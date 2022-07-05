@@ -12,13 +12,11 @@ struct UniformBufferObject {
 };
 
 int main() { 
-    RendererCreationInfo rendererInfo = {};
+    RendererCreateInfo rendererInfo = {};
     rendererInfo.windowWidth = 800;
     rendererInfo.windowHeight = 600;
     rendererInfo.windowName = "Vulkan Renderer";
-    rendererInfo.maxFramesInFlight = 2;
-    rendererInfo.vertexShaderPath = "src/shaders/vert_raymarch.spv";
-    rendererInfo.fragmentShaderPath = "src/shaders/frag_raymarch.spv";
+    rendererInfo.enableValidationLayers = true;
     Renderer renderer = Renderer(&rendererInfo);
 
     const std::vector<Vertex> quad = {

@@ -45,25 +45,18 @@ struct Vertex {
     }
 };
 
-struct RendererCreationInfo {
-    uint32_t windowWidth, windowHeight;
+struct RendererCreateInfo {
+    uint32_t windowWidth;
+    uint32_t windowHeight;
     std::string windowName;
-    uint32_t maxFramesInFlight;
-    std::string vertexShaderPath, fragmentShaderPath;
+    bool enableValidationLayers;
 };
 
 class Renderer {
 public:
-    Renderer(RendererCreationInfo* info);
+    Renderer(RendererCreateInfo* info);
     ~Renderer(); 
 
-    bool shouldWindowClose();
-    void updateWindow();
-    void render();
-    void setWindowSize(int width, int height);
-    void updateRenderer();
-    void addMeshToScene(std::vector<Vertex> data);
-    void uploadUniform(void* data, size_t size);
 private:
     
     // Can be changed to be user defined
@@ -76,9 +69,6 @@ private:
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
     
-    // Can be changed to be user defined
-    bool enableValidationLayers;
-
     GLFWwindow* window;
     VulkanInstance* vulkanInstance;
     VulkanSurface* vulkanSurface;

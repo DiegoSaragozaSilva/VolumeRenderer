@@ -13,14 +13,14 @@ VulkanDevice::VulkanDevice(VulkanDeviceCreateInfo* info) {
     vkEnumeratePhysicalDevices(info->instance, &deviceCount, devices.data());
 
     for (const auto& device : devices) {
-        if (isPhysicalDeviceSuitable(device)) {
+        if (isPhysicalDeviceSuitable(device, info->surface, info->requiredDeviceExtensions)) {
             physicalDevice = device;
             break;
         }
     }
 
     if (physicalDevice == VK_NULL_HANDLE) {
-        spd::error("No suitable physical device found!");
+        spdlog::error("No suitable physical device found!");
         throw 0;
     }
 
@@ -30,7 +30,7 @@ VulkanDevice::VulkanDevice(VulkanDeviceCreateInfo* info) {
 VulkanDevice::~VulkanDevice() {}
 
 bool VulkanDevice::isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<const char*> requiredDeviceExtensions) {
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
      
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
@@ -48,7 +48,7 @@ bool VulkanDevice::isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkS
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
  
@@ -78,3 +78,32 @@ SwapChainSupportDetails VulkanDevice::querySwapChainSupport(VkPhysicalDevice phy
 
     return details;
 }
+
+QueueFamilyIndices VulkanDevice::findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+    QueueFamilyIndices indices;
+
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
+
+    int i = 0;
+    for (const auto& queueFamily : queueFamilies) {
+        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            indices.graphicsFamily = i;
+        }
+
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+        
+        if (presentSupport) {
+            indices.presentFamily = i;
+        }
+
+        i++;
+    }
+
+    return indices;
+}
+

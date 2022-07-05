@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <spdlog/spdlog.h>
 #include <optional>
+#include <set>
 
 struct VulkanDeviceCreateInfo {
    VkInstance instance;
@@ -33,6 +34,6 @@ private:
     VkPhysicalDevice physicalDevice;
 
     bool isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<const char*> requiredDeviceExtensions);
-    void findQueueFamilies(VkPhysicalDevice physicalDevice);
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface); 
 };
