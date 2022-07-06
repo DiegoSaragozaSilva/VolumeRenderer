@@ -29,9 +29,17 @@ public:
     VulkanDevice(VulkanDeviceCreateInfo* info);
     ~VulkanDevice();
 
+    VkDevice getDevice();
+    QueueFamilyIndices getQueueFamilies();
+    SwapChainSupportDetails getSwapChainSupportDetails();
+
 private:
     VkDevice device;
     VkPhysicalDevice physicalDevice;
+    VkQueue presentQueue;
+    VkQueue graphicsQueue;
+    QueueFamilyIndices swapChainQueueFamilies;
+    SwapChainSupportDetails swapChainSupportDetails;
 
     bool isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<const char*> requiredDeviceExtensions);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);

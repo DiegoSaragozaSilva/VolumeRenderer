@@ -10,6 +10,8 @@
 #include "VulkanInstance.hpp"
 #include "VulkanSurface.hpp"
 #include "VulkanDevice.hpp"
+#include "VulkanSwapChain.hpp"
+#include "VulkanRenderPass.hpp"
 
 // #include "Vulkan.hpp"
 
@@ -73,6 +75,8 @@ private:
     VulkanInstance* vulkanInstance;
     VulkanSurface* vulkanSurface;
     VulkanDevice* vulkanDevice;
+    VulkanSwapChain* vulkanSwapChain;
+    VulkanRenderPass* vulkanRenderPass;
 
     void initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string windowName);
 };

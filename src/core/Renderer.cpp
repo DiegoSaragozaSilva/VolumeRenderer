@@ -33,6 +33,26 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanDeviceInfo.validationLayers = validationLayers;
     vulkanDevice = new VulkanDevice(&vulkanDeviceInfo);
     spdlog::info("Physical and logical device successfully created!");
+
+    // Vulkan swap chain creation
+    spdlog::info("Creating vulkan swap chain...");
+    VulkanSwapChainCreateInfo vulkanSwapChainInfo {};
+    vulkanSwapChainInfo.device = vulkanDevice->getDevice();
+    vulkanSwapChainInfo.surface = vulkanSurface->getSurface();
+    vulkanSwapChainInfo.windowWidth = info->windowWidth;
+    vulkanSwapChainInfo.windowHeight = info->windowHeight;
+    vulkanSwapChainInfo.swapChainSupportDetails = vulkanDevice->getSwapChainSupportDetails();
+    vulkanSwapChainInfo.indices = vulkanDevice->getQueueFamilies();
+    vulkanSwapChain = new VulkanSwapChain(&vulkanSwapChainInfo);
+    spdlog::info("Vulkan swap chain successfully created!");
+
+    // Vulkan render pass creation
+    spdlog::info("Creating basic vulkan render pass...");
+    VulkanRenderPassCreateInfo vulkanRenderPassInfo {};
+    vulkanRenderPassInfo.device = vulkanDevice->getDevice();
+    vulkanRenderPassInfo.swapChainImageFormat = vulkanSwapChain->getImageFormat();
+    vulkanRenderPass = new VulkanRenderPass(&vulkanRenderPassInfo);
+    spdlog::info("Basic vulkan render pass created!");
 }
 
 Renderer::~Renderer() {
