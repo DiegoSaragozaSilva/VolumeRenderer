@@ -225,6 +225,30 @@ src/core/Vulkan.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/Vulkan.cpp.s
 .PHONY : src/core/Vulkan.cpp.s
 
+src/core/VulkanCommandBufferHandler.o: src/core/VulkanCommandBufferHandler.cpp.o
+.PHONY : src/core/VulkanCommandBufferHandler.o
+
+# target to build an object file
+src/core/VulkanCommandBufferHandler.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o
+.PHONY : src/core/VulkanCommandBufferHandler.cpp.o
+
+src/core/VulkanCommandBufferHandler.i: src/core/VulkanCommandBufferHandler.cpp.i
+.PHONY : src/core/VulkanCommandBufferHandler.i
+
+# target to preprocess a source file
+src/core/VulkanCommandBufferHandler.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.i
+.PHONY : src/core/VulkanCommandBufferHandler.cpp.i
+
+src/core/VulkanCommandBufferHandler.s: src/core/VulkanCommandBufferHandler.cpp.s
+.PHONY : src/core/VulkanCommandBufferHandler.s
+
+# target to generate assembly for a file
+src/core/VulkanCommandBufferHandler.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.s
+.PHONY : src/core/VulkanCommandBufferHandler.cpp.s
+
 src/core/VulkanDescriptorSetLayout.o: src/core/VulkanDescriptorSetLayout.cpp.o
 .PHONY : src/core/VulkanDescriptorSetLayout.o
 
@@ -272,6 +296,30 @@ src/core/VulkanDevice.s: src/core/VulkanDevice.cpp.s
 src/core/VulkanDevice.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.s
 .PHONY : src/core/VulkanDevice.cpp.s
+
+src/core/VulkanFence.o: src/core/VulkanFence.cpp.o
+.PHONY : src/core/VulkanFence.o
+
+# target to build an object file
+src/core/VulkanFence.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o
+.PHONY : src/core/VulkanFence.cpp.o
+
+src/core/VulkanFence.i: src/core/VulkanFence.cpp.i
+.PHONY : src/core/VulkanFence.i
+
+# target to preprocess a source file
+src/core/VulkanFence.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.i
+.PHONY : src/core/VulkanFence.cpp.i
+
+src/core/VulkanFence.s: src/core/VulkanFence.cpp.s
+.PHONY : src/core/VulkanFence.s
+
+# target to generate assembly for a file
+src/core/VulkanFence.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.s
+.PHONY : src/core/VulkanFence.cpp.s
 
 src/core/VulkanGraphicsPipeline.o: src/core/VulkanGraphicsPipeline.cpp.o
 .PHONY : src/core/VulkanGraphicsPipeline.o
@@ -345,6 +393,30 @@ src/core/VulkanRenderPass.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.s
 .PHONY : src/core/VulkanRenderPass.cpp.s
 
+src/core/VulkanSemaphore.o: src/core/VulkanSemaphore.cpp.o
+.PHONY : src/core/VulkanSemaphore.o
+
+# target to build an object file
+src/core/VulkanSemaphore.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o
+.PHONY : src/core/VulkanSemaphore.cpp.o
+
+src/core/VulkanSemaphore.i: src/core/VulkanSemaphore.cpp.i
+.PHONY : src/core/VulkanSemaphore.i
+
+# target to preprocess a source file
+src/core/VulkanSemaphore.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.i
+.PHONY : src/core/VulkanSemaphore.cpp.i
+
+src/core/VulkanSemaphore.s: src/core/VulkanSemaphore.cpp.s
+.PHONY : src/core/VulkanSemaphore.s
+
+# target to generate assembly for a file
+src/core/VulkanSemaphore.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.s
+.PHONY : src/core/VulkanSemaphore.cpp.s
+
 src/core/VulkanSurface.o: src/core/VulkanSurface.cpp.o
 .PHONY : src/core/VulkanSurface.o
 
@@ -414,12 +486,18 @@ help:
 	@echo "... src/core/Vulkan.o"
 	@echo "... src/core/Vulkan.i"
 	@echo "... src/core/Vulkan.s"
+	@echo "... src/core/VulkanCommandBufferHandler.o"
+	@echo "... src/core/VulkanCommandBufferHandler.i"
+	@echo "... src/core/VulkanCommandBufferHandler.s"
 	@echo "... src/core/VulkanDescriptorSetLayout.o"
 	@echo "... src/core/VulkanDescriptorSetLayout.i"
 	@echo "... src/core/VulkanDescriptorSetLayout.s"
 	@echo "... src/core/VulkanDevice.o"
 	@echo "... src/core/VulkanDevice.i"
 	@echo "... src/core/VulkanDevice.s"
+	@echo "... src/core/VulkanFence.o"
+	@echo "... src/core/VulkanFence.i"
+	@echo "... src/core/VulkanFence.s"
 	@echo "... src/core/VulkanGraphicsPipeline.o"
 	@echo "... src/core/VulkanGraphicsPipeline.i"
 	@echo "... src/core/VulkanGraphicsPipeline.s"
@@ -429,6 +507,9 @@ help:
 	@echo "... src/core/VulkanRenderPass.o"
 	@echo "... src/core/VulkanRenderPass.i"
 	@echo "... src/core/VulkanRenderPass.s"
+	@echo "... src/core/VulkanSemaphore.o"
+	@echo "... src/core/VulkanSemaphore.i"
+	@echo "... src/core/VulkanSemaphore.s"
 	@echo "... src/core/VulkanSurface.o"
 	@echo "... src/core/VulkanSurface.i"
 	@echo "... src/core/VulkanSurface.s"

@@ -1,5 +1,7 @@
 #pragma once
 
+#define MAX_FRAMES_IN_FLIGHT 2
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <string>
@@ -16,6 +18,9 @@
 #include "VulkanRenderPass.hpp"
 #include "VulkanDescriptorSetLayout.hpp"
 #include "VulkanGraphicsPipeline.hpp"
+#include "VulkanCommandBufferHandler.hpp"
+#include "VulkanSemaphore.hpp"
+#include "VulkanFence.hpp"
 
 // #include "Vulkan.hpp"
 
@@ -29,7 +34,10 @@ struct RendererCreateInfo {
 class Renderer {
 public:
     Renderer(RendererCreateInfo* info);
-    ~Renderer(); 
+    ~Renderer();
+
+    bool windowShouldClose();
+    void pollEvents();
 
 private:
     
@@ -50,7 +58,12 @@ private:
     VulkanSwapChain* vulkanSwapChain;
     VulkanRenderPass* vulkanRenderPass;
     VulkanGraphicsPipeline* vulkanGraphicsPipeline;
-
+    VulkanCommandBufferHandler* vulkanCommandBufferHandler;
+    std::vector<VulkanDescriptorSetLayout*> vulkanDescriptorSetLayouts;
+    std::vector<VulkanSemaphore*> imageAvailableVulkanSemaphores;
+    std::vector<VulkanSemaphore*> renderFinishedVulkanSemaphores;
+    std::vector<VulkanFence*> inFlightVulkanFences;
+    
     void initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string windowName);
     std::vector<char> readFile(const std::string& filename);
 };

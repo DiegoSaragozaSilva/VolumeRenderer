@@ -368,4 +368,7 @@ CMakeFiles/VulkanTest.dir/main.cpp.o: /home/diego/IC/Renderer/main.cpp \
  /usr/include/c++/12.1.0/pstl/glue_algorithm_defs.h \
  /home/diego/IC/Renderer/src/core/VulkanRenderPass.hpp \
  /home/diego/IC/Renderer/src/core/VulkanDescriptorSetLayout.hpp \
- /home/diego/IC/Renderer/src/core/VulkanGraphicsPipeline.hpp
+ /home/diego/IC/Renderer/src/core/VulkanGraphicsPipeline.hpp \
+ /home/diego/IC/Renderer/src/core/VulkanCommandBufferHandler.hpp \
+ /home/diego/IC/Renderer/src/core/VulkanSemaphore.hpp \
+ /home/diego/IC/Renderer/src/core/VulkanFence.hpp

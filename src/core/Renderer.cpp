@@ -52,7 +52,18 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanRenderPassInfo.device = vulkanDevice->getDevice();
     vulkanRenderPassInfo.swapChainImageFormat = vulkanSwapChain->getImageFormat();
     vulkanRenderPass = new VulkanRenderPass(&vulkanRenderPassInfo);
-    spdlog::info("Basic vulkan render pass created!");
+    spdlog::info("Basic vulkan render pass successfully created!");
+
+    // [NOTE] Use RendererCreateInfo to manipulate descriptors
+    // Basic descriptor set layout for uniform buffers
+    spdlog::info("Creating basic uniform descriptor set layout...");
+    VulkanDescriptorSetLayoutCreateInfo uniformDescriptorInfo {};
+    uniformDescriptorInfo.device = vulkanDevice->getDevice();
+    uniformDescriptorInfo.binding = 0;
+    uniformDescriptorInfo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uniformDescriptorInfo.shaderStageFlag = VK_SHADER_STAGE_ALL_GRAPHICS;
+    vulkanDescriptorSetLayouts.push_back(new VulkanDescriptorSetLayout(&uniformDescriptorInfo));
+    spdlog::info("Basic uniform descriptor set layout successfully created!");
 
     // Basic graphics pipeline creation
     spdlog::info("Creating basic vulkan graphics pipeline...");
@@ -62,19 +73,59 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanGraphicsPipelineInfo.swapChainExtent = vulkanSwapChain->getExtent();
     vulkanGraphicsPipelineInfo.vertexBindingDescription = Vertex::getBindingDescription();
     vulkanGraphicsPipelineInfo.vertexAttributeDescriptions = Vertex::getAttributeDescriptions();
-    vulkanGraphicsPipelineInfo.descriptorSetLayoutCount = 0;
-    vulkanGraphicsPipelineInfo.descriptorSetLayouts = std::vector<VkDescriptorSetLayout>();
-    vulkanGraphicsPipelineInfo.numSubPasses = 1;
+    vulkanGraphicsPipelineInfo.descriptorSetLayoutCount = vulkanDescriptorSetLayouts.size();
+    
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+    for (const auto& vulkanDescriptorSetLayout : vulkanDescriptorSetLayouts) {
+        descriptorSetLayouts.push_back(vulkanDescriptorSetLayout->getDescriptorSetLayout());
+    }
+
+    vulkanGraphicsPipelineInfo.descriptorSetLayouts = descriptorSetLayouts;
+    vulkanGraphicsPipelineInfo.numSubPasses = 0;
     // [NOTE] User should be able to bind own vertex and fragment shaders
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("src/shaders/vert_raymarch.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("src/shaders/frag_raymarch.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_raymarch.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_raymarch.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
-    spdlog::info("Basic vulkan graphics pipeline created!");
+    spdlog::info("Basic vulkan graphics pipeline successfully created!");
+
+    // Framebuffers creation
+    spdlog::info("Creating swap chain framebuffers...");
+    VulkanFramebufferCreateInfo framebufferInfo {};
+    framebufferInfo.device = vulkanDevice->getDevice();
+    framebufferInfo.renderPass = vulkanRenderPass->getRenderPass();
+    vulkanSwapChain->createSwapChainFramebuffers(&framebufferInfo);
+    spdlog::info("Swap chain framebuffers successfully created!");
+
+    // Command buffer handler creation
+    spdlog::info("Creating command buffer handler...");
+    VulkanCommandBufferHandlerCreateInfo commandBufferHandlerInfo {};
+    commandBufferHandlerInfo.device = vulkanDevice->getDevice();
+    commandBufferHandlerInfo.queueFamilyIndices = vulkanDevice->getQueueFamilies();
+    commandBufferHandlerInfo.numCommandBuffers = MAX_FRAMES_IN_FLIGHT;
+    vulkanCommandBufferHandler = new VulkanCommandBufferHandler(&commandBufferHandlerInfo);
+    spdlog::info("Command buffer handler successfully created!");
+
+    // Sync objects creation
+    spdlog::info("Creating basic sync objects...");
+    VulkanSemaphoreCreateInfo vulkanSemaphoreInfo {};
+    vulkanSemaphoreInfo.device = vulkanDevice->getDevice();
+
+    VulkanFenceCreateInfo vulkanFenceInfo {};
+    vulkanFenceInfo.device = vulkanDevice->getDevice();
+    
+    imageAvailableVulkanSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinishedVulkanSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    inFlightVulkanFences.resize(MAX_FRAMES_IN_FLIGHT);
+
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        imageAvailableVulkanSemaphores[i] = new VulkanSemaphore(&vulkanSemaphoreInfo);
+        renderFinishedVulkanSemaphores[i] = new VulkanSemaphore(&vulkanSemaphoreInfo);
+        inFlightVulkanFences[i] = new VulkanFence(&vulkanFenceInfo);
+    }
+    spdlog::info("Basic sync objects created!");
 }
 
-Renderer::~Renderer() {
-    
-}
+Renderer::~Renderer() {}
 
 void Renderer::initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string windowName) {
     if (!glfwInit()) {
@@ -87,6 +138,7 @@ void Renderer::initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string
 
     // Disable default OpenGL context creation
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
     window = glfwCreateWindow(windowWidth, windowHeight, windowName.c_str(), nullptr, nullptr);
     if (!window) {
         spdlog::error("Failed to create GLFW window!");
@@ -98,7 +150,7 @@ std::vector<char> Renderer::readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-        spdlog::error("Failed to load file: {%s}", filename);
+        spdlog::error("Failed to load file: {}", filename.c_str());
         throw 0;
     }
 
@@ -113,3 +165,10 @@ std::vector<char> Renderer::readFile(const std::string& filename) {
 
 }
 
+bool Renderer::windowShouldClose() {
+    return glfwWindowShouldClose(window);
+}
+
+void Renderer::pollEvents() {
+    glfwPollEvents();
+}

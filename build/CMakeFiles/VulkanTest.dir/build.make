@@ -125,10 +125,24 @@ CMakeFiles/VulkanTest.dir/src/core/Vulkan.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/VulkanTest.dir/src/core/Vulkan.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/diego/IC/Renderer/src/core/Vulkan.cpp -o CMakeFiles/VulkanTest.dir/src/core/Vulkan.cpp.s
 
+CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
+CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o: ../src/core/VulkanCommandBufferHandler.cpp
+CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanCommandBufferHandler.cpp
+
+CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/diego/IC/Renderer/src/core/VulkanCommandBufferHandler.cpp > CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.i
+
+CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/diego/IC/Renderer/src/core/VulkanCommandBufferHandler.cpp -o CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.s
+
 CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
 CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o: ../src/core/VulkanDescriptorSetLayout.cpp
 CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanDescriptorSetLayout.cpp
 
 CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.i: cmake_force
@@ -142,7 +156,7 @@ CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.s: cmake_force
 CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
 CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o: ../src/core/VulkanDevice.cpp
 CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanDevice.cpp
 
 CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.i: cmake_force
@@ -153,10 +167,24 @@ CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/diego/IC/Renderer/src/core/VulkanDevice.cpp -o CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.s
 
+CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
+CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o: ../src/core/VulkanFence.cpp
+CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanFence.cpp
+
+CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/diego/IC/Renderer/src/core/VulkanFence.cpp > CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.i
+
+CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/diego/IC/Renderer/src/core/VulkanFence.cpp -o CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.s
+
 CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
 CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o: ../src/core/VulkanGraphicsPipeline.cpp
 CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanGraphicsPipeline.cpp
 
 CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.i: cmake_force
@@ -170,7 +198,7 @@ CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.s: cmake_force
 CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
 CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o: ../src/core/VulkanInstance.cpp
 CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanInstance.cpp
 
 CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.i: cmake_force
@@ -184,7 +212,7 @@ CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.s: cmake_force
 CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
 CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o: ../src/core/VulkanRenderPass.cpp
 CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanRenderPass.cpp
 
 CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.i: cmake_force
@@ -195,10 +223,24 @@ CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/diego/IC/Renderer/src/core/VulkanRenderPass.cpp -o CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.s
 
+CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
+CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o: ../src/core/VulkanSemaphore.cpp
+CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanSemaphore.cpp
+
+CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/diego/IC/Renderer/src/core/VulkanSemaphore.cpp > CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.i
+
+CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/diego/IC/Renderer/src/core/VulkanSemaphore.cpp -o CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.s
+
 CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
 CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o: ../src/core/VulkanSurface.cpp
 CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanSurface.cpp
 
 CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.i: cmake_force
@@ -212,7 +254,7 @@ CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.s: cmake_force
 CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o: CMakeFiles/VulkanTest.dir/flags.make
 CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o: ../src/core/VulkanSwapChain.cpp
 CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o: CMakeFiles/VulkanTest.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o -MF CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o.d -o CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o -c /home/diego/IC/Renderer/src/core/VulkanSwapChain.cpp
 
 CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.i: cmake_force
@@ -229,11 +271,14 @@ VulkanTest_OBJECTS = \
 "CMakeFiles/VulkanTest.dir/src/core/Renderer.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/Vertex.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/Vulkan.cpp.o" \
+"CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o" \
+"CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o" \
+"CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o" \
 "CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o"
 
@@ -244,18 +289,21 @@ VulkanTest: CMakeFiles/VulkanTest.dir/main.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/Renderer.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/Vertex.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/Vulkan.cpp.o
+VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanCommandBufferHandler.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanDescriptorSetLayout.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanDevice.cpp.o
+VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanFence.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanGraphicsPipeline.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanInstance.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanRenderPass.cpp.o
+VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanSemaphore.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanSurface.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/src/core/VulkanSwapChain.cpp.o
 VulkanTest: CMakeFiles/VulkanTest.dir/build.make
 VulkanTest: /usr/local/lib/libspdlog.a
 VulkanTest: /usr/lib/libglfw.so.3.3
 VulkanTest: CMakeFiles/VulkanTest.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX executable VulkanTest"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/diego/IC/Renderer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Linking CXX executable VulkanTest"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/VulkanTest.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -27,6 +27,10 @@ int main() {
     quad.push_back(Vertex({-1.f, 1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
     quad.push_back(Vertex({1.f, 1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
     
+    while (!renderer.windowShouldClose()) {
+        renderer.pollEvents(); 
+    }
+
     // renderer.addMeshToScene(quad);
    
     // float time = 0.0f;

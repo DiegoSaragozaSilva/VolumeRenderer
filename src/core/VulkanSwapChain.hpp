@@ -17,11 +17,17 @@ struct VulkanSwapChainCreateInfo {
     uint32_t windowHeight;
 };
 
+struct VulkanFramebufferCreateInfo {
+    VkDevice device;
+    VkRenderPass renderPass;
+};
+
 class VulkanSwapChain {
 public:
     VulkanSwapChain(VulkanSwapChainCreateInfo* info);
     ~VulkanSwapChain();
 
+    void createSwapChainFramebuffers(VulkanFramebufferCreateInfo* info);
     VkFormat getImageFormat();
     VkExtent2D getExtent();
 private:
@@ -30,7 +36,8 @@ private:
     VkFormat swapChainImageFormat;
     std::vector<VkImageView> swapChainImageViews;
     VkExtent2D swapChainExtent;
-
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+    
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats);
     VkPresentModeKHR chooseSwapPresentMode(std::vector<VkPresentModeKHR> presentModes);
     VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities, uint32_t windowWidth, uint32_t windowHeight);
