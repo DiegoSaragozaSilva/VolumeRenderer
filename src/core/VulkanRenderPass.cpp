@@ -44,3 +44,7 @@ VulkanRenderPass::VulkanRenderPass(VulkanRenderPassCreateInfo* info) {
 }
 
 VulkanRenderPass::~VulkanRenderPass() {};
+
+VkRenderPass VulkanRenderPass::getRenderPass() {
+    return renderPass;
+}

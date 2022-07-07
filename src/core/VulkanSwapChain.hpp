@@ -23,7 +23,7 @@ public:
     ~VulkanSwapChain();
 
     VkFormat getImageFormat();
-
+    VkExtent2D getExtent();
 private:
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;

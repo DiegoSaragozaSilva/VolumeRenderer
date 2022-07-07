@@ -13,6 +13,7 @@ public:
     VulkanRenderPass(VulkanRenderPassCreateInfo* info);
     ~VulkanRenderPass();
 
+    VkRenderPass getRenderPass();
 private:
     VkRenderPass renderPass;
 };

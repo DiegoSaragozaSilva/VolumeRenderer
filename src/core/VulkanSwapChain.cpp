@@ -116,3 +116,7 @@ VkExtent2D VulkanSwapChain::chooseSwapExtent(VkSurfaceCapabilitiesKHR capabiliti
 VkFormat VulkanSwapChain::getImageFormat() {
     return swapChainImageFormat;
 }
+
+VkExtent2D VulkanSwapChain::getExtent() {
+    return swapChainExtent;
+}

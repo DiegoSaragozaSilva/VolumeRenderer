@@ -53,6 +53,23 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanRenderPassInfo.swapChainImageFormat = vulkanSwapChain->getImageFormat();
     vulkanRenderPass = new VulkanRenderPass(&vulkanRenderPassInfo);
     spdlog::info("Basic vulkan render pass created!");
+
+    // Basic graphics pipeline creation
+    spdlog::info("Creating basic vulkan graphics pipeline...");
+    VulkanGraphicsPipelineCreateInfo vulkanGraphicsPipelineInfo {};
+    vulkanGraphicsPipelineInfo.device = vulkanDevice->getDevice();
+    vulkanGraphicsPipelineInfo.renderPass = vulkanRenderPass->getRenderPass(); 
+    vulkanGraphicsPipelineInfo.swapChainExtent = vulkanSwapChain->getExtent();
+    vulkanGraphicsPipelineInfo.vertexBindingDescription = Vertex::getBindingDescription();
+    vulkanGraphicsPipelineInfo.vertexAttributeDescriptions = Vertex::getAttributeDescriptions();
+    vulkanGraphicsPipelineInfo.descriptorSetLayoutCount = 0;
+    vulkanGraphicsPipelineInfo.descriptorSetLayouts = std::vector<VkDescriptorSetLayout>();
+    vulkanGraphicsPipelineInfo.numSubPasses = 1;
+    // [NOTE] User should be able to bind own vertex and fragment shaders
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("src/shaders/vert_raymarch.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("src/shaders/frag_raymarch.spv");
+    vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
+    spdlog::info("Basic vulkan graphics pipeline created!");
 }
 
 Renderer::~Renderer() {
@@ -75,5 +92,24 @@ void Renderer::initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string
         spdlog::error("Failed to create GLFW window!");
         throw 0;
     }
+}
+
+std::vector<char> Renderer::readFile(const std::string& filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        spdlog::error("Failed to load file: {%s}", filename);
+        throw 0;
+    }
+
+    size_t fileSize = (size_t) file.tellg();
+    std::vector<char> buffer(fileSize);
+
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+
+    return buffer;
+
 }
 

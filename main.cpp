@@ -19,21 +19,20 @@ int main() {
     rendererInfo.enableValidationLayers = true;
     Renderer renderer = Renderer(&rendererInfo);
 
-    const std::vector<Vertex> quad = {
-        {{-1.f, -1.f}, {0.0f, 0.0f, 0.0f}},
-        {{1.f, 1.f}, {0.0f, 0.0f, 0.0f}},
-        {{1.f, -1.f}, {0.0f, 0.0f, 0.0f}},
-        {{-1.f, -1.f}, {0.0f, 0.0f, 0.0f}},
-        {{-1.f, 1.f}, {0.0f, 0.0f, 0.0f}},
-        {{1.f, 1.f}, {0.0f, 0.0f, 0.0f}}
-    };
+    std::vector<Vertex> quad;
+    quad.push_back(Vertex({-1.f, -1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
+    quad.push_back(Vertex({1.f, 1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
+    quad.push_back(Vertex({1.f, -1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
+    quad.push_back(Vertex({-1.f, -1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
+    quad.push_back(Vertex({-1.f, 1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
+    quad.push_back(Vertex({1.f, 1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
     
     // renderer.addMeshToScene(quad);
    
-    float time = 0.0f;
-    UniformBufferObject ubo {};
-    ubo.windowWidth = rendererInfo.windowWidth;
-    ubo.windowHeight = rendererInfo.windowHeight;
+    // float time = 0.0f;
+    // UniformBufferObject ubo {};
+    // ubo.windowWidth = rendererInfo.windowWidth;
+    // ubo.windowHeight = rendererInfo.windowHeight;
     // while(!renderer.shouldWindowClose()) {
         // renderer.updateWindow();
         

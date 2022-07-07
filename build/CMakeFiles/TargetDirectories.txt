@@ -1,0 +1,3 @@
+/home/diego/IC/Renderer/build/CMakeFiles/VulkanTest.dir
+/home/diego/IC/Renderer/build/CMakeFiles/edit_cache.dir
+/home/diego/IC/Renderer/build/CMakeFiles/rebuild_cache.dir
