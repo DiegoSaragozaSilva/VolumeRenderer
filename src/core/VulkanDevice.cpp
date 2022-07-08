@@ -161,3 +161,15 @@ QueueFamilyIndices VulkanDevice::getQueueFamilies() {
 SwapChainSupportDetails VulkanDevice::getSwapChainSupportDetails() {
     return swapChainSupportDetails;
 }
+
+VkPhysicalDevice VulkanDevice::getPhysicalDevice() {
+    return physicalDevice;
+}
+
+VkQueue VulkanDevice::getGraphicsQueue() {
+    return graphicsQueue;
+}
+
+VkQueue VulkanDevice::getPresentQueue() {
+    return presentQueue;
+}

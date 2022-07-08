@@ -22,6 +22,8 @@ public:
     VulkanGraphicsPipeline(VulkanGraphicsPipelineCreateInfo* info);
     ~VulkanGraphicsPipeline();
 
+    VkPipeline getGraphicsPipeline();
+    VkPipelineLayout getPipelineLayout();
 private:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;

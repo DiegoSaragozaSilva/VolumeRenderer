@@ -144,3 +144,11 @@ void VulkanSwapChain::createSwapChainFramebuffers(VulkanFramebufferCreateInfo* i
         }
     }
 }
+
+VkSwapchainKHR VulkanSwapChain::getSwapChain() {
+    return swapChain;
+}
+
+VkFramebuffer VulkanSwapChain::getFramebuffer(uint32_t framebufferIndex) {
+    return swapChainFramebuffers[framebufferIndex]; 
+}

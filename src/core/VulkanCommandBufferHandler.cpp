@@ -26,3 +26,52 @@ VulkanCommandBufferHandler::VulkanCommandBufferHandler(VulkanCommandBufferHandle
 }
 
 VulkanCommandBufferHandler::~VulkanCommandBufferHandler() {}
+
+VkCommandBuffer VulkanCommandBufferHandler::getCommandBuffer(uint32_t bufferIndex) {
+    return commandBuffers[bufferIndex];
+}
+
+void VulkanCommandBufferHandler::recordCommandBuffer(CommandBufferRecordInfo* info) {
+    VkCommandBuffer commandBuffer = getCommandBuffer(info->bufferIndex);
+    
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = 0; // Optional
+    beginInfo.pInheritanceInfo = nullptr; // Optional
+
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        spdlog::error("Failed to begin command buffer!");
+        throw 0;
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = info->renderPass;
+    renderPassInfo.framebuffer = info->framebuffer;
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = info->swapChainExtent;
+
+    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info->graphicsPipeline);
+
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, info->vertexBuffers.data(), offsets);
+
+    if (info->descriptorSet != nullptr) {
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info->pipelineLayout, 0, 1, &info->descriptorSet, 0, nullptr);
+    }
+
+    vkCmdDraw(commandBuffer, 3 * info->numPrimitives, 1, 0, 0);
+
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to record command buffer!");
+    }
+
+}

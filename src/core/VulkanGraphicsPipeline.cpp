@@ -22,7 +22,7 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanGraphicsPipelineCreateInfo*
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.pVertexBindingDescriptions = &info->vertexBindingDescription;
-    vertexInputInfo.vertexAttributeDescriptionCount = 1;
+    vertexInputInfo.vertexAttributeDescriptionCount = info->vertexAttributeDescriptions.size();
     vertexInputInfo.pVertexAttributeDescriptions = info->vertexAttributeDescriptions.data();
     
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -138,6 +138,8 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanGraphicsPipelineCreateInfo*
     vkDestroyShaderModule(info->device, vertShaderModule, nullptr);
 }
 
+VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {};
+
 VkShaderModule VulkanGraphicsPipeline::createShaderModule(VkDevice device, std::vector<char> shaderCode) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -151,4 +153,12 @@ VkShaderModule VulkanGraphicsPipeline::createShaderModule(VkDevice device, std::
 
     return shaderModule;
 
+}
+
+VkPipeline VulkanGraphicsPipeline::getGraphicsPipeline() {
+    return graphicsPipeline;
+}
+
+VkPipelineLayout VulkanGraphicsPipeline::getPipelineLayout() {
+    return pipelineLayout; 
 }

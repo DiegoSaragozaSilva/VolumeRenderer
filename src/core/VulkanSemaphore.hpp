@@ -11,6 +11,8 @@ class VulkanSemaphore {
 public:
     VulkanSemaphore(VulkanSemaphoreCreateInfo* info);
     ~VulkanSemaphore();
+
+    VkSemaphore getSemaphore();
 private:
     VkSemaphore semaphore;
 };

@@ -5,7 +5,7 @@
 
 #include "src/core/Renderer.hpp"
 
-struct UniformBufferObject {
+struct UniformData {
     int windowWidth;
     int windowHeight;
     float time;
@@ -27,8 +27,25 @@ int main() {
     quad.push_back(Vertex({-1.f, 1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
     quad.push_back(Vertex({1.f, 1.f, 0.f}, {0.0f, 0.0f, 0.0f}));
     
+    Model quadModel = Model();
+    quadModel.setMesh(quad);
+
+    renderer.addModelToScene(&quadModel);
+    
+    // Uniform rotine
+    VulkanBuffer* uniformBuffer = renderer.getUniformBuffer(sizeof(UniformData));
+    renderer.attachUniformBufferToPipeline(uniformBuffer);
+
+    UniformData data {};
+    data.windowWidth = 800;
+    data.windowHeight = 600;
+
     while (!renderer.windowShouldClose()) {
-        renderer.pollEvents(); 
+        renderer.pollEvents();
+
+        renderer.updateUniformBufferData(uniformBuffer, &data);
+
+        renderer.render();
     }
 
     // renderer.addMeshToScene(quad);

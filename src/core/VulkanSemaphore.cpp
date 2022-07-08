@@ -11,3 +11,7 @@ VulkanSemaphore::VulkanSemaphore(VulkanSemaphoreCreateInfo* info) {
 }
 
 VulkanSemaphore::~VulkanSemaphore() {}
+
+VkSemaphore VulkanSemaphore::getSemaphore() {
+    return semaphore;
+}

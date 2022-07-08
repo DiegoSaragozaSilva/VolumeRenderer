@@ -6,7 +6,9 @@ add_compile_options(-std=c++17 -O2)
 find_package(spdlog REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 
-file(GLOB CppSources src/core/*.cpp)
+file(GLOB CppSources src/*/*.cpp)
+list(REMOVE_ITEM CppSources ["src/core/Vulkan.hpp","src/core/Vulkan.cpp"])
+
 file(GLOB SpvFiles src/shaders/*.spv)
 add_executable(VulkanTest main.cpp ${CppSources})
 

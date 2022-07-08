@@ -30,9 +30,11 @@ public:
     ~VulkanDevice();
 
     VkDevice getDevice();
+    VkPhysicalDevice getPhysicalDevice();
     QueueFamilyIndices getQueueFamilies();
     SwapChainSupportDetails getSwapChainSupportDetails();
-
+    VkQueue getGraphicsQueue();
+    VkQueue getPresentQueue();
 private:
     VkDevice device;
     VkPhysicalDevice physicalDevice;

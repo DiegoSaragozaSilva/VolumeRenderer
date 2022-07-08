@@ -11,6 +11,8 @@ class VulkanFence {
 public:
     VulkanFence(VulkanFenceCreateInfo* info);
     ~VulkanFence();
+
+    VkFence getFence();
 private:
     VkFence fence;
 };

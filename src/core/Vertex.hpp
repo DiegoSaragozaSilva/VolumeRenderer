@@ -14,4 +14,5 @@ public:
 
     static VkVertexInputBindingDescription getBindingDescription();
     static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+    static size_t getVertexSize();
 };

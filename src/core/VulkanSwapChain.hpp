@@ -30,6 +30,8 @@ public:
     void createSwapChainFramebuffers(VulkanFramebufferCreateInfo* info);
     VkFormat getImageFormat();
     VkExtent2D getExtent();
+    VkSwapchainKHR getSwapChain();
+    VkFramebuffer getFramebuffer(uint32_t framebufferIndex);
 private:
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;

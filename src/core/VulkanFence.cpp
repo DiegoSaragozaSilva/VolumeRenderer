@@ -12,3 +12,7 @@ VulkanFence::VulkanFence(VulkanFenceCreateInfo* info) {
 }
 
 VulkanFence::~VulkanFence() {}
+
+VkFence VulkanFence::getFence() {
+    return fence;
+}

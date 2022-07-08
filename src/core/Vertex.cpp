@@ -10,7 +10,7 @@ Vertex::~Vertex() {}
 VkVertexInputBindingDescription Vertex::getBindingDescription() {
     VkVertexInputBindingDescription description;
     description.binding = 0;
-    description.stride = sizeof(Vertex);
+    description.stride = Vertex::getVertexSize();
     description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         
     return description;
@@ -38,3 +38,9 @@ std::vector<VkVertexInputAttributeDescription> Vertex::getAttributeDescriptions(
     return attributeDescriptions;
 }
 
+size_t Vertex::getVertexSize() {
+    size_t posSize = sizeof(float) * 3;
+    size_t colorSize = sizeof(float) * 3;
+    
+    return posSize + colorSize;
+}

@@ -9,6 +9,7 @@
 #include <array>
 #include <spdlog/spdlog.h>
 #include <fstream>
+#include <iostream>
 
 #include "Vertex.hpp"
 #include "VulkanInstance.hpp"
@@ -16,11 +17,13 @@
 #include "VulkanDevice.hpp"
 #include "VulkanSwapChain.hpp"
 #include "VulkanRenderPass.hpp"
-#include "VulkanDescriptorSetLayout.hpp"
+#include "VulkanDescriptorSetHandler.hpp"
 #include "VulkanGraphicsPipeline.hpp"
 #include "VulkanCommandBufferHandler.hpp"
 #include "VulkanSemaphore.hpp"
 #include "VulkanFence.hpp"
+#include "VulkanBuffer.hpp"
+#include "../engine/Engine.hpp"
 
 // #include "Vulkan.hpp"
 
@@ -31,6 +34,11 @@ struct RendererCreateInfo {
     bool enableValidationLayers;
 };
 
+struct VertexBuffer {
+   VulkanBuffer* vulkanBuffer;
+   Model* model;
+};
+
 class Renderer {
 public:
     Renderer(RendererCreateInfo* info);
@@ -38,7 +46,12 @@ public:
 
     bool windowShouldClose();
     void pollEvents();
+    void addModelToScene(Model* model);
+    void attachUniformBufferToPipeline(VulkanBuffer* uniformBuffer);
+    VulkanBuffer* getUniformBuffer(VkDeviceSize bufferSize);
+    void updateUniformBufferData(VulkanBuffer* uniformBuffer, void* data);
 
+    void render();
 private:
     
     // Can be changed to be user defined
@@ -59,11 +72,16 @@ private:
     VulkanRenderPass* vulkanRenderPass;
     VulkanGraphicsPipeline* vulkanGraphicsPipeline;
     VulkanCommandBufferHandler* vulkanCommandBufferHandler;
-    std::vector<VulkanDescriptorSetLayout*> vulkanDescriptorSetLayouts;
+    VulkanDescriptorSetHandler* vulkanDescriptorSetHandler;
     std::vector<VulkanSemaphore*> imageAvailableVulkanSemaphores;
     std::vector<VulkanSemaphore*> renderFinishedVulkanSemaphores;
     std::vector<VulkanFence*> inFlightVulkanFences;
+
+    std::vector<VertexBuffer> scene;
+    std::vector<VulkanBuffer*> uniformBuffers;
     
+    uint32_t currentFrame;
+
     void initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string windowName);
     std::vector<char> readFile(const std::string& filename);
 };

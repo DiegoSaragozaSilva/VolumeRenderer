@@ -12,12 +12,11 @@ layout(location = 0) out vec4 outColor;
 layout(binding = 0) uniform UniformBuffer {
     int windowWidth;
     int windowHeight;
-    float time;
 } ubo;
 
 vec3 getRayDirection(vec2 windowSize, vec2 coord, float fov) {
-    vec2 xy = coord.xy - windowSize / 2.0;
-    float z = windowSize.y / tan(radians(fov) / 2.0);
+    vec2 xy = coord.xy - vec2(800.0, 600.0) / 2.0;
+    float z = 600.0 / tan(radians(fov) / 2.0);
     return normalize(vec3(xy, -z));
 }
 
@@ -54,8 +53,9 @@ void main() {
     float dist = getShortestDistance(eye, dir);
 
     if (dist > MAX_DIST - EPSILON) {
-        outColor = vec4(0, 0, 0, 1.0);
+        outColor = vec4(0, 1.0, 0, 1.0);
         return;
     }
+
     outColor = vec4(dir, 1.0);
 }
