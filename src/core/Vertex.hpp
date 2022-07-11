@@ -6,11 +6,12 @@
 
 class Vertex {
 public:
-    Vertex(glm::vec3 pos, glm::vec3 color);
+    Vertex(glm::vec3 pos, glm::vec3 color, glm::vec2 uv);
     ~Vertex();
 
     glm::vec3 pos;
     glm::vec3 color;
+    glm::vec2 uv;
 
     static VkVertexInputBindingDescription getBindingDescription();
     static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();

@@ -90,8 +90,11 @@ bool VulkanDevice::isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkS
         SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
- 
-    return indices.graphicsFamily.has_value() && indices.graphicsFamily.has_value() && requiredExtensions.empty() && swapChainAdequate;   
+
+    VkPhysicalDeviceFeatures supportedFeatures;
+    vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
+
+    return indices.graphicsFamily.has_value() && indices.graphicsFamily.has_value() && requiredExtensions.empty() && swapChainAdequate && supportedFeatures.samplerAnisotropy;   
 }
 
 SwapChainSupportDetails VulkanDevice::querySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {

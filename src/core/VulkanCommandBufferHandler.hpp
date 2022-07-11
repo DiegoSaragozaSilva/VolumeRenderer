@@ -32,6 +32,8 @@ public:
 
     VkCommandBuffer getCommandBuffer(uint32_t bufferIndex);
     void recordCommandBuffer(CommandBufferRecordInfo* info);
+    VkCommandBuffer beginSingleTimeCommands(VkDevice device);
+    void endSingleTimeCommands(VkDevice device, VkQueue graphicsQueue, VkCommandBuffer commandBuffer);
 private:
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;

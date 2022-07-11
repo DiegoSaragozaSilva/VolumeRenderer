@@ -7,7 +7,6 @@
 
 struct VulkanDescriptorSetHandlerCreateInfo {
     VkDevice device;
-    uint32_t binding;
     VkDescriptorType descriptorType;
     VkShaderStageFlagBits shaderStageFlag;
     uint32_t maxFramesInFlight;
@@ -16,8 +15,10 @@ struct VulkanDescriptorSetHandlerCreateInfo {
 struct DescriptorSetCreateInfo {
     VkDevice device;
     uint32_t maxFramesInFlight;
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceSize> uniformBufferSizes;
+    VkBuffer uniformBuffer;
+    VkDeviceSize uniformBufferSize;
+    VkImageView textureImageView;
+    VkSampler textureSampler;
 };
 
 class VulkanDescriptorSetHandler {

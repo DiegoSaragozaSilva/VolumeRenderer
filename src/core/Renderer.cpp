@@ -56,12 +56,10 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanRenderPass = new VulkanRenderPass(&vulkanRenderPassInfo);
     spdlog::info("Basic vulkan render pass successfully created!");
 
-    // [NOTE] Use RendererCreateInfo to manipulate descriptors
     // Basic descriptor set for uniform buffers
     spdlog::info("Creating descriptor handler...");
     VulkanDescriptorSetHandlerCreateInfo descriptorHandlerInfo {};
     descriptorHandlerInfo.device = vulkanDevice->getDevice();
-    descriptorHandlerInfo.binding = 0;
     descriptorHandlerInfo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     descriptorHandlerInfo.shaderStageFlag = VK_SHADER_STAGE_ALL_GRAPHICS;
     descriptorHandlerInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT; 
@@ -82,8 +80,8 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
     // [NOTE] User should be able to bind own vertex and fragment shaders
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_raymarch.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_raymarch.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_texture.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_texture.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
     spdlog::info("Basic vulkan graphics pipeline successfully created!");
 
@@ -182,7 +180,7 @@ void Renderer::addModelToScene(Model* model) {
     VulkanBuffer* vulkanBuffer = new VulkanBuffer(&vulkanBufferInfo);
 
     std::vector<Vertex> modelMesh = model->getMesh();
-    std::vector<float> meshData(sizeof(float) * model->getMeshSize() * Vertex::getVertexSize());
+    std::vector<float> meshData(8 * modelMesh.size());
     uint32_t i = 0;
     for (const auto& vertex : modelMesh) {
         meshData[i + 0] = vertex.pos.x;
@@ -191,7 +189,9 @@ void Renderer::addModelToScene(Model* model) {
         meshData[i + 3] = vertex.color.x;
         meshData[i + 4] = vertex.color.y;
         meshData[i + 5] = vertex.color.z;
-        i += 6;
+        meshData[i + 6] = vertex.uv.x;
+        meshData[i + 7] = vertex.uv.y;
+        i += 8;
     }
 
     vulkanBuffer->fillBuffer(vulkanDevice->getDevice(), meshData.data());
@@ -222,10 +222,10 @@ void Renderer::render() {
         spdlog::error("Failed to acquire swap chain image!");
         throw 0;
     }
-
+    
     vkResetFences(vulkanDevice->getDevice(), 1, &inFlightFence);
     vkResetCommandBuffer(currentCommandBuffer, 0);
-    
+      
     uint32_t numPrimitives = 0;
     std::vector<VkBuffer> vulkanVertexBuffers;
     for (const auto& vertexBuffer : scene) {
@@ -264,7 +264,7 @@ void Renderer::render() {
         spdlog::error("Failed to submit command buffer to graphics queue!");
         throw 0;
     }
-   
+    
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
@@ -285,48 +285,36 @@ void Renderer::render() {
         spdlog::error("Failed to present image to present queue!");
         throw 0;
     }
-
+ 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Renderer::attachUniformBufferToPipeline(VulkanBuffer* uniformBuffer) {
-    // Add uniform buffer to vector
-    uniformBuffers.push_back(uniformBuffer);
+void Renderer::attachTextureToPipeline(VulkanTexture* texture) {
+    currentTexture = texture;
+    updateDescriptorSets();
+}
 
-    // Descriptor set recreation
+void Renderer::attachUniformBufferToPipeline(VulkanBuffer* uniformBuffer) {
+    currentUniformBuffer = uniformBuffer;
+    updateDescriptorSets();
+}
+
+void Renderer::updateDescriptorSets() {
     DescriptorSetCreateInfo setInfo {};
     setInfo.device = vulkanDevice->getDevice();
     setInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
-
-    std::vector<VkBuffer> uBuffers;
-    std::vector<VkDeviceSize> uBufferSizes;
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        VulkanBuffer* uniformBuffer = uniformBuffers.back();
-        uBuffers.push_back(uniformBuffer->getBuffer());
-        uBufferSizes.push_back(uniformBuffer->getBufferSize());
+    
+    if (currentUniformBuffer != nullptr) {
+        setInfo.uniformBuffer = currentUniformBuffer->getBuffer();
+        setInfo.uniformBufferSize = currentUniformBuffer->getBufferSize();
     }
 
-    setInfo.uniformBuffers = uBuffers;
-    setInfo.uniformBufferSizes = uBufferSizes;     
-    vulkanDescriptorSetHandler->updateDescriptorSets(&setInfo);       
-
-    // Pipeline recreation
-    delete vulkanGraphicsPipeline;
-
-    VulkanGraphicsPipelineCreateInfo vulkanGraphicsPipelineInfo {};
-    vulkanGraphicsPipelineInfo.device = vulkanDevice->getDevice();
-    vulkanGraphicsPipelineInfo.renderPass = vulkanRenderPass->getRenderPass(); 
-    vulkanGraphicsPipelineInfo.swapChainExtent = vulkanSwapChain->getExtent();
-    vulkanGraphicsPipelineInfo.vertexBindingDescription = Vertex::getBindingDescription();
-    vulkanGraphicsPipelineInfo.vertexAttributeDescriptions = Vertex::getAttributeDescriptions();
-    vulkanGraphicsPipelineInfo.descriptorSetLayoutCount = 1; 
-
-    std::vector<VkDescriptorSetLayout> layouts = {vulkanDescriptorSetHandler->getDescriptorSetLayout()};
-    vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
-    vulkanGraphicsPipelineInfo.numSubPasses = 0;
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_raymarch.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_raymarch.spv");
-    vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
+    if (currentTexture != nullptr) {
+        setInfo.textureImageView = currentTexture->getImageView();
+        setInfo.textureSampler = currentTexture->getSampler();
+    }
+    
+    vulkanDescriptorSetHandler->updateDescriptorSets(&setInfo);
 }
 
 VulkanBuffer* Renderer::getUniformBuffer(VkDeviceSize bufferSize) {
@@ -343,4 +331,102 @@ VulkanBuffer* Renderer::getUniformBuffer(VkDeviceSize bufferSize) {
 
 void Renderer::updateUniformBufferData(VulkanBuffer* uniformBuffer, void* data) {
     uniformBuffer->fillBuffer(vulkanDevice->getDevice(), data);
+}
+
+void Renderer::transitionImageLayouts(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
+    VkCommandBuffer commandBuffer = vulkanCommandBufferHandler->beginSingleTimeCommands(vulkanDevice->getDevice());
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+
+    VkPipelineStageFlags sourceStage;
+    VkPipelineStageFlags destinationStage;
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    } 
+    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } 
+    else {
+        spdlog::error("Unsupported layout transition. Transition failed!");
+        throw 0;
+    }
+
+
+    vkCmdPipelineBarrier(
+        commandBuffer,
+        sourceStage, destinationStage,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &barrier
+    );
+
+    vulkanCommandBufferHandler->endSingleTimeCommands(vulkanDevice->getDevice(), vulkanDevice->getGraphicsQueue(), commandBuffer);
+}
+
+void Renderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t depth) {
+    VkCommandBuffer commandBuffer = vulkanCommandBufferHandler->beginSingleTimeCommands(vulkanDevice->getDevice());
+    
+    VkBufferImageCopy region{};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {width, height, depth};
+    
+    vkCmdCopyBufferToImage(
+        commandBuffer,
+        buffer,
+        image,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1,
+        &region
+    );
+
+    vulkanCommandBufferHandler->endSingleTimeCommands(vulkanDevice->getDevice(), vulkanDevice->getGraphicsQueue(), commandBuffer);
+}
+
+VulkanTexture* Renderer::getTexture(TextureCreateInfo* info) {
+    VulkanTextureCreateInfo textureInfo {};
+    textureInfo.device = vulkanDevice->getDevice();
+    textureInfo.physicalDevice = vulkanDevice->getPhysicalDevice();
+    textureInfo.imageType = info->imageType;
+    textureInfo.imageViewType = info->imageViewType;
+    textureInfo.width = info->width;
+    textureInfo.height = info->height;
+    textureInfo.depth = info->depth;
+    textureInfo.data = info->data;
+    textureInfo.imageSize = info->size;
+    textureInfo.imageFormat = info->imageFormat;
+    textureInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    VulkanTexture* texture = new VulkanTexture(&textureInfo);
+
+    transitionImageLayouts(texture->getTextureImage(), info->imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    copyBufferToImage(texture->getBuffer(), texture->getTextureImage(), info->width, info->height, info->depth);
+    transitionImageLayouts(texture->getTextureImage(), info->imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    return texture;
 }

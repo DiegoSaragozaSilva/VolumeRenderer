@@ -6,12 +6,16 @@ add_compile_options(-std=c++17 -O2)
 find_package(spdlog REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 
-file(GLOB CppSources src/*/*.cpp)
-list(REMOVE_ITEM CppSources ["src/core/Vulkan.hpp","src/core/Vulkan.cpp"])
+file(GLOB Sources src/*/*.cpp /usr/lib/stb/*.h)
+list(REMOVE_ITEM Sources ["src/core/Vulkan.hpp","src/core/Vulkan.cpp"])
 
 file(GLOB SpvFiles src/shaders/*.spv)
-add_executable(VulkanTest main.cpp ${CppSources})
+file(GLOB Textures src/textures/*)
 
-file(COPY ${SpvFiles} DESTINATION ${CMAKE_BINARY_DIR}/shaders)
+add_executable(VulkanTest main.cpp ${Sources})
 
 target_link_libraries(VulkanTest PRIVATE spdlog::spdlog glfw vulkan)
+target_include_directories(VulkanTest PRIVATE "/usr/lib/stb/")
+
+file(COPY ${SpvFiles} DESTINATION ${CMAKE_BINARY_DIR}/shaders)
+file(COPY ${Textures} DESTINATION ${CMAKE_BINARY_DIR}/textures)

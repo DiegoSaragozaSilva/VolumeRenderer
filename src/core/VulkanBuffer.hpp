@@ -20,10 +20,10 @@ public:
     VkBuffer getBuffer();
     VkDeviceSize getBufferSize();
     void fillBuffer(VkDevice device, void* data);
+    static uint32_t findBufferMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags propertyFlags);
+
 private:
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
     VkDeviceSize bufferSize;
-
-    uint32_t findBufferMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags propertyFlags);
 };
