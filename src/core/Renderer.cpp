@@ -4,6 +4,8 @@ Renderer::Renderer(RendererCreateInfo* info) {
     currentFrame = 0;
     bindingCount = 0;
 
+    shouldRecreatePipeline = false;
+
     currentUniformBuffer = nullptr;
     currentTexture = nullptr;
 
@@ -82,8 +84,8 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
     // [NOTE] User should be able to bind own vertex and fragment shaders
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_texture.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_texture.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
     spdlog::info("Basic vulkan graphics pipeline successfully created!");
 
@@ -170,6 +172,12 @@ bool Renderer::windowShouldClose() {
 
 void Renderer::pollEvents() {
     glfwPollEvents();
+
+    if (shouldRecreatePipeline) {
+        shouldRecreatePipeline = false;
+
+        recreateGraphicsPipeline();
+    }
 }
 
 void Renderer::addModelToScene(Model* model) {
@@ -201,7 +209,27 @@ void Renderer::addModelToScene(Model* model) {
     VertexBuffer vertexBuffer {};
     vertexBuffer.vulkanBuffer = vulkanBuffer;
     vertexBuffer.model = model;
-    scene.push_back(vertexBuffer);
+    
+    VulkanBufferCreateInfo indexBufferInfo {};
+    indexBufferInfo.device = vulkanDevice->getDevice();
+    indexBufferInfo.physicalDevice = vulkanDevice->getPhysicalDevice();
+    indexBufferInfo.bufferSize = model->getMeshSize() * sizeof(int);
+    indexBufferInfo.usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+    indexBufferInfo.propertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    VulkanBuffer* indexVulkanBuffer = new VulkanBuffer(&indexBufferInfo);
+
+    std::vector<uint32_t> indices = model->getMeshIndices();
+    indexVulkanBuffer->fillBuffer(vulkanDevice->getDevice(), indices.data());
+
+    IndexBuffer indexBuffer {};
+    indexBuffer.vulkanBuffer = indexVulkanBuffer;
+    indexBuffer.model = model;
+
+    ModelHandler modelHandler {};
+    modelHandler.vertexBuffer = vertexBuffer;
+    modelHandler.indexBuffer = indexBuffer;
+
+    scene.push_back(modelHandler);
 }
 
 void Renderer::render() {
@@ -227,24 +255,23 @@ void Renderer::render() {
     
     vkResetFences(vulkanDevice->getDevice(), 1, &inFlightFence);
     vkResetCommandBuffer(currentCommandBuffer, 0);
-      
-    uint32_t numPrimitives = 0;
-    std::vector<VkBuffer> vulkanVertexBuffers;
-    for (const auto& vertexBuffer : scene) {
-        numPrimitives += vertexBuffer.model->getMeshSize() / 3;
-        vulkanVertexBuffers.push_back(vertexBuffer.vulkanBuffer->getBuffer()); 
-    }
+    
+
+    std::vector<VkBuffer> vulkanVertexBuffers = {scene[0].vertexBuffer.vulkanBuffer->getBuffer()};
+    VkBuffer vulkanIndexBuffer = scene[0].indexBuffer.vulkanBuffer->getBuffer();
+    uint32_t numIndices = scene[0].indexBuffer.vulkanBuffer->getBufferSize() / sizeof(int);    
 
     CommandBufferRecordInfo recordInfo {};
     recordInfo.bufferIndex = currentFrame;
     recordInfo.vertexBuffers = vulkanVertexBuffers;
+    recordInfo.indexBuffer = vulkanIndexBuffer; // Crap
+    recordInfo.numIndices = numIndices; 
     recordInfo.renderPass = vulkanRenderPass->getRenderPass();
     recordInfo.framebuffer = vulkanSwapChain->getFramebuffer(imageIndex);
     recordInfo.swapChainExtent = vulkanSwapChain->getExtent();
     recordInfo.graphicsPipeline = vulkanGraphicsPipeline->getGraphicsPipeline();
     recordInfo.pipelineLayout = vulkanGraphicsPipeline->getPipelineLayout();
     recordInfo.descriptorSet = vulkanDescriptorSetHandler->getDescriptorSet(currentFrame);
-    recordInfo.numPrimitives = numPrimitives;
     vulkanCommandBufferHandler->recordCommandBuffer(&recordInfo); 
    
     VkSubmitInfo submitInfo{};
@@ -306,7 +333,7 @@ void Renderer::attachTextureToPipeline(VulkanTexture* texture) {
     }
 
     updateDescriptorSets();
-    recreateGraphicsPipeline();
+    shouldRecreatePipeline = true;
 }
 
 void Renderer::attachUniformBufferToPipeline(VulkanBuffer* uniformBuffer) {
@@ -324,7 +351,7 @@ void Renderer::attachUniformBufferToPipeline(VulkanBuffer* uniformBuffer) {
     }
 
     updateDescriptorSets();
-    recreateGraphicsPipeline();
+    shouldRecreatePipeline = true;
 }
 
 void Renderer::updateDescriptorSets() {
@@ -495,7 +522,7 @@ void Renderer::recreateGraphicsPipeline() {
     std::vector<VkDescriptorSetLayout> layouts = {vulkanDescriptorSetHandler->getDescriptorSetLayout()};
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_texture.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_texture.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
 }

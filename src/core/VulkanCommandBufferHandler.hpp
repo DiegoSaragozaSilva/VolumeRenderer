@@ -16,13 +16,14 @@ struct VulkanCommandBufferHandlerCreateInfo {
 struct CommandBufferRecordInfo {
     uint32_t bufferIndex;
     std::vector<VkBuffer> vertexBuffers;
+    VkBuffer indexBuffer;
+    uint32_t numIndices;
     VkRenderPass renderPass;
     VkFramebuffer framebuffer;
     VkExtent2D swapChainExtent;
     VkPipeline graphicsPipeline;
     VkPipelineLayout pipelineLayout;
     VkDescriptorSet descriptorSet;
-    uint32_t numPrimitives;
 };
 
 class VulkanCommandBufferHandler {

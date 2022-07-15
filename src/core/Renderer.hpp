@@ -45,8 +45,18 @@ struct TextureCreateInfo {
 };
 
 struct VertexBuffer {
-   VulkanBuffer* vulkanBuffer;
-   Model* model;
+    VulkanBuffer* vulkanBuffer;
+    Model* model;
+};
+
+struct IndexBuffer {
+    VulkanBuffer* vulkanBuffer;
+    Model* model;
+};
+
+struct ModelHandler {
+    VertexBuffer vertexBuffer;
+    IndexBuffer indexBuffer;
 };
 
 class Renderer {
@@ -89,12 +99,14 @@ private:
     std::vector<VulkanSemaphore*> renderFinishedVulkanSemaphores;
     std::vector<VulkanFence*> inFlightVulkanFences;
 
-    std::vector<VertexBuffer> scene;
+    std::vector<ModelHandler> scene;
     VulkanBuffer* currentUniformBuffer;
     VulkanTexture* currentTexture;
     
     uint32_t currentFrame;
     uint32_t bindingCount;
+
+    bool shouldRecreatePipeline;
 
     void initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string windowName);
     std::vector<char> readFile(const std::string& filename);
