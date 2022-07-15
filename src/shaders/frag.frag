@@ -8,9 +8,8 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
-    float time;
 } ubo;
 
 void main() {
-    outColor = vec4(fragColor * (cos(ubo.time) + 1.0), 1.0);
+    outColor = vec4(fragColor, 1.0);
 }

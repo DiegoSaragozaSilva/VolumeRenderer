@@ -1,12 +1,10 @@
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <chrono>
+#include <iostream>
+#include <vector>
 
 #include "src/core/Renderer.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
 
 struct UniformData {
     glm::mat4 model;
@@ -15,82 +13,41 @@ struct UniformData {
 };
 
 int main() { 
-    RendererCreateInfo rendererInfo = {};
+    RendererCreateInfo rendererInfo {};
     rendererInfo.windowWidth = 800;
     rendererInfo.windowHeight = 600;
-    rendererInfo.windowName = "Vulkan Renderer";
+    rendererInfo.windowName = "Vulkan renderer";
     rendererInfo.enableValidationLayers = true;
-    Renderer renderer = Renderer(&rendererInfo);
+    Renderer* renderer = new Renderer(&rendererInfo);
 
-    // Model/Mesh rotine
-    std::vector<Vertex> quad;
-    quad.push_back(Vertex({-0.5f, -0.5f, 0.f}, {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}));
-    quad.push_back(Vertex({0.5f, -0.5f, 0.f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}));
-    quad.push_back(Vertex({0.5f, 0.5f, 0.f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}));
-    quad.push_back(Vertex({-0.5f, -0.5f, 0.f}, {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}));
-    quad.push_back(Vertex({0.5f, 0.5f, 0.f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}));
-    quad.push_back(Vertex({-0.5f, 0.5f, 0.f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f}));
-    
-    Model quadModel = Model();
-    quadModel.setMesh(quad);
-    renderer.addModelToScene(&quadModel);
-    
-    // Uniform rotine
-    VulkanBuffer* uniformBuffer = renderer.getUniformBuffer(sizeof(UniformData));   
-    renderer.attachUniformBufferToPipeline(uniformBuffer);
-    UniformData data {};
+    // Viking room model
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
 
-    // Texture rotine
-    int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
-
-    if (!pixels) {
-        throw std::runtime_error("failed to load texture image!");
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
+        throw std::runtime_error(warn + err);
     }
 
-    TextureCreateInfo textureInfo {};
-    textureInfo.imageType = VK_IMAGE_TYPE_2D;
-    textureInfo.imageViewType = VK_IMAGE_VIEW_TYPE_2D;
-    textureInfo.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-    textureInfo.size = imageSize; 
-    textureInfo.width = texWidth;
-    textureInfo.height = texHeight;
-    textureInfo.depth = 1;
-    textureInfo.data = pixels;
-    VulkanTexture* texture = renderer.getTexture(&textureInfo);
-    renderer.attachTextureToPipeline(texture); 
+    VulkanBuffer* uniformBuffer = renderer->getUniformBuffer(sizeof(UniformData));
+    renderer->attachUniformBufferToPipeline(uniformBuffer);
 
+    UniformData uniformData {};
     float time = 0.0f;
-    while (!renderer.windowShouldClose()) {
-        renderer.pollEvents();
-
-        data.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        data.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        data.proj = glm::perspective(glm::radians(45.0f), 800 / (float) 600, 0.1f, 10.f);
-        data.proj[1][1] *= -1;
-        renderer.updateUniformBufferData(uniformBuffer, &data);    
+    while (!renderer->windowShouldClose()) {
+        renderer->pollEvents();
+        
+        uniformData.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        uniformData.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        uniformData.proj = glm::perspective(glm::radians(45.0f), 800 / (float) 600, 0.1f, 10.f);
+        uniformData.proj[1][1] *= -1;
+        renderer->updateUniformBufferData(uniformBuffer, &uniformData);
 
         time += 0.001f;
 
-        renderer.render();
+        renderer->render();
     }
-
-    // renderer.addMeshToScene(quad);
-   
-    // float time = 0.0f;
-    // UniformBufferObject ubo {};
-    // ubo.windowWidth = rendererInfo.windowWidth;
-    // ubo.windowHeight = rendererInfo.windowHeight;
-    // while(!renderer.shouldWindowClose()) {
-        // renderer.updateWindow();
-        
-        // ubo.time = time;
-        // renderer.uploadUniform(&ubo, sizeof(ubo));
-        // time += 0.01f;
-
-        // renderer.render(); 
-    // }
 
     return 1;
 }

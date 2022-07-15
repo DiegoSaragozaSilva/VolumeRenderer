@@ -94,10 +94,12 @@ private:
     VulkanTexture* currentTexture;
     
     uint32_t currentFrame;
+    uint32_t bindingCount;
 
     void initGLFW(uint32_t windowWidth, uint32_t windowHeight, std::string windowName);
     std::vector<char> readFile(const std::string& filename);
     void transitionImageLayouts(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t depth);
     void updateDescriptorSets();
+    void recreateGraphicsPipeline();
 };

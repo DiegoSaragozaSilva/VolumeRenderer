@@ -2,6 +2,10 @@
 
 Renderer::Renderer(RendererCreateInfo* info) {
     currentFrame = 0;
+    bindingCount = 0;
+
+    currentUniformBuffer = nullptr;
+    currentTexture = nullptr;
 
     // GLFW initialization
     initGLFW(info->windowWidth, info->windowHeight, info->windowName);
@@ -60,9 +64,7 @@ Renderer::Renderer(RendererCreateInfo* info) {
     spdlog::info("Creating descriptor handler...");
     VulkanDescriptorSetHandlerCreateInfo descriptorHandlerInfo {};
     descriptorHandlerInfo.device = vulkanDevice->getDevice();
-    descriptorHandlerInfo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorHandlerInfo.shaderStageFlag = VK_SHADER_STAGE_ALL_GRAPHICS;
-    descriptorHandlerInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT; 
+    descriptorHandlerInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
     vulkanDescriptorSetHandler = new VulkanDescriptorSetHandler(&descriptorHandlerInfo);
     spdlog::info("Descriptor handler successfully created!");
 
@@ -80,8 +82,8 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
     // [NOTE] User should be able to bind own vertex and fragment shaders
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_texture.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_texture.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
     spdlog::info("Basic vulkan graphics pipeline successfully created!");
 
@@ -291,29 +293,78 @@ void Renderer::render() {
 
 void Renderer::attachTextureToPipeline(VulkanTexture* texture) {
     currentTexture = texture;
+
+    if (vulkanDescriptorSetHandler->getBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) < 0) {
+        BindingCreateInfo textureBindingInfo {};
+        textureBindingInfo.device = vulkanDevice->getDevice();
+        textureBindingInfo.binding = bindingCount;
+        textureBindingInfo.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        textureBindingInfo.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+        textureBindingInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
+        vulkanDescriptorSetHandler->addBinding(&textureBindingInfo);
+        bindingCount++;
+    }
+
     updateDescriptorSets();
+    recreateGraphicsPipeline();
 }
 
 void Renderer::attachUniformBufferToPipeline(VulkanBuffer* uniformBuffer) {
     currentUniformBuffer = uniformBuffer;
+   
+    if (vulkanDescriptorSetHandler->getBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) < 0) {
+        BindingCreateInfo uniformBindingInfo {};
+        uniformBindingInfo.device = vulkanDevice->getDevice();
+        uniformBindingInfo.binding = bindingCount;
+        uniformBindingInfo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBindingInfo.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+        uniformBindingInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
+        vulkanDescriptorSetHandler->addBinding(&uniformBindingInfo);
+        bindingCount++;
+    }
+
     updateDescriptorSets();
+    recreateGraphicsPipeline();
 }
 
 void Renderer::updateDescriptorSets() {
-    DescriptorSetCreateInfo setInfo {};
-    setInfo.device = vulkanDevice->getDevice();
-    setInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
-    
+    std::vector<DescriptorSetInfo> setInfos;
+
+    // Uniform buffer
     if (currentUniformBuffer != nullptr) {
-        setInfo.uniformBuffer = currentUniformBuffer->getBuffer();
-        setInfo.uniformBufferSize = currentUniformBuffer->getBufferSize();
+        VkDescriptorBufferInfo bufferInfo {};
+        bufferInfo.buffer = currentUniformBuffer->getBuffer();
+        bufferInfo.range = currentUniformBuffer->getBufferSize();
+        bufferInfo.offset = 0;
+
+        DescriptorSetInfo uniformSetInfo {};
+        uniformSetInfo.binding = vulkanDescriptorSetHandler->getBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        uniformSetInfo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformSetInfo.bufferInfo = bufferInfo;
+
+        setInfos.push_back(uniformSetInfo);
     }
 
+    // Textures
     if (currentTexture != nullptr) {
-        setInfo.textureImageView = currentTexture->getImageView();
-        setInfo.textureSampler = currentTexture->getSampler();
+        VkDescriptorImageInfo textureInfo {};
+        textureInfo.sampler = currentTexture->getSampler();
+        textureInfo.imageView = currentTexture->getImageView();
+        textureInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        DescriptorSetInfo textureSetInfo {};
+        textureSetInfo.binding = vulkanDescriptorSetHandler->getBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+        textureSetInfo.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        textureSetInfo.imageInfo = textureInfo;
+
+        setInfos.push_back(textureSetInfo);       
     }
-    
+
+    DescriptorSetUpdateInfo setInfo {};
+    setInfo.device = vulkanDevice->getDevice();
+    setInfo.maxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
+    setInfo.setInfos = setInfos;
+
     vulkanDescriptorSetHandler->updateDescriptorSets(&setInfo);
 }
 
@@ -429,4 +480,22 @@ VulkanTexture* Renderer::getTexture(TextureCreateInfo* info) {
     transitionImageLayouts(texture->getTextureImage(), info->imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     return texture;
+}
+
+void Renderer::recreateGraphicsPipeline() {
+    delete vulkanGraphicsPipeline;
+
+    VulkanGraphicsPipelineCreateInfo vulkanGraphicsPipelineInfo {};
+    vulkanGraphicsPipelineInfo.device = vulkanDevice->getDevice();
+    vulkanGraphicsPipelineInfo.renderPass = vulkanRenderPass->getRenderPass(); 
+    vulkanGraphicsPipelineInfo.swapChainExtent = vulkanSwapChain->getExtent();
+    vulkanGraphicsPipelineInfo.vertexBindingDescription = Vertex::getBindingDescription();
+    vulkanGraphicsPipelineInfo.vertexAttributeDescriptions = Vertex::getAttributeDescriptions();
+    vulkanGraphicsPipelineInfo.descriptorSetLayoutCount = 1; 
+    std::vector<VkDescriptorSetLayout> layouts = {vulkanDescriptorSetHandler->getDescriptorSetLayout()};
+    vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
+    vulkanGraphicsPipelineInfo.numSubPasses = 0;
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
+    vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
 }

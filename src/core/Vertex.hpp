@@ -6,6 +6,7 @@
 
 class Vertex {
 public:
+    Vertex() {};
     Vertex(glm::vec3 pos, glm::vec3 color, glm::vec2 uv);
     ~Vertex();
 
