@@ -84,8 +84,8 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
     // [NOTE] User should be able to bind own vertex and fragment shaders
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_texture.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_texture.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
     spdlog::info("Basic vulkan graphics pipeline successfully created!");
 
@@ -213,7 +213,7 @@ void Renderer::addModelToScene(Model* model) {
     VulkanBufferCreateInfo indexBufferInfo {};
     indexBufferInfo.device = vulkanDevice->getDevice();
     indexBufferInfo.physicalDevice = vulkanDevice->getPhysicalDevice();
-    indexBufferInfo.bufferSize = model->getMeshSize() * sizeof(int);
+    indexBufferInfo.bufferSize = model->getMeshIndiceSize() * sizeof(uint32_t);
     indexBufferInfo.usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
     indexBufferInfo.propertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     VulkanBuffer* indexVulkanBuffer = new VulkanBuffer(&indexBufferInfo);
@@ -256,10 +256,9 @@ void Renderer::render() {
     vkResetFences(vulkanDevice->getDevice(), 1, &inFlightFence);
     vkResetCommandBuffer(currentCommandBuffer, 0);
     
-
     std::vector<VkBuffer> vulkanVertexBuffers = {scene[0].vertexBuffer.vulkanBuffer->getBuffer()};
     VkBuffer vulkanIndexBuffer = scene[0].indexBuffer.vulkanBuffer->getBuffer();
-    uint32_t numIndices = scene[0].indexBuffer.vulkanBuffer->getBufferSize() / sizeof(int);    
+    uint32_t numIndices = scene[0].indexBuffer.vulkanBuffer->getBufferSize() / sizeof(uint32_t);
 
     CommandBufferRecordInfo recordInfo {};
     recordInfo.bufferIndex = currentFrame;
@@ -522,7 +521,7 @@ void Renderer::recreateGraphicsPipeline() {
     std::vector<VkDescriptorSetLayout> layouts = {vulkanDescriptorSetHandler->getDescriptorSetLayout()};
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_texture.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_texture.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
 }
