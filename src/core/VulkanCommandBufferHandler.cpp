@@ -60,8 +60,11 @@ void VulkanCommandBufferHandler::recordCommandBuffer(CommandBufferRecordInfo* in
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info->graphicsPipeline);
 
     VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, info->vertexBuffers.data(), offsets);
-    vkCmdBindIndexBuffer(commandBuffer, info->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    if (info->vertexBuffers.size() > 0)
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, info->vertexBuffers.data(), offsets);
+    
+    if (info->indexBuffer != nullptr)
+        vkCmdBindIndexBuffer(commandBuffer, info->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
     if (info->descriptorSet != nullptr) {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info->pipelineLayout, 0, 1, &info->descriptorSet, 0, nullptr);

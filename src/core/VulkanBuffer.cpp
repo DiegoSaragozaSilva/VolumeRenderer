@@ -58,3 +58,9 @@ VkBuffer VulkanBuffer::getBuffer() {
 VkDeviceSize VulkanBuffer::getBufferSize() {
     return bufferSize;
 }
+
+void VulkanBuffer::freeBuffer(VkDevice device) {
+    vkDestroyBuffer(device, buffer, nullptr);
+    vkFreeMemory(device, bufferMemory, nullptr);  
+}
+

@@ -67,6 +67,7 @@ public:
     bool windowShouldClose();
     void pollEvents();
     void addModelToScene(Model* model);
+    void removeModelFromScene(Model* model);
     void attachUniformBufferToPipeline(VulkanBuffer* uniformBuffer);
     void attachTextureToPipeline(VulkanTexture* texture);
     VulkanBuffer* getUniformBuffer(VkDeviceSize bufferSize);

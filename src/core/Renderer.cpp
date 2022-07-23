@@ -232,6 +232,26 @@ void Renderer::addModelToScene(Model* model) {
     scene.push_back(modelHandler);
 }
 
+void Renderer::removeModelFromScene(Model* model) {  
+    uint32_t previousFrame = (currentFrame - 1) % MAX_FRAMES_IN_FLIGHT;
+    VkFence inFlightFence = inFlightVulkanFences[previousFrame]->getFence();
+    vkWaitForFences(vulkanDevice->getDevice(), 1, &inFlightFence, VK_TRUE, UINT64_MAX);
+
+    int index = 0;
+    for (const auto& modelHandler : scene) {
+        if (modelHandler.vertexBuffer.model == model) {
+            modelHandler.vertexBuffer.vulkanBuffer->freeBuffer(vulkanDevice->getDevice());
+            delete modelHandler.vertexBuffer.vulkanBuffer;
+            
+            modelHandler.indexBuffer.vulkanBuffer->freeBuffer(vulkanDevice->getDevice());
+            delete modelHandler.indexBuffer.vulkanBuffer;
+
+            scene.erase(scene.begin() + index);
+        }
+        index++;
+    }
+}
+
 void Renderer::render() {
     VkFence inFlightFence = inFlightVulkanFences[currentFrame]->getFence();
     VkSemaphore imageAvailableSemaphore = imageAvailableVulkanSemaphores[currentFrame]->getSemaphore(); 
@@ -256,9 +276,14 @@ void Renderer::render() {
     vkResetFences(vulkanDevice->getDevice(), 1, &inFlightFence);
     vkResetCommandBuffer(currentCommandBuffer, 0);
     
-    std::vector<VkBuffer> vulkanVertexBuffers = {scene[0].vertexBuffer.vulkanBuffer->getBuffer()};
-    VkBuffer vulkanIndexBuffer = scene[0].indexBuffer.vulkanBuffer->getBuffer();
-    uint32_t numIndices = scene[0].indexBuffer.vulkanBuffer->getBufferSize() / sizeof(uint32_t);
+    std::vector<VkBuffer> vulkanVertexBuffers;
+    VkBuffer vulkanIndexBuffer = nullptr;
+    uint32_t numIndices = 0;
+    for (const auto& modelHandler : scene) {
+        vulkanVertexBuffers.push_back(modelHandler.vertexBuffer.vulkanBuffer->getBuffer());
+        vulkanIndexBuffer = modelHandler.indexBuffer.vulkanBuffer->getBuffer();
+        numIndices = modelHandler.indexBuffer.vulkanBuffer->getBufferSize() / sizeof(uint32_t);
+    }
 
     CommandBufferRecordInfo recordInfo {};
     recordInfo.bufferIndex = currentFrame;
@@ -272,7 +297,7 @@ void Renderer::render() {
     recordInfo.pipelineLayout = vulkanGraphicsPipeline->getPipelineLayout();
     recordInfo.descriptorSet = vulkanDescriptorSetHandler->getDescriptorSet(currentFrame);
     vulkanCommandBufferHandler->recordCommandBuffer(&recordInfo); 
-   
+
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 

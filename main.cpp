@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <glm/gtc/random.hpp>
 
 #include "src/core/Renderer.hpp"
 #include "src/engine/Engine.hpp"
@@ -15,29 +16,22 @@ int main() {
     rendererInfo.windowWidth = 800;
     rendererInfo.windowHeight = 600;
     rendererInfo.windowName = "Vulkan renderer";
-    rendererInfo.enableValidationLayers = true;
+    rendererInfo.enableValidationLayers = false;
     Renderer* renderer = new Renderer(&rendererInfo);
 
-    std::vector<glm::vec3> volume = {
-        {0.f, 0.f, 0.f},
-        {1.f, 0.f, 0.f},
-        {1.f, 1.f, 0.f},
-        {0.f, 1.f, 0.f},
-        {0.f, 0.f, 1.f},
-        {1.f, 0.f, 1.f},
-        {1.f, 1.f, 1.f},
-        {0.f, 1.f, 1.f}
-    };
+    uint32_t numPoints = 50;
+    std::vector<glm::vec3> volume(numPoints);
+    for (uint32_t i = 0; i < numPoints; i++)
+        volume.push_back(glm::ballRand(1.0f));
+        //volume.push_back(glm::linearRand(glm::vec3({-1.f, -1.f, -1.f}), glm::vec3({1.f, 1.f, 1.f})));
 
     Octree* octree = new Octree();
     octree->setVolumeData(volume);
+    octree->setMaxDepth(1, false);
     octree->generateOctree();
 
     std::vector<Vertex> octreeVertices = octree->_generateMesh();
     std::vector<uint32_t> octreeIndices = octree->_generateIndices(octreeVertices.size());
-
-    std::cout << "Vert count: " << octreeVertices.size() << "\n";
-    std::cout << "Ind count: " << octreeIndices.size() << "\n";
 
     Model* octreeModel = new Model();
     octreeModel->setMesh(octreeVertices, octreeIndices);
@@ -49,8 +43,35 @@ int main() {
     UniformData uniformData {};
 
     float time = 0.0f;
+    int _time = 0;
+    int maxDepth = 1;
+    bool ascending = true;
     while (!renderer->windowShouldClose()) {
         renderer->pollEvents();
+
+        if (_time % 350 == 0) {
+            if (maxDepth < 5 && ascending) {
+                maxDepth++;
+                
+                if (maxDepth == 5) ascending = false;
+            }
+            else if (maxDepth > 2 && !ascending) {
+                maxDepth--;
+
+                if (maxDepth == 2) ascending = true;
+            }
+
+            renderer->removeModelFromScene(octreeModel);
+
+            octree->setMaxDepth(maxDepth, true);
+            
+            std::vector<Vertex> octreeVertices = octree->_generateMesh();
+            std::vector<uint32_t> octreeIndices = octree->_generateIndices(octreeVertices.size());
+            
+            octreeModel->setMesh(octreeVertices, octreeIndices);
+
+            renderer->addModelToScene(octreeModel);
+        }
 
         uniformData.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         uniformData.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -58,6 +79,7 @@ int main() {
         uniformData.proj[1][1] *= -1;
         renderer->updateUniformBufferData(uniformBuffer, &uniformData);
         time += 0.001f;
+        _time += 1;
 
         renderer->render();
     }
