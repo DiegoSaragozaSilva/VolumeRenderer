@@ -1,6 +1,7 @@
 #include "OctreeNode.hpp"
 
 OctreeNode::OctreeNode() {
+    isLeaf = false;
     for (uint8_t i = 0; i < 8; i++)
         childs[i] = nullptr;
 }

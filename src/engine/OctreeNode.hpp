@@ -9,6 +9,7 @@ public:
     OctreeNode();
     ~OctreeNode();
 
+    bool isLeaf;
     glm::vec3 minPoint, maxPoint;
 
     void addChild(OctreeNode* child, uint8_t index);

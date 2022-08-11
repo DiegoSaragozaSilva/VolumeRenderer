@@ -1,85 +1,71 @@
 #include <iostream>
 #include <vector>
+#include <cstdlib>
+#include <ctime>
 #include <glm/gtc/random.hpp>
 
 #include "src/core/Renderer.hpp"
 #include "src/engine/Engine.hpp"
-
-struct UniformData {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
-};
 
 int main() { 
     RendererCreateInfo rendererInfo {};
     rendererInfo.windowWidth = 800;
     rendererInfo.windowHeight = 600;
     rendererInfo.windowName = "Vulkan renderer";
-    rendererInfo.enableValidationLayers = false;
+    rendererInfo.enableValidationLayers = true;
     Renderer* renderer = new Renderer(&rendererInfo);
 
-    uint32_t numPoints = 50;
-    std::vector<glm::vec3> volume(numPoints);
-    for (uint32_t i = 0; i < numPoints; i++)
-        volume.push_back(glm::ballRand(1.0f));
-        //volume.push_back(glm::linearRand(glm::vec3({-1.f, -1.f, -1.f}), glm::vec3({1.f, 1.f, 1.f})));
+    // Basic random volume
+    srand(time(NULL));
 
-    Octree* octree = new Octree();
-    octree->setVolumeData(volume);
-    octree->setMaxDepth(1, false);
-    octree->generateOctree();
+    uint32_t maxPoints = 1000;
+    std::vector<glm::vec3> volumeData(maxPoints);
+    for (uint32_t i = 0; i < maxPoints; i++)
+        volumeData[i] = glm::linearRand(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1));
 
-    std::vector<Vertex> octreeVertices = octree->_generateMesh();
-    std::vector<uint32_t> octreeIndices = octree->_generateIndices(octreeVertices.size());
+    // Octree generation
+    uint32_t octreeMaxDepth = 4;
+    Octree* octree = new Octree(volumeData, octreeMaxDepth); 
 
-    Model* octreeModel = new Model();
-    octreeModel->setMesh(octreeVertices, octreeIndices);
+    // Octree to texture data
+    std::vector<uint32_t> textureData = octree->compressToTexture();
+ 
+    std::cout << "Original size: " << volumeData.size() * sizeof(float) * 3 << " bytes\n";
+    std::cout << "Compressed size: " << textureData.size() * sizeof(uint32_t) << " bytes\n";
 
-    renderer->addModelToScene(octreeModel);
+    // Texture creation
+    TextureCreateInfo octreeTextureInfo {};
+    octreeTextureInfo.imageType = VK_IMAGE_TYPE_3D;
+    octreeTextureInfo.imageViewType = VK_IMAGE_VIEW_TYPE_3D;
+    octreeTextureInfo.imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    octreeTextureInfo.size = textureData.size() * sizeof(uint32_t);
+    octreeTextureInfo.width = textureData.size() / 8;
+    octreeTextureInfo.height = 2;
+    octreeTextureInfo.depth = 2;
+    octreeTextureInfo.data = textureData.data();
+    VulkanTexture* octreeTexture = renderer->getTexture(&octreeTextureInfo);
+    renderer->attachTextureToPipeline(octreeTexture);
 
-    VulkanBuffer* uniformBuffer = renderer->getUniformBuffer(sizeof(UniformData));
-    renderer->attachUniformBufferToPipeline(uniformBuffer);
-    UniformData uniformData {};
+    // Base quad for rendering
+    std::vector<Vertex> quadMesh = {
+        Vertex({-1, -1, 0}, {0, 0, 0}, {0, 0}),
+        Vertex({1, -1, 0}, {0, 0, 0}, {1, 0}),
+        Vertex({1, 1, 0}, {0, 0, 0}, {1, 1}),
+        Vertex({-1, 1, 0}, {0, 0, 0}, {0, 1})
+    };
 
-    float time = 0.0f;
-    int _time = 0;
-    int maxDepth = 1;
-    bool ascending = true;
+    std::vector<uint32_t> quadIndices = {
+        0, 2, 1,
+        0, 3, 2
+    };
+
+    Model* quadModel = new Model;
+    quadModel->setMesh(quadMesh, quadIndices);
+
+    renderer->addModelToScene(quadModel);
+
     while (!renderer->windowShouldClose()) {
-        renderer->pollEvents();
-
-        if (_time % 350 == 0) {
-            if (maxDepth < 5 && ascending) {
-                maxDepth++;
-                
-                if (maxDepth == 5) ascending = false;
-            }
-            else if (maxDepth > 2 && !ascending) {
-                maxDepth--;
-
-                if (maxDepth == 2) ascending = true;
-            }
-
-            renderer->removeModelFromScene(octreeModel);
-
-            octree->setMaxDepth(maxDepth, true);
-            
-            std::vector<Vertex> octreeVertices = octree->_generateMesh();
-            std::vector<uint32_t> octreeIndices = octree->_generateIndices(octreeVertices.size());
-            
-            octreeModel->setMesh(octreeVertices, octreeIndices);
-
-            renderer->addModelToScene(octreeModel);
-        }
-
-        uniformData.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        uniformData.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        uniformData.proj = glm::perspective(glm::radians(45.0f), 800 / (float) 600, 0.1f, 10.f);
-        uniformData.proj[1][1] *= -1;
-        renderer->updateUniformBufferData(uniformBuffer, &uniformData);
-        time += 0.001f;
-        _time += 1;
+        renderer->pollEvents(); 
 
         renderer->render();
     }

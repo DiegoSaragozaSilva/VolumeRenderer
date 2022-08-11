@@ -14,20 +14,16 @@
 
 class Octree {
 public:
-    Octree() { maxDepth = -1;}
-    Octree(int maxDepth);
+    Octree(std::vector<glm::vec3> volume, int maxDepth);
     ~Octree();
 
-    void setVolumeData(std::vector<glm::vec3> volumeData);
-    void generateOctree();
-    std::vector<Vertex> _generateMesh();
-    std::vector<uint32_t> _generateIndices(uint32_t numVertices);
-    void setMaxDepth(int maxDepth, bool recreate);
+    void generateOctree(std::vector<glm::vec3> volume);
+    std::vector<uint32_t> compressToTexture();
 private:
     OctreeNode* root;
     int maxDepth;
-    std::vector<glm::vec3> volumeData;
-    
+        
     void subdivideNode(OctreeNode* node, std::vector<glm::vec3> nodeVolume, uint32_t currentDepth);
-    std::vector<Vertex> _getMeshFromNode(OctreeNode* node);
+    std::vector<uint32_t> compressNode(OctreeNode* node, uint32_t* nodeIndex);
+    uint32_t getNodeSize(OctreeNode* node);
 };

@@ -1,1 +1,4 @@
 https://developer.nvidia.com/gpugems/gpugems2/part-v-image-oriented-computing/chapter-37-octree-textures-gpu
+https://diglib.eg.org/bitstream/handle/10.2312/EGGH.EGGH89.061-073/061-073.pdf?sequence=1
+https://lsi2.ugr.es/curena/inves/wscg00/revelles-wscg00.pdf
+https://www.yumpu.com/en/document/read/4467323/sparse-voxel-octree-ray-tracing-on-the-gpu-daimi

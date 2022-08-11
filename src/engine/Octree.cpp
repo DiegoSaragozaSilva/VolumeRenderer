@@ -1,28 +1,20 @@
 #include "Octree.hpp"
 
-Octree::Octree(int maxDepth) {
+Octree::Octree(std::vector<glm::vec3> volume, int maxDepth) {
     this->maxDepth = maxDepth;
+
+    generateOctree(volume);
 }
 
 Octree::~Octree() {}
 
-void Octree::setVolumeData(std::vector<glm::vec3> volumeData) {
-    this->volumeData = volumeData;
-}
-
-void Octree::generateOctree() { 
-    if (volumeData.size() == 0) {
-        spdlog::warn("Octree volume data is not set. Octree will not be constructed!");
-        return;
-    }
-
-    spdlog::info("Generating octree with max depth {}...", maxDepth == -1 ? DEFAULT_MAX_DEPTH : maxDepth);
+void Octree::generateOctree(std::vector<glm::vec3> volume) { 
     root = new OctreeNode();
 
     root->minPoint = glm::vec3(std::numeric_limits<float>::max());
     root->maxPoint = glm::vec3(std::numeric_limits<float>::min());
  
-    for (const auto& point : volumeData) {
+    for (const auto& point : volume) {
         root->minPoint.x = point.x < root->minPoint.x ? point.x : root->minPoint.x;
         root->minPoint.y = point.y < root->minPoint.y ? point.y : root->minPoint.y;
         root->minPoint.z = point.z < root->minPoint.z ? point.z : root->minPoint.z;
@@ -32,15 +24,14 @@ void Octree::generateOctree() {
         root->maxPoint.z = point.z > root->maxPoint.z ? point.z : root->maxPoint.z;
     }
 
-    subdivideNode(root, volumeData, 0);
-    spdlog::info("Octree generated successfully!");
+    subdivideNode(root, volume, 0);
 }
 
 void Octree::subdivideNode(OctreeNode* node, std::vector<glm::vec3> nodeVolume, uint32_t currentDepth) {
-    if (maxDepth == -1 && currentDepth == DEFAULT_MAX_DEPTH)
+    if (currentDepth == maxDepth) {
+        node->isLeaf = true;
         return;
-    if (maxDepth != - 1 && currentDepth == maxDepth)
-        return;
+    }
 
     glm::vec3 volumeLength = {
         fabs(node->maxPoint.x - node->minPoint.x),
@@ -72,90 +63,46 @@ void Octree::subdivideNode(OctreeNode* node, std::vector<glm::vec3> nodeVolume, 
             }
 }
 
-std::vector<Vertex> Octree::_generateMesh() {
-    if (root == nullptr) {
-        spdlog::warn("No octree data. No mesh data will be generated!");
-        return {};
-    }
+std::vector<uint32_t> Octree::compressToTexture() {
+    uint32_t numNodes = getNodeSize(root);
 
-    return _getMeshFromNode(root); 
+    uint32_t index = 0;
+    std::vector<uint32_t> data = compressNode(root, &index); 
+    return data; 
 }
 
-std::vector<Vertex> Octree::_getMeshFromNode(OctreeNode* node) {
-    if (node == nullptr)
-        return {};
-
-    bool isLeaf = true;
-    for (uint8_t i = 0; i < 8; i++)
-        if (node->getChild(i) != nullptr) {
-            isLeaf = false;
-            break;
+std::vector<uint32_t> Octree::compressNode(OctreeNode* node, uint32_t* nodeIndex) {
+    std::vector<uint32_t> compressedNode;
+    std::vector<uint32_t> compressedChilds;
+    for (uint32_t i = 0; i < 8; i++) {
+        OctreeNode* child = node->getChild(i);
+        if (child != nullptr) {
+            *nodeIndex += 1;
+            uint32_t lastIndex = *nodeIndex;
+            std::vector<uint32_t> compressedChild = compressNode(child, nodeIndex);
+            compressedChilds.insert(compressedChilds.end(), compressedChild.begin(), compressedChild.end());
+            
+            if (lastIndex == *nodeIndex)
+                compressedNode.insert(compressedNode.end(), (0xF010F0 << 8) | 0xFF);
+            else 
+                compressedNode.insert(compressedNode.end(), (lastIndex << 8) | 0x7F);
         }
+        else
+            compressedNode.insert(compressedNode.end(), 0);
+    }
+    
+    compressedNode.insert(compressedNode.end(), compressedChilds.begin(), compressedChilds.end());
+    return compressedNode;
+}
 
-    std::vector<Vertex> nodeVertices;
-    if (!isLeaf) {
-        for (uint8_t i = 0; i < 8; i++) {
-            std::vector<Vertex> childVertices = _getMeshFromNode(node->getChild(i));
-            nodeVertices.insert(nodeVertices.end(), childVertices.begin(), childVertices.end());
+uint32_t Octree::getNodeSize(OctreeNode* node) {
+    uint32_t numChilds = 0;
+    for (uint32_t i = 0; i < 8; i++) {
+        OctreeNode* child = node->getChild(i);
+        if (child != nullptr) {
+            numChilds++;
+            numChilds += getNodeSize(child);
         }
-
-        return nodeVertices;
     }
-
-    glm::vec3 volumeLength = {
-        fabs(node->maxPoint.x - node->minPoint.x),
-        fabs(node->maxPoint.y - node->minPoint.y),
-        fabs(node->maxPoint.z - node->minPoint.z)
-    };
-
-    for (float y = node->minPoint.y; y <= node->maxPoint.y; y += volumeLength.y)
-        for (float z = node->minPoint.z; z <= node->maxPoint.z; z += volumeLength.z)
-            for (float x = node->minPoint.x; x <= node->maxPoint.x; x += volumeLength.x) {
-                glm::vec3 pos = {x, y, z};
-                glm::vec3 color = {0.5f, 1.f, 0.25f};
-                glm::vec2 uv = {0.0f, 0.0f}; 
-
-                Vertex v = Vertex(pos, color, uv);
-                nodeVertices.push_back(v);
-            }
-
-    return nodeVertices;
-}
-
-std::vector<uint32_t> Octree::_generateIndices(uint32_t numVertices) {
-    std::vector<uint32_t> indices;
-    for (uint32_t i = 0, j = 0; i < numVertices / 8; i++, j = i * 8) {
-        // front face
-        indices.insert(indices.end(), {0 + j, 1 + j, 5 + j});
-        indices.insert(indices.end(), {5 + j, 4 + j, 0 + j});
-
-        // back face
-        indices.insert(indices.end(), {3 + j, 2 + j, 6 + j});
-        indices.insert(indices.end(), {6 + j, 7 + j, 3 + j});
-
-        // top face
-        indices.insert(indices.end(), {4 + j, 5 + j, 7 + j});
-        indices.insert(indices.end(), {7 + j, 6 + j, 4 + j});
-        
-        // bottom face
-        indices.insert(indices.end(), {0 + j, 2 + j, 3 + j});
-        indices.insert(indices.end(), {3 + j, 1 + j, 0 + j});
-    
-        // left face
-        indices.insert(indices.end(), {2 + j, 0 + j, 4 + j});
-        indices.insert(indices.end(), {4 + j, 6 + j, 2 + j});
-    
-        // right face
-        indices.insert(indices.end(), {1 + j, 3 + j, 7 + j});
-        indices.insert(indices.end(), {7 + j, 5 + j, 1 + j});
-    }
-
-    return indices;
-}
-
-void Octree::setMaxDepth(int maxDepth, bool recreate) {
-    this->maxDepth = maxDepth;
-
-    if (recreate)
-        generateOctree();
+    return numChilds;
 }

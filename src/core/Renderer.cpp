@@ -84,8 +84,8 @@ Renderer::Renderer(RendererCreateInfo* info) {
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
     // [NOTE] User should be able to bind own vertex and fragment shaders
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_octree_raytracing.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_octree_raytracing.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
     spdlog::info("Basic vulkan graphics pipeline successfully created!");
 
@@ -546,7 +546,7 @@ void Renderer::recreateGraphicsPipeline() {
     std::vector<VkDescriptorSetLayout> layouts = {vulkanDescriptorSetHandler->getDescriptorSetLayout()};
     vulkanGraphicsPipelineInfo.descriptorSetLayouts = layouts;
     vulkanGraphicsPipelineInfo.numSubPasses = 0;
-    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert.spv");
-    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag.spv");
+    vulkanGraphicsPipelineInfo.vertexShaderCode = readFile("shaders/vert_octree_raytracing.spv");
+    vulkanGraphicsPipelineInfo.fragmentShaderCode = readFile("shaders/frag_octree_raytracing.spv");
     vulkanGraphicsPipeline = new VulkanGraphicsPipeline(&vulkanGraphicsPipelineInfo);
 }
