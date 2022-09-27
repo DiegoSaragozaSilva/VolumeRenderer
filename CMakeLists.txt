@@ -1,24 +1,19 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.1)
 project(VolumeRenderer)
 
-add_compile_options(-std=c++17 -O2)
+add_compile_options(-O3 -Wall -pedantic)
 
-find_package(spdlog REQUIRED)
-find_package(glfw3 3.3 REQUIRED)
+# Build GLFW from include folder
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only")
+set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")
 
-file(GLOB Sources src/*/*.cpp /usr/lib/stb/*.h)
-list(REMOVE_ITEM Sources ["src/core/Vulkan.hpp","src/core/Vulkan.cpp"])
+add_subdirectory("include/glfw")
 
-file(GLOB SpvFiles src/shaders/*.spv)
-file(GLOB Textures src/textures/*)
-file(GLOB Volumes src/volumes/*)
+# Build spdlog from include folder
+add_subdirectory("include/spdlog")
 
-add_executable(VulkanTest main.cpp ${Sources})
+# Executable
+add_executable(Renderer main.cpp ${Sources})
 
-target_link_libraries(VulkanTest PRIVATE spdlog::spdlog glfw vulkan)
-target_include_directories(VulkanTest PRIVATE "/usr/lib/stb/")
-target_include_directories(VulkanTest PRIVATE "include")
-
-file(COPY ${SpvFiles} DESTINATION ${CMAKE_BINARY_DIR}/shaders)
-file(COPY ${Textures} DESTINATION ${CMAKE_BINARY_DIR}/textures)
-file(COPY ${Volumes} DESTINATION ${CMAKE_BINARY_DIR}/volumes)
+# Libray linking
+target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw vulkan)
