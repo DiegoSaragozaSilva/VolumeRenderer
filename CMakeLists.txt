@@ -15,6 +15,9 @@ add_subdirectory("include/spdlog")
 # Build VulkanMemoryAllocator from include folder
 add_subdirectory("include/VulkanMemoryAllocator")
 
+# Build glm from include folder
+add_subdirectory("include/glm")
+
 # Force Vulkan packaged be required
 find_package(Vulkan REQUIRED)
 
