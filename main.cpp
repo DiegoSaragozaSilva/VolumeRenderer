@@ -5,8 +5,10 @@
 #include <vulkan/vulkan.hpp>
 #include <spdlog/spdlog.h>
 
+#include "src/render_engine/Window.hpp"
+
 int main() {
-    spdlog::info("All working!");
+    Window* window = new Window(640, 320, "New window"); 
 
     return 1;
 }

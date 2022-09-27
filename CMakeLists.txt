@@ -18,8 +18,11 @@ add_subdirectory("include/VulkanMemoryAllocator")
 # Force Vulkan packaged be required
 find_package(Vulkan REQUIRED)
 
+# Cpp and hpp dependencies
+file(GLOB SOURCES src/*/*.hpp src/*/*.cpp)
+
 # Executable
-add_executable(Renderer main.cpp ${Sources})
+add_executable(Renderer main.cpp ${SOURCES})
 
 # Include directory
 include_directories("include")
