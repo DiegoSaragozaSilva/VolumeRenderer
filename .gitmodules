@@ -1,0 +1,6 @@
+[submodule "include/glfw"]
+	path = include/glfw
+	url = https://www.github.com/glfw/glfw
+[submodule "include/spdlog"]
+	path = include/spdlog
+	url = https://www.github.com/gabime/spdlog
