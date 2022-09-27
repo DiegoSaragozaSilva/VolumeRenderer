@@ -9,6 +9,6 @@
 
 int main() {
     Window* window = new Window(640, 320, "New window"); 
-
+    delete window;
     return 1;
 }

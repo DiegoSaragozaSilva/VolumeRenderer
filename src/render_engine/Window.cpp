@@ -25,3 +25,12 @@ Window::Window(int width, int height, std::string name) {
         spdlog::info("Window successfully created. " + windowInformation);
     #endif
 }
+
+Window::~Window() {
+    // GLFW termination
+    glfwTerminate();
+
+    #ifndef NDEBUG
+        spdlog::info("GLFW successfully terminated.");
+    #endif
+}
