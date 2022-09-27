@@ -12,8 +12,14 @@ add_subdirectory("include/glfw")
 # Build spdlog from include folder
 add_subdirectory("include/spdlog")
 
+# Force Vulkan packaged be required
+find_package(Vulkan REQUIRED)
+
 # Executable
 add_executable(Renderer main.cpp ${Sources})
+
+# Include directory
+include_directories("include")
 
 # Libray linking
 target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw vulkan)
