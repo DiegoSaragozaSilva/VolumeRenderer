@@ -4,6 +4,7 @@ Window::Window(int width, int height, std::string name) {
     this->width = width;
     this->height = height;
     this->name = name;
+    this->hasSurfaceBeenCreated = false;
 
     // Initialize GLFW
     if (glfwInit() != GLFW_TRUE) {
@@ -22,7 +23,7 @@ Window::Window(int width, int height, std::string name) {
     window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
 
     #ifndef NDEBUG
-        std::string windowInformation = "(" + std::to_string(width) + ", " + std::to_string(height) + ")";
+        std::string windowInformation = "Window '" + name + "': " + "(" + std::to_string(width) + ", " + std::to_string(height) + ")";
         spdlog::info("Window successfully created. " + windowInformation);
     #endif
 }
@@ -45,4 +46,17 @@ std::vector<const char*> Window::getGLFWExtensions() {
 
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
     return extensions;
+}
+
+vk::SurfaceKHR* getWindowSurface(vk::Instance* instance) {
+    // If window surface has never been created, create and return it
+    if (!hasSurfaceBeenCreated) {
+        hasSurfaceBeenCreated = true;
+        vk::Result creationError = glfwCreateWindowSurface(instance, window, NULL, &surface);
+        if (creationError) {
+            spdlog::error("Failed to create GLFW window surface.");
+            throw 0;
+        }
+    }
+    return &surface;
 }
