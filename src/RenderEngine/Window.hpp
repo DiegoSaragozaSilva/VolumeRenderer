@@ -8,6 +8,8 @@ class Window {
 public:
     Window(int width, int height, std::string name);
     ~Window();
+
+    std::vector<const char*> getGLFWExtensions();
 private:
     int width, height;
     std::string name;

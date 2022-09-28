@@ -6,7 +6,7 @@
 #include <spdlog/spdlog.h>
 #include <glm/glm.hpp>
 
-#include "src/render_engine/RenderEngine.hpp"
+#include "src/RenderEngine/RenderEngine.hpp"
 
 int main() {
     RenderEngine* renderEngine = new RenderEngine();

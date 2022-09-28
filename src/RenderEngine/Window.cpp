@@ -17,6 +17,7 @@ Window::Window(int width, int height, std::string name) {
     #endif
 
     // Window creation
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
 
@@ -28,9 +29,20 @@ Window::Window(int width, int height, std::string name) {
 
 Window::~Window() {
     // GLFW termination
+    glfwDestroyWindow(window);
     glfwTerminate();
 
     #ifndef NDEBUG
         spdlog::info("GLFW successfully terminated.");
     #endif
+}
+
+std::vector<const char*> Window::getGLFWExtensions() {
+    // Enumerate all the glfw instance required extensions
+    const char** glfwExtensions;
+    uint32_t glfwExtensionCount = 0;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    return extensions;
 }
