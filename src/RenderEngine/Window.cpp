@@ -48,15 +48,18 @@ std::vector<const char*> Window::getGLFWExtensions() {
     return extensions;
 }
 
-vk::SurfaceKHR* getWindowSurface(vk::Instance* instance) {
+vk::SurfaceKHR* Window::getSurface(vk::Instance* instance) {
     // If window surface has never been created, create and return it
     if (!hasSurfaceBeenCreated) {
         hasSurfaceBeenCreated = true;
-        vk::Result creationError = glfwCreateWindowSurface(instance, window, NULL, &surface);
-        if (creationError) {
+
+        VkSurfaceKHR pSurface = VkSurfaceKHR(surface);        
+        auto creationError = glfwCreateWindowSurface(*instance, window, NULL, &pSurface);
+        if (creationError != 0) {
             spdlog::error("Failed to create GLFW window surface.");
             throw 0;
         }
+        surface = vk::SurfaceKHR(pSurface);
     }
     return &surface;
 }

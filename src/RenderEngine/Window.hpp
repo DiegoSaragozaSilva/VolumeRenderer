@@ -11,7 +11,7 @@ public:
     ~Window();
 
     std::vector<const char*> getGLFWExtensions();
-    vk::SurfaceKHR* getWindowSurface(vk::Instance* instance);
+    vk::SurfaceKHR* getSurface(vk::Instance* instance);
 private:
     bool hasSurfaceBeenCreated;
     int width, height;

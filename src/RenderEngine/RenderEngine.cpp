@@ -8,8 +8,10 @@ RenderEngine::RenderEngine() {
 
 RenderEngine::~RenderEngine() {
     // Clean up
+    vulkan.instance->getInstance()->destroySurfaceKHR(*window->getSurface(vulkan.instance->getInstance()));
     delete window;
-    delete instance;
+    delete vulkan.device;
+    delete vulkan.instance;
 }
 
 void RenderEngine::initWindow() {
@@ -19,5 +21,8 @@ void RenderEngine::initWindow() {
 
 void RenderEngine::initVulkan() {
     // Vulkan instance initialization
-    instance = new Instance("Render Engine", "Render Engine", window->getGLFWExtensions());    
+    vulkan.instance = new Instance("Render Engine", "Render Engine", window->getGLFWExtensions());    
+
+    // Vulkan device initialization
+    vulkan.device = new Device(vulkan.instance->getInstance(), window->getSurface(vulkan.instance->getInstance()));
 }
