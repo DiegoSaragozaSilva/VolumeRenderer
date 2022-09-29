@@ -1,6 +1,6 @@
 #include "Window.hpp"
 
-Window::Window(int width, int height, std::string name) {
+Window::Window(uint32_t width, uint32_t height, std::string name) {
     this->width = width;
     this->height = height;
     this->name = name;
@@ -34,7 +34,7 @@ Window::~Window() {
     glfwTerminate();
 
     #ifndef NDEBUG
-        spdlog::info("GLFW successfully terminated.");
+        spdlog::info("GLFW successfully terminated and window destroyed.");
     #endif
 }
 
@@ -62,4 +62,12 @@ vk::SurfaceKHR* Window::getSurface(vk::Instance* instance) {
         surface = vk::SurfaceKHR(pSurface);
     }
     return &surface;
+}
+
+uint32_t Window::getWidth() {
+    return width;
+}
+
+uint32_t Window::getHeight() {
+    return height;
 }

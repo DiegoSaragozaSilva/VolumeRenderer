@@ -7,10 +7,18 @@ RenderEngine::RenderEngine() {
 }
 
 RenderEngine::~RenderEngine() {
-    // Clean up
+    // Swapchain destruction
+    vulkan.device->getLogicalDevice()->destroySwapchainKHR(*vulkan.swapchain->getSwapchain());
+    delete vulkan.swapchain;
+
+    // Window destruction
     vulkan.instance->getInstance()->destroySurfaceKHR(*window->getSurface(vulkan.instance->getInstance()));
     delete window;
+
+    // Device destruction
     delete vulkan.device;
+
+    // Instance destruction
     delete vulkan.instance;
 }
 
@@ -25,4 +33,7 @@ void RenderEngine::initVulkan() {
 
     // Vulkan device initialization
     vulkan.device = new Device(vulkan.instance->getInstance(), window->getSurface(vulkan.instance->getInstance()));
+
+    // Vulkan swapchain initialization
+    vulkan.swapchain = new Swapchain(vulkan.device, window->getSurface(vulkan.instance->getInstance()), window->getWidth(), window->getHeight());
 }

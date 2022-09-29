@@ -5,7 +5,7 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
     pickPhysicalDevice(instance);
 
     // Querying the physical device queue families for graphics and presentation queues
-    QueueConfig queueConfig = queryPhysicalDeviceQueues(windowSurface);
+    queueConfig = queryPhysicalDeviceQueues(windowSurface);
 
     // Logical device creation
     // Queue priority (not relevant)
@@ -61,7 +61,7 @@ Device::~Device() {
     logicalDevice.destroy(); 
 
     #ifndef NDEBUG
-        spdlog::info("Vulkan logical device successfully destroyed.");
+        spdlog::info("Vulkan device successfully destroyed.");
     #endif
 }
 
@@ -166,4 +166,24 @@ QueueConfig Device::queryPhysicalDeviceQueues(vk::SurfaceKHR* windowSurface) {
     queueConfig.hasDifferentIndices = queueConfig.graphicsQueueIndex != queueConfig.presentationQueueIndex;
 
     return queueConfig;
+}
+
+vk::PhysicalDevice* Device::getPhysicalDevice() {
+    return &physicalDevice;
+}
+
+vk::Device* Device::getLogicalDevice() {
+    return &logicalDevice;
+}
+
+uint32_t Device::getGraphicsQueueIndex() {
+    return queueConfig.graphicsQueueIndex;
+}
+
+uint32_t Device::getPresentationQueueIndex() {
+    return queueConfig.presentationQueueIndex;
+}
+
+bool Device::hasPresentationQueue() {
+    return queueConfig.hasDifferentIndices;
 }

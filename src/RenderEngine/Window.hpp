@@ -7,14 +7,16 @@
 
 class Window {
 public:
-    Window(int width, int height, std::string name);
+    Window(uint32_t width, uint32_t height, std::string name);
     ~Window();
 
     std::vector<const char*> getGLFWExtensions();
     vk::SurfaceKHR* getSurface(vk::Instance* instance);
+    uint32_t getWidth();
+    uint32_t getHeight();
 private:
     bool hasSurfaceBeenCreated;
-    int width, height;
+    uint32_t width, height;
     std::string name;
     GLFWwindow* window;
     vk::SurfaceKHR surface;
