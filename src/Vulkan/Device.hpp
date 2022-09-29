@@ -1,6 +1,7 @@
 #ifndef _DEVICE_H_
 #define _DEVICE_H_
 
+#include <iostream>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
 
@@ -20,6 +21,8 @@ public:
     uint32_t getGraphicsQueueIndex();
     uint32_t getPresentationQueueIndex();
     bool hasPresentationQueue();
+    void destroySwapchain(vk::SwapchainKHR* swapchain);
+    void destroyImageView(vk::ImageView* imageView);
 private:
     vk::PhysicalDevice physicalDevice;
     vk::Device logicalDevice;

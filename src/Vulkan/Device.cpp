@@ -187,3 +187,13 @@ uint32_t Device::getPresentationQueueIndex() {
 bool Device::hasPresentationQueue() {
     return queueConfig.hasDifferentIndices;
 }
+
+void Device::destroySwapchain(vk::SwapchainKHR* swapchain) {
+    logicalDevice.destroySwapchainKHR(*swapchain);
+    swapchain = nullptr;
+}
+
+void Device::destroyImageView(vk::ImageView* imageView) {
+    logicalDevice.destroyImageView(*imageView);
+    imageView = nullptr;
+}

@@ -20,6 +20,7 @@ public:
     ~Swapchain();
 
     vk::SwapchainKHR* getSwapchain();
+    std::vector<vk::ImageView> getImageViews();
 private:
     vk::SwapchainKHR swapchain;
     std::vector<ImageView> imageViews;

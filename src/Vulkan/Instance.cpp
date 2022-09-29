@@ -34,7 +34,7 @@ Instance::Instance(std::string applicationName, std::string engineName, std::vec
     #endif
 
     // Instance creation
-    vkInstance = vk::createInstance(instanceCreateInfo);
+    instance = vk::createInstance(instanceCreateInfo);
 
     #ifndef NDEBUG
         std::string instanceInfo = "App name: " + applicationName + " | Engine name: " + engineName + " | Validation layers: ";
@@ -46,7 +46,7 @@ Instance::Instance(std::string applicationName, std::string engineName, std::vec
 
 Instance::~Instance() {
     // Vulkan instance destruction
-    vkInstance.destroy();
+    instance.destroy();
 
     #ifndef NDEBUG
         spdlog::info("Vulkan instance successfully destroyed.");
@@ -54,7 +54,7 @@ Instance::~Instance() {
 }
 
 vk::Instance* Instance::getInstance() {
-    return &vkInstance;
+    return &instance;
 }
 
 bool Instance::checkValidationLayersSupport(std::vector<const char*> requestedLayers) {
@@ -76,4 +76,9 @@ bool Instance::checkValidationLayersSupport(std::vector<const char*> requestedLa
     }
 
     return true;
+}
+
+void Instance::destroySurface(vk::SurfaceKHR* surface) {
+    instance.destroySurfaceKHR(*surface);
+    surface = nullptr;
 }

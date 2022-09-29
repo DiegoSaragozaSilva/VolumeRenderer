@@ -13,6 +13,8 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidt
 
     // List all the surface capabilities
     vk::SurfaceCapabilitiesKHR surfaceCapabilities = device->getPhysicalDevice()->getSurfaceCapabilitiesKHR(*surface);
+    if (surfaceCapabilities.maxImageCount > 0 && surfaceCapabilities.minImageCount > surfaceCapabilities.maxImageCount)
+        surfaceCapabilities.minImageCount = surfaceCapabilities.maxImageCount;
 
     // Swapchain creation
     vk::SwapchainCreateInfoKHR swapchainCreateInfo(vk::SwapchainCreateFlagsKHR(),
@@ -50,7 +52,7 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidt
     imageViews = createImageViews(device->getLogicalDevice());
 
     #ifndef NDEBUG
-        std::string swapchainInfo = "Images: (" + std::to_string(imageWidth) + ", " + std::to_string(imageHeight) + ") | " + 
+        std::string swapchainInfo = "Size: (" + std::to_string(imageWidth) + ", " + std::to_string(imageHeight) + ") | " + 
                                     "Image count: " + std::to_string(surfaceCapabilities.minImageCount) + " | " +
                                     "Present mode: " + std::to_string((int)presentMode) + " | " + 
                                     "Format: " + std::to_string((int)format.colorFormat);
@@ -130,7 +132,8 @@ std::vector<ImageView> Swapchain::createImageViews(vk::Device* logicalDevice) {
     std::vector<ImageView> imageViews;
 
     // Create a new image view for each image in the swapchain
-    for (const auto& image : logicalDevice->getSwapchainImagesKHR(swapchain))
+    std::vector<vk::Image> swapchainImages = logicalDevice->getSwapchainImagesKHR(swapchain);
+    for (const auto& image : swapchainImages)
         imageViews.push_back(ImageView(logicalDevice,
                                        image,
                                        vk::ImageViewType::e2D,
@@ -138,4 +141,11 @@ std::vector<ImageView> Swapchain::createImageViews(vk::Device* logicalDevice) {
                                        vk::ImageAspectFlagBits::eColor,
                                        1));
     return imageViews;    
+}
+
+std::vector<vk::ImageView> Swapchain::getImageViews() {
+    std::vector<vk::ImageView> pImageViews;
+    for (ImageView imageView : imageViews)
+        pImageViews.push_back(*imageView.getImageView());
+    return pImageViews;
 }

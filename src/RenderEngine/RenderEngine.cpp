@@ -8,11 +8,15 @@ RenderEngine::RenderEngine() {
 
 RenderEngine::~RenderEngine() {
     // Swapchain destruction
-    vulkan.device->getLogicalDevice()->destroySwapchainKHR(*vulkan.swapchain->getSwapchain());
+    std::vector<vk::ImageView> swapchainImageViews = vulkan.swapchain->getImageViews();
+    for (vk::ImageView imageView : swapchainImageViews) {
+        vulkan.device->destroyImageView(&imageView);
+    }
+    vulkan.device->destroySwapchain(vulkan.swapchain->getSwapchain());
     delete vulkan.swapchain;
 
     // Window destruction
-    vulkan.instance->getInstance()->destroySurfaceKHR(*window->getSurface(vulkan.instance->getInstance()));
+    vulkan.instance->destroySurface(window->getSurface(vulkan.instance->getInstance()));
     delete window;
 
     // Device destruction

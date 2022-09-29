@@ -10,9 +10,10 @@ public:
     ~Instance();
 
     vk::Instance* getInstance();
+    void destroySurface(vk::SurfaceKHR* surface);
 private:
     std::string applicationName, engineName;
-    vk::Instance vkInstance;
+    vk::Instance instance;
 
     bool checkValidationLayersSupport(std::vector<const char*> validationLayers);
 };
