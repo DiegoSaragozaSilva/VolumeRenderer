@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "Device.hpp"
+#include "ImageView.hpp"
 
 struct SwapchainFormat {
     vk::ColorSpaceKHR colorSpace;
@@ -21,7 +22,7 @@ public:
     vk::SwapchainKHR* getSwapchain();
 private:
     vk::SwapchainKHR swapchain;
-    std::vector<vk::Image> swapchainImages;
+    std::vector<ImageView> imageViews;
     SwapchainFormat format;
     vk::PresentModeKHR presentMode;
     vk::Extent2D extent;
@@ -29,6 +30,7 @@ private:
 
     SwapchainFormat getFormat(vk::PhysicalDevice* physicalDevice, vk::SurfaceKHR surface);
     vk::PresentModeKHR getPresentMode(vk::PhysicalDevice* physicalDevice, vk::SurfaceKHR surface); 
+    std::vector<ImageView> createImageViews(vk::Device* logicalDevice);
 };
 
 #endif

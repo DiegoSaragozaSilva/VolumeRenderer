@@ -5,7 +5,10 @@ Instance::Instance(std::string applicationName, std::string engineName, std::vec
     this->engineName = engineName;
 
     // Application information
-    vk::ApplicationInfo applicationInfo(applicationName.c_str(), 1, engineName.c_str(), VK_API_VERSION_1_1);
+    vk::ApplicationInfo applicationInfo(applicationName.c_str(),
+                                        1,
+                                        engineName.c_str(),
+                                        VK_API_VERSION_1_1);
 
     // Instance create information
     vk::InstanceCreateInfo instanceCreateInfo(vk::InstanceCreateFlags(),

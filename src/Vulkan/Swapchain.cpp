@@ -46,6 +46,9 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidt
 
     swapchain = device->getLogicalDevice()->createSwapchainKHR(swapchainCreateInfo);
 
+    // Image views creation
+    imageViews = createImageViews(device->getLogicalDevice());
+
     #ifndef NDEBUG
         std::string swapchainInfo = "Images: (" + std::to_string(imageWidth) + ", " + std::to_string(imageHeight) + ") | " + 
                                     "Image count: " + std::to_string(surfaceCapabilities.minImageCount) + " | " +
@@ -121,4 +124,18 @@ vk::PresentModeKHR Swapchain::getPresentMode(vk::PhysicalDevice* physicalDevice,
 
 vk::SwapchainKHR* Swapchain::getSwapchain() {
     return &swapchain;
+}
+
+std::vector<ImageView> Swapchain::createImageViews(vk::Device* logicalDevice) {
+    std::vector<ImageView> imageViews;
+
+    // Create a new image view for each image in the swapchain
+    for (const auto& image : logicalDevice->getSwapchainImagesKHR(swapchain))
+        imageViews.push_back(ImageView(logicalDevice,
+                                       image,
+                                       vk::ImageViewType::e2D,
+                                       format.colorFormat,
+                                       vk::ImageAspectFlagBits::eColor,
+                                       1));
+    return imageViews;    
 }
