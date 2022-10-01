@@ -7,6 +7,12 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
     // Querying the physical device queue families for graphics and presentation queues
     queueConfig = queryPhysicalDeviceQueues(windowSurface);
 
+    // Querying multisampling level
+    multiSamplingLevel = queryMultiSamplingLevel();
+
+    // Querying depth format
+    depthFormat = queryDepthFormat();
+
     // Logical device creation
     // Queue priority (not relevant)
     const float deviceQueuePriority = 1.0f;
@@ -168,6 +174,42 @@ QueueConfig Device::queryPhysicalDeviceQueues(vk::SurfaceKHR* windowSurface) {
     return queueConfig;
 }
 
+vk::SampleCountFlagBits Device::queryMultiSamplingLevel() {
+    // List all the sampling levels supported
+    vk::PhysicalDeviceProperties properties = physicalDevice.getProperties();
+    vk::SampleCountFlags supportedSampleCountFlags = properties.limits.framebufferColorSampleCounts;
+
+    // Preferred multisampling count. Lower index means higher preferrence
+    std::vector<vk::SampleCountFlagBits> preferredSampleCounts = {
+        vk::SampleCountFlagBits::e8,
+        vk::SampleCountFlagBits::e4,
+        vk::SampleCountFlagBits::e2,
+        vk::SampleCountFlagBits::e1,
+    };
+
+    // Find the multisampling count that the physical device supports first
+    for (vk::SampleCountFlagBits sampleCount : preferredSampleCounts)
+        if (supportedSampleCountFlags & sampleCount)
+            return sampleCount;
+
+    // At least one multisampling count must be supported
+    spdlog::error("No multisampling supported.");
+    throw 0;
+}
+
+vk::Format Device::queryDepthFormat() {
+    // List all format properties available
+    vk::FormatProperties formatProperties = physicalDevice.getFormatProperties(vk::Format::eD32Sfloat);
+
+    // Check support for for 32 bit stencil format
+    if (formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment)
+        return vk::Format::eD32Sfloat;
+
+    // Throw if not supported
+    spdlog::error("32 bit depth stencil not supported.");
+    throw 0;
+}
+
 vk::PhysicalDevice* Device::getPhysicalDevice() {
     return &physicalDevice;
 }
@@ -184,6 +226,14 @@ uint32_t Device::getPresentationQueueIndex() {
     return queueConfig.presentationQueueIndex;
 }
 
+vk::SampleCountFlagBits Device::getMultiSamplingLevel() {
+    return multiSamplingLevel;
+}
+
+vk::Format Device::getDepthFormat() {
+    return depthFormat;
+}
+
 bool Device::hasPresentationQueue() {
     return queueConfig.hasDifferentIndices;
 }
@@ -196,4 +246,9 @@ void Device::destroySwapchain(vk::SwapchainKHR* swapchain) {
 void Device::destroyImageView(vk::ImageView* imageView) {
     logicalDevice.destroyImageView(*imageView);
     imageView = nullptr;
+}
+
+void Device::destroyRenderPass(vk::RenderPass* renderPass) {
+    logicalDevice.destroyRenderPass(*renderPass);
+    renderPass = nullptr;
 }

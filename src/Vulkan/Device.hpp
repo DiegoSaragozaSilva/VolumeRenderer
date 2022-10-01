@@ -21,15 +21,22 @@ public:
     uint32_t getGraphicsQueueIndex();
     uint32_t getPresentationQueueIndex();
     bool hasPresentationQueue();
+    vk::SampleCountFlagBits getMultiSamplingLevel();
+    vk::Format getDepthFormat();
     void destroySwapchain(vk::SwapchainKHR* swapchain);
     void destroyImageView(vk::ImageView* imageView);
+    void destroyRenderPass(vk::RenderPass* renderPass);
 private:
     vk::PhysicalDevice physicalDevice;
     vk::Device logicalDevice;
     QueueConfig queueConfig;
+    vk::SampleCountFlagBits multiSamplingLevel;
+    vk::Format depthFormat;
 
     void pickPhysicalDevice(vk::Instance* instance);
     QueueConfig queryPhysicalDeviceQueues(vk::SurfaceKHR* windowSurface);
+    vk::SampleCountFlagBits queryMultiSamplingLevel();
+    vk::Format queryDepthFormat();
 };
 
 #endif

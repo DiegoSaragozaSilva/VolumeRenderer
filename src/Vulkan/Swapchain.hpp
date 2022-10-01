@@ -21,9 +21,10 @@ public:
 
     vk::SwapchainKHR* getSwapchain();
     std::vector<vk::ImageView> getImageViews();
+    vk::Format getColorFormat();
 private:
     vk::SwapchainKHR swapchain;
-    std::vector<ImageView> imageViews;
+    std::vector<ImageView*> imageViews;
     SwapchainFormat format;
     vk::PresentModeKHR presentMode;
     vk::Extent2D extent;
@@ -31,7 +32,7 @@ private:
 
     SwapchainFormat getFormat(vk::PhysicalDevice* physicalDevice, vk::SurfaceKHR surface);
     vk::PresentModeKHR getPresentMode(vk::PhysicalDevice* physicalDevice, vk::SurfaceKHR surface); 
-    std::vector<ImageView> createImageViews(vk::Device* logicalDevice);
+    std::vector<ImageView*> createImageViews(vk::Device* logicalDevice);
 };
 
 #endif

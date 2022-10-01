@@ -61,6 +61,10 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidt
 }
 
 Swapchain::~Swapchain() {
+    // Image view destruction
+    for (const auto& imageView : imageViews)
+        delete imageView;
+
     #ifndef NDEBUG
         spdlog::info("Vulkan swapchain successfully destroyed.");
     #endif
@@ -128,24 +132,28 @@ vk::SwapchainKHR* Swapchain::getSwapchain() {
     return &swapchain;
 }
 
-std::vector<ImageView> Swapchain::createImageViews(vk::Device* logicalDevice) {
-    std::vector<ImageView> imageViews;
+std::vector<ImageView*> Swapchain::createImageViews(vk::Device* logicalDevice) {
+    std::vector<ImageView*> imageViews;
 
     // Create a new image view for each image in the swapchain
     std::vector<vk::Image> swapchainImages = logicalDevice->getSwapchainImagesKHR(swapchain);
     for (const auto& image : swapchainImages)
-        imageViews.push_back(ImageView(logicalDevice,
-                                       image,
-                                       vk::ImageViewType::e2D,
-                                       format.colorFormat,
-                                       vk::ImageAspectFlagBits::eColor,
-                                       1));
+        imageViews.push_back(new ImageView(logicalDevice,
+                                           image,
+                                           vk::ImageViewType::e2D,
+                                           format.colorFormat,
+                                           vk::ImageAspectFlagBits::eColor,
+                                           1));
     return imageViews;    
 }
 
 std::vector<vk::ImageView> Swapchain::getImageViews() {
     std::vector<vk::ImageView> pImageViews;
-    for (ImageView imageView : imageViews)
-        pImageViews.push_back(*imageView.getImageView());
+    for (ImageView* imageView : imageViews)
+        pImageViews.push_back(*imageView->getImageView());
     return pImageViews;
+}
+
+vk::Format Swapchain::getColorFormat() {
+    return format.colorFormat; 
 }

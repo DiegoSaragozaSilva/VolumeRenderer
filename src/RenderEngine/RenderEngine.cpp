@@ -4,16 +4,24 @@ RenderEngine::RenderEngine() {
     // Initializing all basic componentes and Vulkan
     initWindow();
     initVulkan();
+
+    #ifndef NDEBUG
+        spdlog::info("Render engine successfully initialized");
+    #endif
 }
 
 RenderEngine::~RenderEngine() {
+    // Render pass destruction
+    vulkan.device->destroyRenderPass(render.renderPass->getRenderPass());
+    delete render.renderPass;
+
     // Swapchain destruction
-    std::vector<vk::ImageView> swapchainImageViews = vulkan.swapchain->getImageViews();
+    std::vector<vk::ImageView> swapchainImageViews = render.swapchain->getImageViews();
     for (vk::ImageView imageView : swapchainImageViews) {
         vulkan.device->destroyImageView(&imageView);
     }
-    vulkan.device->destroySwapchain(vulkan.swapchain->getSwapchain());
-    delete vulkan.swapchain;
+    vulkan.device->destroySwapchain(render.swapchain->getSwapchain());
+    delete render.swapchain;
 
     // Window destruction
     vulkan.instance->destroySurface(window->getSurface(vulkan.instance->getInstance()));
@@ -24,6 +32,10 @@ RenderEngine::~RenderEngine() {
 
     // Instance destruction
     delete vulkan.instance;
+
+    #ifndef NDEBUG
+        spdlog::info("Render engine successfully destroyed");
+    #endif
 }
 
 void RenderEngine::initWindow() {
@@ -39,5 +51,8 @@ void RenderEngine::initVulkan() {
     vulkan.device = new Device(vulkan.instance->getInstance(), window->getSurface(vulkan.instance->getInstance()));
 
     // Vulkan swapchain initialization
-    vulkan.swapchain = new Swapchain(vulkan.device, window->getSurface(vulkan.instance->getInstance()), window->getWidth(), window->getHeight());
+    render.swapchain = new Swapchain(vulkan.device, window->getSurface(vulkan.instance->getInstance()), window->getWidth(), window->getHeight());
+
+    // Vulkan render pass initialization
+    render.renderPass = new RenderPass(vulkan.device, render.swapchain);
 }

@@ -4,13 +4,19 @@
 #include "../Vulkan/Instance.hpp"
 #include "../Vulkan/Device.hpp"
 #include "../Vulkan/Swapchain.hpp"
+#include "../Vulkan/RenderPass.hpp"
 #include "Window.hpp"
 
 // Struct that holds all vulkan context variables
 struct Vulkan {
     Instance* instance;
     Device* device;
+};
+
+// Struct that holds all vulkan render context variables
+struct Render {
     Swapchain* swapchain;
+    RenderPass* renderPass;
 };
 
 class RenderEngine {
@@ -20,6 +26,7 @@ public:
 private:
     Window* window;
     Vulkan vulkan;
+    Render render;
 
     void initWindow();
     void initVulkan();

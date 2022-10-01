@@ -27,12 +27,14 @@ ImageView::ImageView(vk::Device* logicalDevice, vk::Image image, vk::ImageViewTy
         std::string imageViewInfo = "Type: " + std::to_string((int)type) + " | " +
                                     "Format: " + std::to_string((int)format) + " | " +
                                     "Mipmap level: " + std::to_string(mipmapLevel);
-        spdlog::info("Image view successfully created. " + imageViewInfo);
+        spdlog::info("Vulkan Image view successfully created. " + imageViewInfo);
     #endif
 }
 
 ImageView::~ImageView() {
-
+    #ifndef NDEBUG
+        spdlog::info("Vulkan image view successfully destroyed.");
+    #endif
 }
 
 vk::ImageView* ImageView::getImageView() {
