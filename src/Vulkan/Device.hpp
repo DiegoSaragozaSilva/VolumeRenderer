@@ -24,10 +24,14 @@ public:
     vk::SampleCountFlagBits getMultiSamplingLevel();
     vk::Format getDepthFormat();
     vk::Queue getGraphicsQueue();
+    uint32_t getMemoryTypeIndex(uint32_t filter, vk::MemoryPropertyFlags flags);
     void destroySwapchain(vk::SwapchainKHR* swapchain);
+    void destroyImage(vk::Image image);
     void destroyImageView(vk::ImageView* imageView);
     void destroyRenderPass(vk::RenderPass* renderPass);
     void destroyCommandPool(vk::CommandPool commandPool);
+    void destroyFramebuffer(vk::Framebuffer framebuffer);
+    void freeDeviceMemory(vk::DeviceMemory deviceMemory);
 private:
     vk::PhysicalDevice physicalDevice;
     vk::Device logicalDevice;

@@ -22,6 +22,7 @@ public:
     vk::SwapchainKHR* getSwapchain();
     std::vector<vk::ImageView> getImageViews();
     vk::Format getColorFormat();
+    vk::Extent2D getExtent();
 private:
     vk::SwapchainKHR swapchain;
     std::vector<ImageView*> imageViews;

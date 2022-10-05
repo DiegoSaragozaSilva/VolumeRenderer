@@ -217,6 +217,21 @@ vk::Queue Device::getGraphicsQueue() {
     return graphicsQueue;
 }
 
+uint32_t Device::getMemoryTypeIndex(uint32_t filter, vk::MemoryPropertyFlags flags) {
+    // Fetch all the memory types from the physical device
+    vk::PhysicalDeviceMemoryProperties memoryProperties = physicalDevice.getMemoryProperties();
+
+    // Loop through all properties trying to find a suitable one based on the arguments provided
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+        if ((filter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & flags) == flags)
+            return i;
+    }
+
+    // At least one memory type index must be found
+    spdlog::error("Failed to find a suitable memory type");
+    throw 0;
+}
+
 vk::PhysicalDevice* Device::getPhysicalDevice() {
     return &physicalDevice;
 }
@@ -250,6 +265,10 @@ void Device::destroySwapchain(vk::SwapchainKHR* swapchain) {
     swapchain = nullptr;
 }
 
+void Device::destroyImage(vk::Image image) {
+    logicalDevice.destroyImage(image);
+}
+
 void Device::destroyImageView(vk::ImageView* imageView) {
     logicalDevice.destroyImageView(*imageView);
     imageView = nullptr;
@@ -262,4 +281,16 @@ void Device::destroyRenderPass(vk::RenderPass* renderPass) {
 
 void Device::destroyCommandPool(vk::CommandPool commandPool) {
     logicalDevice.destroyCommandPool(commandPool);
+}
+
+void Device::destroyFramebuffer(vk::Framebuffer framebuffer) {
+    logicalDevice.destroyFramebuffer(framebuffer);
+}
+
+void Device::freeDeviceMemory(vk::DeviceMemory deviceMemory) {
+    logicalDevice.freeMemory(deviceMemory);
+
+    std::stringstream addressStream;
+    addressStream << &deviceMemory;
+    spdlog::info("Device memory (" + addressStream.str() + ") freed.");
 }

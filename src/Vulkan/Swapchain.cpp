@@ -157,3 +157,7 @@ std::vector<vk::ImageView> Swapchain::getImageViews() {
 vk::Format Swapchain::getColorFormat() {
     return format.colorFormat; 
 }
+
+vk::Extent2D Swapchain::getExtent() {
+    return extent;
+}
