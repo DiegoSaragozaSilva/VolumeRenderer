@@ -56,6 +56,9 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
     // Logical device creation
     logicalDevice = physicalDevice.createDevice(deviceCreateInfo);
 
+    // Graphics queue storage
+    graphicsQueue = logicalDevice.getQueue(0, 0);
+
     #ifndef NDEBUG
         std::string devicesInfo = "Graphics queue index: " + std::to_string(queueConfig.graphicsQueueIndex) + " | Presentation queue index: " + std::to_string(queueConfig.presentationQueueIndex);
         spdlog::info("Vulkan physical and logical devices successfully created. " + devicesInfo);
@@ -208,6 +211,10 @@ vk::Format Device::queryDepthFormat() {
     // Throw if not supported
     spdlog::error("32 bit depth stencil not supported.");
     throw 0;
+}
+
+vk::Queue Device::getGraphicsQueue() {
+    return graphicsQueue;
 }
 
 vk::PhysicalDevice* Device::getPhysicalDevice() {

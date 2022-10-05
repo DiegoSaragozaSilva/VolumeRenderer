@@ -23,6 +23,7 @@ public:
     bool hasPresentationQueue();
     vk::SampleCountFlagBits getMultiSamplingLevel();
     vk::Format getDepthFormat();
+    vk::Queue getGraphicsQueue();
     void destroySwapchain(vk::SwapchainKHR* swapchain);
     void destroyImageView(vk::ImageView* imageView);
     void destroyRenderPass(vk::RenderPass* renderPass);
@@ -32,6 +33,7 @@ private:
     QueueConfig queueConfig;
     vk::SampleCountFlagBits multiSamplingLevel;
     vk::Format depthFormat;
+    vk::Queue graphicsQueue;
 
     void pickPhysicalDevice(vk::Instance* instance);
     QueueConfig queryPhysicalDeviceQueues(vk::SurfaceKHR* windowSurface);
