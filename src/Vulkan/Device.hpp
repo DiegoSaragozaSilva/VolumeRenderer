@@ -27,6 +27,7 @@ public:
     void destroySwapchain(vk::SwapchainKHR* swapchain);
     void destroyImageView(vk::ImageView* imageView);
     void destroyRenderPass(vk::RenderPass* renderPass);
+    void destroyCommandPool(vk::CommandPool commandPool);
 private:
     vk::PhysicalDevice physicalDevice;
     vk::Device logicalDevice;

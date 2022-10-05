@@ -5,12 +5,14 @@
 #include "../Vulkan/Device.hpp"
 #include "../Vulkan/Swapchain.hpp"
 #include "../Vulkan/RenderPass.hpp"
+#include "../Vulkan/CommandPool.hpp"
 #include "Window.hpp"
 
 // Struct that holds all vulkan context variables
 struct Vulkan {
     Instance* instance;
     Device* device;
+    CommandPool* commandPool;
 };
 
 // Struct that holds all vulkan render context variables

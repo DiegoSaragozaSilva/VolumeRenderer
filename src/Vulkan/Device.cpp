@@ -259,3 +259,7 @@ void Device::destroyRenderPass(vk::RenderPass* renderPass) {
     logicalDevice.destroyRenderPass(*renderPass);
     renderPass = nullptr;
 }
+
+void Device::destroyCommandPool(vk::CommandPool commandPool) {
+    logicalDevice.destroyCommandPool(commandPool);
+}

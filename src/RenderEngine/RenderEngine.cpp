@@ -23,6 +23,10 @@ RenderEngine::~RenderEngine() {
     vulkan.device->destroySwapchain(render.swapchain->getSwapchain());
     delete render.swapchain;
 
+    // Command pool destruction
+    vulkan.device->destroyCommandPool(vulkan.commandPool->getCommandPool());
+    delete vulkan.commandPool;
+
     // Window destruction
     vulkan.instance->destroySurface(window->getSurface(vulkan.instance->getInstance()));
     delete window;
@@ -49,6 +53,9 @@ void RenderEngine::initVulkan() {
 
     // Vulkan device initialization
     vulkan.device = new Device(vulkan.instance->getInstance(), window->getSurface(vulkan.instance->getInstance()));
+
+    // Vulkan command pool initialization
+    vulkan.commandPool = new CommandPool(vulkan.device);
 
     // Vulkan swapchain initialization
     render.swapchain = new Swapchain(vulkan.device, window->getSurface(vulkan.instance->getInstance()), window->getWidth(), window->getHeight());
