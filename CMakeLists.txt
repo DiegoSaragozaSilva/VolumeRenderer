@@ -31,4 +31,4 @@ add_executable(Renderer main.cpp ${SOURCES})
 include_directories("include")
 
 # Libray linking
-target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw vulkan VulkanMemoryAllocator)
+target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan VulkanMemoryAllocator)
