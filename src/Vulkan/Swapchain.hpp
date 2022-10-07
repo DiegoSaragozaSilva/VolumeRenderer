@@ -20,6 +20,7 @@ public:
     ~Swapchain();
 
     vk::SwapchainKHR* getSwapchain();
+    uint32_t getImageCount();
     std::vector<vk::ImageView> getImageViews();
     vk::Format getColorFormat();
     vk::Extent2D getExtent();

@@ -57,7 +57,10 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
     logicalDevice = physicalDevice.createDevice(deviceCreateInfo);
 
     // Graphics queue storage
-    graphicsQueue = logicalDevice.getQueue(0, 0);
+    graphicsQueue = logicalDevice.getQueue(0, queueConfig.graphicsQueueIndex);
+
+    // Presentation queue storage
+    presentationQueue = logicalDevice.getQueue(0, queueConfig.presentationQueueIndex);
 
     #ifndef NDEBUG
         std::string devicesInfo = "Graphics queue index: " + std::to_string(queueConfig.graphicsQueueIndex) + " | Presentation queue index: " + std::to_string(queueConfig.presentationQueueIndex);
@@ -217,6 +220,10 @@ vk::Queue Device::getGraphicsQueue() {
     return graphicsQueue;
 }
 
+vk::Queue Device::getPresentationQueue() {
+    return presentationQueue;
+}
+
 uint32_t Device::getMemoryTypeIndex(uint32_t filter, vk::MemoryPropertyFlags flags) {
     // Fetch all the memory types from the physical device
     vk::PhysicalDeviceMemoryProperties memoryProperties = physicalDevice.getMemoryProperties();
@@ -230,6 +237,29 @@ uint32_t Device::getMemoryTypeIndex(uint32_t filter, vk::MemoryPropertyFlags fla
     // At least one memory type index must be found
     spdlog::error("Failed to find a suitable memory type");
     throw 0;
+}
+
+std::vector<vk::Semaphore> Device::createSemaphores(uint32_t count) {
+    // Semaphores creation and return
+    std::vector<vk::Semaphore> semaphores;
+    vk::SemaphoreCreateInfo semaphoreCreateInfo;
+    for (int i = 0; i < count i++)
+        semaphores.push_back(logicalDevice->createSemaphore(semaphoreCreateInfo));
+
+    return semaphores;
+}
+
+std::vector<vk::Fence> Device::createFences(uint32_t count) {
+    // Fences creation and return
+    std::vector<vk::Fence> fences;
+    vk::FenceCreateInfo fenceCreateInfo (
+        vk::FenceCreateFlagBits::eSignaled        
+    );
+
+    for (int i = 0; i < count i++)
+        fences.push_back(logicalDevice->createFence(fenceCreateInfo));
+
+    return fences;
 }
 
 vk::PhysicalDevice* Device::getPhysicalDevice() {

@@ -20,6 +20,14 @@ struct Vulkan {
     Image* depthImage;
     ImageView* depthImageView;
     std::vector<vk::Framebuffer> framebuffers;
+    std::vector<vk::CommandBuffer> commandBuffers;
+    std::vector<vk::Semaphore> graphicsSemaphores;
+    std::vector<vk::Semaphore> presentationSemaphores;
+    std::vector<vk::Fence> graphicsFences;
+    std::vector<vk::ClearValue> clearValues;
+    vk::Rect2D scissor;
+    vk::Viewport viewport;
+    uint32_t maxRenderFrames;
 };
 
 // Struct that holds all vulkan render context variables
@@ -43,6 +51,9 @@ private:
     Image* createDepthImage();
     ImageView* createImageView(Image* image, vk::ImageAspectFlags aspectFlags);
     std::vector<vk::Framebuffer> createFramebuffers();
+    vk::Rect2D createScissor();
+    vk::Viewport createViewport();
+    std::vector<vk::ClearValue> createClearValues();
 };
 
 #endif

@@ -24,7 +24,10 @@ public:
     vk::SampleCountFlagBits getMultiSamplingLevel();
     vk::Format getDepthFormat();
     vk::Queue getGraphicsQueue();
+    vk::Queue getPresentationQueue();
     uint32_t getMemoryTypeIndex(uint32_t filter, vk::MemoryPropertyFlags flags);
+    std::vector<vk::Semaphore> createSemaphores(uint32_t count);
+    std::vector<vk::Fence> createFences(uint32_t count);
     void destroySwapchain(vk::SwapchainKHR* swapchain);
     void destroyImage(vk::Image image);
     void destroyImageView(vk::ImageView* imageView);
@@ -39,6 +42,7 @@ private:
     vk::SampleCountFlagBits multiSamplingLevel;
     vk::Format depthFormat;
     vk::Queue graphicsQueue;
+    vk::Queue presentationQueue;
 
     void pickPhysicalDevice(vk::Instance* instance);
     QueueConfig queryPhysicalDeviceQueues(vk::SurfaceKHR* windowSurface);

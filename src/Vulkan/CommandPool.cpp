@@ -71,3 +71,15 @@ void CommandPool::endCommandBuffer(vk::CommandBuffer commandBuffer, Device* devi
     }
     device->getGraphicsQueue().waitIdle();
 }
+
+std::vector<vk::CommandBuffer> CommandPool::createCommandBuffers(Device* device, uint32_t count) {
+    // Multiple command buffer create info
+    vk::CommandBufferAllocateInfo commandBufferAllocateInfo (
+        commandPool,
+        vk::CommandBufferLevel::ePrimary,
+        count
+    );
+
+    // Allocate and return the command buffers
+    return device->getLogicalDevice()->allocatedCommandBuffers(commandBufferAllocateInfo);
+}

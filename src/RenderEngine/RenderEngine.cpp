@@ -98,6 +98,28 @@ void RenderEngine::initVulkan() {
 
     // Vulkan framebuffers initialization
     vulkan.framebuffers = createFramebuffers();
+
+    // Vulkan render command buffers initialization
+    vulkan.commandBuffers = vulkan.commandPool->createCommandBuffers(vulkan.device, render.swapchain->getImageCount());
+
+    // Max render frames
+    vulkan.maxRenderFrames = 2;
+
+    // Graphics and presentation semaphores initialization
+    vulkan.graphicsSemaphores = vulkan.device->createSemaphores(vulkan.maxRenderFrames);
+    vulkan.presentationSemaphores = vulkan.device->createSemaphores(vulkan.maxRenderFrames);
+
+    // Graphics fences initialization
+    vulkan.graphicsFences = vulkan.device->createFences(vulkan.maxRenderFrames);
+
+    // Swapchain scissor initialization
+    vulkan.scissor = createScissor();
+
+    // Swapchain viewport initialization
+    vulkan.viewport = createViewport();
+
+    // Render clear colors creation
+    vulkan.clearValues = createClearValues();
 }
 
 Image* RenderEngine::createMultiSampleImage() {
@@ -187,4 +209,33 @@ std::vector<vk::Framebuffer> RenderEngine::createFramebuffers() {
     #endif
 
     return framebuffers;
+}
+
+vk::Rect2D RenderEngine::createScissor() {
+    // Swapchain scissor creation and return
+    vk::Offset2D offset = {0, 0};
+    return vk::Rect2D (offset, render.swapchain->getExtent());
+}
+
+vk::Viewport RenderEngine::createViewport() {
+    // Swapchain viewport creation and return
+    vk::Extent2D extent = render.swapchain->getExtent();
+    return vk::Viewport (0.0f, 0.0f, extent.width, extent.height, 0.0f, 1.0f);
+}
+
+std::vector<vk::ClearValue> RenderEngine::createClearValues() {
+    // Sky clear color
+    vk::ClearValue skyColor;
+    skyColor.color = vk::ClearColorValue({
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f
+    });
+
+    // Depth clear color
+    vk::ClearValue depthColor;
+    depthColor.depthStencil = vk::ClearDepthStencilValue(1.0f, 0.0f);
+
+    return std::vector<vk::ClearValue> {skyColor, depthColor};
 }

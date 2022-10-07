@@ -132,6 +132,10 @@ vk::SwapchainKHR* Swapchain::getSwapchain() {
     return &swapchain;
 }
 
+uint32_t Swapchain::getImageCount() {
+    return imageViews.size();
+}
+
 std::vector<ImageView*> Swapchain::createImageViews(vk::Device* logicalDevice) {
     std::vector<ImageView*> imageViews;
 
