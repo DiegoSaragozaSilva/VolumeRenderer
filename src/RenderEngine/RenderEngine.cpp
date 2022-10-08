@@ -105,6 +105,10 @@ void RenderEngine::initVulkan() {
     // Max render frames
     vulkan.maxRenderFrames = 2;
 
+    // Current frame index and swapchain image index
+    vulkan.currentFrameIndex = 0;
+    vulkan.currentSwapchainImageIndex = 0;
+
     // Graphics and presentation semaphores initialization
     vulkan.graphicsSemaphores = vulkan.device->createSemaphores(vulkan.maxRenderFrames);
     vulkan.presentationSemaphores = vulkan.device->createSemaphores(vulkan.maxRenderFrames);
@@ -226,8 +230,8 @@ vk::Viewport RenderEngine::createViewport() {
 std::vector<vk::ClearValue> RenderEngine::createClearValues() {
     // Sky clear color
     vk::ClearValue skyColor;
-    skyColor.color = vk::ClearColorValue({
-        0.0f,
+    skyColor.color = vk::ClearColorValue(std::array<float, 4> {
+        1.0f,
         0.0f,
         0.0f,
         1.0f
@@ -238,4 +242,167 @@ std::vector<vk::ClearValue> RenderEngine::createClearValues() {
     depthColor.depthStencil = vk::ClearDepthStencilValue(1.0f, 0.0f);
 
     return std::vector<vk::ClearValue> {skyColor, depthColor};
+}
+
+uint32_t RenderEngine::getNextImageIndex(vk::Fence fence, vk::Semaphore semaphore) {
+    // Wait for the render fence for some timeout time
+    uint64_t timeout = std::numeric_limits<uint64_t>::max();
+    vulkan.device->getLogicalDevice()->waitForFences(1, &fence, VK_TRUE, timeout);
+
+    // After waiting, reset the fence for future use
+    vulkan.device->getLogicalDevice()->resetFences(1, &fence);
+
+    // Get next swapchain image index and return it
+    vk::ResultValue nextImageIndex = vulkan.device->getLogicalDevice()->acquireNextImageKHR(
+        *(render.swapchain->getSwapchain()),
+        timeout,
+        semaphore,
+        nullptr
+    );
+
+    return nextImageIndex.value;
+}
+
+void RenderEngine::recreateRenderContext() {
+    // Recreate the render context
+    Render newRenderContext;
+    newRenderContext.swapchain = new Swapchain(vulkan.device, window->getSurface(vulkan.instance->getInstance()), window->getWidth(), window->getHeight(), *(render.swapchain->getSwapchain()));
+    newRenderContext.renderPass = new RenderPass(vulkan.device, render.swapchain);
+
+    // Wait for the device to be idle and substitute the render context
+    vulkan.device->getLogicalDevice()->waitIdle();
+    render = newRenderContext;
+}
+
+void RenderEngine::renderFrame() {
+    // Begin frame rendering
+    bool beginStatus = renderBegin();
+    if (!beginStatus)
+        recreateRenderContext();
+
+    // RENDER MODELS
+    
+    // End frame rendering
+    bool endStatus = renderEnd();
+    if (!endStatus)
+        recreateRenderContext();
+}
+
+bool RenderEngine::renderBegin() {
+    // Get the right graphics fence and semaphore
+    vk::Fence graphicsFence = vulkan.graphicsFences[vulkan.currentFrameIndex];
+    vk::Semaphore graphicsSemaphore = vulkan.graphicsSemaphores[vulkan.currentFrameIndex];
+
+    // Acquire the next swapchain image index
+    // If the swapchain is outdated, it needs to be recreated
+    try {
+        vulkan.currentSwapchainImageIndex = getNextImageIndex(graphicsFence, graphicsSemaphore);
+    }
+    catch (vk::OutOfDateKHRError outOfDateError) {
+        return false;
+    }
+
+    // Prepare the image command buffer for drawing
+    vk::CommandBuffer commandBuffer = vulkan.commandBuffers[vulkan.currentSwapchainImageIndex];
+    commandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+
+    // Begin the command buffer
+    vk::CommandBufferBeginInfo commandBufferBeginInfo (
+        vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+        nullptr
+    );
+    commandBuffer.begin(&commandBufferBeginInfo);
+
+    // Scissor config
+    commandBuffer.setScissor (
+        0,
+        1,
+        &vulkan.scissor
+    );
+
+    // Viewport config
+    commandBuffer.setViewport (
+        0,
+        1,
+        &vulkan.viewport
+    );
+
+    // Begin the command buffer record with the render pass
+    vk::RenderPassBeginInfo renderPassBeginInfo (
+        *(render.renderPass->getRenderPass()),
+        vulkan.framebuffers[vulkan.currentSwapchainImageIndex],
+        vulkan.scissor,
+        2,
+        vulkan.clearValues.data()
+    );
+
+    // Record the command buffer command
+    commandBuffer.beginRenderPass(
+        &renderPassBeginInfo,
+        vk::SubpassContents::eInline
+    );
+
+    return true;
+}
+
+bool RenderEngine::renderEnd() {
+    // Get the current command buffer
+    vk::CommandBuffer commandBuffer = vulkan.commandBuffers[vulkan.currentSwapchainImageIndex];
+
+    // End the command buffer recording
+    commandBuffer.endRenderPass();
+    commandBuffer.end();
+
+    // Prepare and submit the command buffer to the graphics queue
+    vk::Fence graphicsFence = vulkan.graphicsFences[vulkan.currentFrameIndex];
+    vk::Semaphore graphicsSemaphore = vulkan.graphicsSemaphores[vulkan.currentFrameIndex];
+    vk::Semaphore presentationSemaphore = vulkan.presentationSemaphores[vulkan.currentFrameIndex];
+    vk::PipelineStageFlags pipelineStageFlags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+    // Create a submit info for the graphics queue
+    vk::SubmitInfo submitInfo (
+        1,
+        &graphicsSemaphore,
+        &pipelineStageFlags,
+        1,
+        &commandBuffer,
+        1,
+        &presentationSemaphore
+    );
+
+    // Submit the command buffer
+    vulkan.device->getGraphicsQueue().submit(1, &submitInfo, graphicsFence);
+
+    // Create a present info for the presentation queue
+    vk::PresentInfoKHR presentationInfo (
+        1,
+        &presentationSemaphore,
+        1,
+        render.swapchain->getSwapchain(),
+        &vulkan.currentSwapchainImageIndex,
+        nullptr
+    );
+
+    // Submit the presentation info to the presentation queue
+    // If swapchain is out of date or suboptimal, return false
+    try {
+        if (vulkan.device->getPresentationQueue().presentKHR(presentationInfo) == vk::Result::eSuboptimalKHR)
+            return false;
+    }
+    catch (vk::OutOfDateKHRError outOfDateError) {
+        return false;
+    }
+    
+    // Wait for the presentation queue to be idle
+    vulkan.device->getPresentationQueue().waitIdle();
+
+    // Increment the current frame index. Hash to max frames
+    vulkan.currentFrameIndex = (vulkan.currentFrameIndex + 1) % vulkan.maxRenderFrames;
+
+    return true;
+}
+
+bool RenderEngine::windowShouldClose() {
+    // Return the window should close state
+    return window->shouldClose();
 }

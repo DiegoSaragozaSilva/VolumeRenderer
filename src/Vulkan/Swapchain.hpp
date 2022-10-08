@@ -16,7 +16,7 @@ struct SwapchainFormat {
 
 class Swapchain {
 public:
-    Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidth, uint32_t imageHeight);
+    Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidth, uint32_t imageHeight, vk::SwapchainKHR oldSwapchain = vk::SwapchainKHR());
     ~Swapchain();
 
     vk::SwapchainKHR* getSwapchain();

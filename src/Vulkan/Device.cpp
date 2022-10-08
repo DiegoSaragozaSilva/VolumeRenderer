@@ -243,8 +243,8 @@ std::vector<vk::Semaphore> Device::createSemaphores(uint32_t count) {
     // Semaphores creation and return
     std::vector<vk::Semaphore> semaphores;
     vk::SemaphoreCreateInfo semaphoreCreateInfo;
-    for (int i = 0; i < count i++)
-        semaphores.push_back(logicalDevice->createSemaphore(semaphoreCreateInfo));
+    for (int i = 0; i < count; i++)
+        semaphores.push_back(logicalDevice.createSemaphore(semaphoreCreateInfo));
 
     return semaphores;
 }
@@ -256,8 +256,8 @@ std::vector<vk::Fence> Device::createFences(uint32_t count) {
         vk::FenceCreateFlagBits::eSignaled        
     );
 
-    for (int i = 0; i < count i++)
-        fences.push_back(logicalDevice->createFence(fenceCreateInfo));
+    for (int i = 0; i < count; i++)
+        fences.push_back(logicalDevice.createFence(fenceCreateInfo));
 
     return fences;
 }
@@ -315,6 +315,10 @@ void Device::destroyCommandPool(vk::CommandPool commandPool) {
 
 void Device::destroyFramebuffer(vk::Framebuffer framebuffer) {
     logicalDevice.destroyFramebuffer(framebuffer);
+}
+
+void Device::destroyShaderModule(vk::ShaderModule shaderModule) {
+    logicalDevice.destroyShaderModule(shaderModule);
 }
 
 void Device::freeDeviceMemory(vk::DeviceMemory deviceMemory) {

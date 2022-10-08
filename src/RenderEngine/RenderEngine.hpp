@@ -28,6 +28,8 @@ struct Vulkan {
     vk::Rect2D scissor;
     vk::Viewport viewport;
     uint32_t maxRenderFrames;
+    uint32_t currentFrameIndex;
+    uint32_t currentSwapchainImageIndex;
 };
 
 // Struct that holds all vulkan render context variables
@@ -40,6 +42,9 @@ class RenderEngine {
 public:
     RenderEngine();
     ~RenderEngine();
+
+    bool windowShouldClose();
+    void renderFrame();
 private:
     Window* window;
     Vulkan vulkan;
@@ -54,6 +59,10 @@ private:
     vk::Rect2D createScissor();
     vk::Viewport createViewport();
     std::vector<vk::ClearValue> createClearValues();
+    uint32_t getNextImageIndex(vk::Fence fence, vk::Semaphore semaphore);
+    void recreateRenderContext();
+    bool renderBegin();
+    bool renderEnd();
 };
 
 #endif

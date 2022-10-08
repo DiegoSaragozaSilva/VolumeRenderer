@@ -81,5 +81,5 @@ std::vector<vk::CommandBuffer> CommandPool::createCommandBuffers(Device* device,
     );
 
     // Allocate and return the command buffers
-    return device->getLogicalDevice()->allocatedCommandBuffers(commandBufferAllocateInfo);
+    return device->getLogicalDevice()->allocateCommandBuffers(commandBufferAllocateInfo);
 }

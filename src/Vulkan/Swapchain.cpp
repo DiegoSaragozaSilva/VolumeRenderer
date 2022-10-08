@@ -1,6 +1,6 @@
 #include "Swapchain.hpp"
 
-Swapchain::Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidth, uint32_t imageHeight) {
+Swapchain::Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidth, uint32_t imageHeight, vk::SwapchainKHR oldSwapchain) {
     // Format and present mode
     format = getFormat(device->getPhysicalDevice(), *surface);
     presentMode = getPresentMode(device->getPhysicalDevice(), *surface);
@@ -32,7 +32,7 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR* surface, uint32_t imageWidt
                                                    vk::CompositeAlphaFlagBitsKHR::eOpaque,
                                                    presentMode,
                                                    VK_TRUE,
-                                                   vk::SwapchainKHR());
+                                                   oldSwapchain);
     
     // Check for presentation queues presence
     if (device->hasPresentationQueue()) {

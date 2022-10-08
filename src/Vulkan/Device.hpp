@@ -34,6 +34,7 @@ public:
     void destroyRenderPass(vk::RenderPass* renderPass);
     void destroyCommandPool(vk::CommandPool commandPool);
     void destroyFramebuffer(vk::Framebuffer framebuffer);
+    void destroyShaderModule(vk::ShaderModule shaderModule);
     void freeDeviceMemory(vk::DeviceMemory deviceMemory);
 private:
     vk::PhysicalDevice physicalDevice;
