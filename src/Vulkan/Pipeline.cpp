@@ -1,12 +1,12 @@
 #include "Pipeline.hpp"
 
-Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderModule*> shaderModules, vk::PrimitiveTopology topology, vk::PolygonMode polygonMode, vk::Viewport viewport, vk::Rect2D scissor) {
+Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderModule*> shaderModules, std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription, vk::PrimitiveTopology topology, vk::PolygonMode polygonMode, vk::Viewport viewport, vk::Rect2D scissor) {
     // Querying all the necessary states information
     std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStageCreateInfos;
     for (size_t i = 0; i < shaderModules.size(); i++)
         shaderStageCreateInfos[i] = initShaderStage(shaderModules[i]);
 
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = initVertexInputState();
+    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = initVertexInputState( bindingDescription, attributeDescription);
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = initInputAssembly(topology);
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = initRasterizationState(polygonMode);
     vk::PipelineMultisampleStateCreateInfo multiSampleStateCreateInfo = initMultiSamplingState(device->getMultiSamplingLevel());
@@ -100,15 +100,14 @@ vk::PipelineShaderStageCreateInfo Pipeline::initShaderStage(ShaderModule* shader
     return shaderStageCreateInfo;
 }
 
-vk::PipelineVertexInputStateCreateInfo Pipeline::initVertexInputState() {
+vk::PipelineVertexInputStateCreateInfo Pipeline::initVertexInputState(std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription) {
     // Vertex input state create info creation and return
-    // [TODO] Include support for vertex buffer descriptions
     vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo (
         vk::PipelineVertexInputStateCreateFlags(),
-        0,
-        nullptr,
-        0,
-        nullptr
+        bindingDescription.size(),
+        bindingDescription.data(),
+        attributeDescription.size(),
+        attributeDescription.data()
     );
     return vertexInputStateCreateInfo;
 }
