@@ -1,6 +1,8 @@
 #include "ShaderModule.hpp"
 
-ShaderModule::ShaderModule(Device* device, std::vector<uint32_t> shaderCode) {
+ShaderModule::ShaderModule(Device* device, std::vector<uint32_t> shaderCode, vk::ShaderStageFlagBits shaderStage) {
+    this->shaderStage = shaderStage;
+
     // Shader module create info
     vk::ShaderModuleCreateInfo shaderModuleCreateInfo (
         vk::ShaderModuleCreateFlags(),
@@ -11,7 +13,8 @@ ShaderModule::ShaderModule(Device* device, std::vector<uint32_t> shaderCode) {
     shaderModule = device->getLogicalDevice()->createShaderModule(shaderModuleCreateInfo);
 
     #ifndef NDEBUG
-        spdlog::info("Shader module successfully created.");
+        std::string shaderModuleInfo = "Shader stage: " + std::to_string((int)shaderStage);
+        spdlog::info("Shader module successfully created. " + shaderModuleInfo);
     #endif   
 }
 
@@ -23,4 +26,8 @@ ShaderModule::~ShaderModule(){
 
 vk::ShaderModule ShaderModule::getShaderModule() {
     return shaderModule;
+}
+
+vk::ShaderStageFlagBits ShaderModule::getShaderStage() {
+    return shaderStage;
 }
