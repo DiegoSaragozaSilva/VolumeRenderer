@@ -1,6 +1,7 @@
 #ifndef _SHADERMODULE_H_
 #define _SHADERMODULE_H_
 
+#include <SPIRV-Cross/spirv_cross.hpp>
 #include "Device.hpp"
 
 class ShaderModule {
@@ -10,9 +11,11 @@ public:
 
     vk::ShaderModule getShaderModule();
     vk::ShaderStageFlagBits getShaderStage();
+    std::vector<uint32_t> getSPIRVCode();
 private:
     vk::ShaderModule shaderModule;
     vk::ShaderStageFlagBits shaderStage;
+    std::vector<uint32_t> shaderCode;
 };
 
 #endif

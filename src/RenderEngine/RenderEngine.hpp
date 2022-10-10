@@ -8,6 +8,7 @@
 #include "../Vulkan/CommandPool.hpp"
 #include "../Vulkan/Image.hpp"
 #include "../Vulkan/ImageView.hpp"
+#include "../Vulkan/ShaderModule.hpp"
 #include "Window.hpp"
 
 // Struct that holds all vulkan context variables

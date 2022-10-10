@@ -1,9 +1,18 @@
 #include "RenderEngine.hpp"
 
+#include <fstream>
+#include <iterator>
+
 RenderEngine::RenderEngine() {
     // Initializing all basic componentes and Vulkan
     initWindow();
     initVulkan();
+
+    // TEST SHADER MODULE
+    std::ifstream shaderInput ("assets/shaders/default.vert.spv", std::ios::binary);
+    std::vector<char> shaderCode (std::istreambuf_iterator<char>(shaderInput), {});
+    std::vector<uint32_t>& _shaderCode = reinterpret_cast<std::vector<uint32_t>&>(shaderCode);
+    ShaderModule* testModule = new ShaderModule(vulkan.device, _shaderCode, vk::ShaderStageFlagBits::eVertex);
 
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");

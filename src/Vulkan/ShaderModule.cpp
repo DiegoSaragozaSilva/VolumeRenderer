@@ -2,6 +2,7 @@
 
 ShaderModule::ShaderModule(Device* device, std::vector<uint32_t> shaderCode, vk::ShaderStageFlagBits shaderStage) {
     this->shaderStage = shaderStage;
+    this->shaderCode = shaderCode;
 
     // Shader module create info
     vk::ShaderModuleCreateInfo shaderModuleCreateInfo (
@@ -11,6 +12,11 @@ ShaderModule::ShaderModule(Device* device, std::vector<uint32_t> shaderCode, vk:
 
     // Shader module creation
     shaderModule = device->getLogicalDevice()->createShaderModule(shaderModuleCreateInfo);
+
+    // TEST
+    spirv_cross::Compiler compiler(std::move(shaderCode));
+    spirv_cross::ShaderResources shaderResources = compiler.get_shader_resources();
+    std::cout << shaderResources.push_constant_buffers[0].id << std::endl;
 
     #ifndef NDEBUG
         std::string shaderModuleInfo = "Shader stage: " + std::to_string((int)shaderStage);
@@ -30,4 +36,8 @@ vk::ShaderModule ShaderModule::getShaderModule() {
 
 vk::ShaderStageFlagBits ShaderModule::getShaderStage() {
     return shaderStage;
+}
+
+std::vector<uint32_t> ShaderModule::getSPIRVCode() {
+    return shaderCode;
 }

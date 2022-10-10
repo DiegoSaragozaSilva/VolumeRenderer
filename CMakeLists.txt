@@ -52,6 +52,8 @@ foreach(source IN LISTS SHADERS)
     add_custom_command(
         COMMAND
         ${glslc_executable}
+        -O
+        -c
         -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
         ${source}
         OUTPUT ${SHADER_BINARY_DIR}/${FILENAME}.spv
@@ -68,7 +70,7 @@ add_executable(Renderer main.cpp ${SOURCES})
 include_directories("include")
 
 # Libray linking
-target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan VulkanMemoryAllocator)
+target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core VulkanMemoryAllocator)
 
 # Shader custom target
 add_custom_target(Shaders ALL DEPENDS ${SPV_SHADERS})
