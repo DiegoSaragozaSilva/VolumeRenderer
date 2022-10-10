@@ -18,6 +18,9 @@ add_subdirectory("include/VulkanMemoryAllocator")
 # Build glm from include folder
 add_subdirectory("include/glm")
 
+# Build SPIRV-Cross from include folder
+add_subdirectory("include/SPIRV-Cross")
+
 # Force Vulkan packaged be required
 find_package(Vulkan REQUIRED)
 
