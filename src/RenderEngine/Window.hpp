@@ -14,6 +14,8 @@ public:
     vk::SurfaceKHR* getSurface(vk::Instance* instance);
     uint32_t getWidth();
     uint32_t getHeight();
+    double getTime();
+    void pollEvents();
     bool shouldClose();
 private:
     bool hasSurfaceBeenCreated;

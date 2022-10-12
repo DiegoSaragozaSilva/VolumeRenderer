@@ -8,11 +8,18 @@ RenderEngine::RenderEngine() {
     initWindow();
     initVulkan();
 
-    // TEST SHADER MODULE
-    std::ifstream shaderInput ("assets/shaders/default.vert.spv", std::ios::binary);
-    std::vector<char> shaderCode (std::istreambuf_iterator<char>(shaderInput), {});
-    std::vector<uint32_t>& _shaderCode = reinterpret_cast<std::vector<uint32_t>&>(shaderCode);
-    ShaderModule* testModule = new ShaderModule(vulkan.device, _shaderCode, vk::ShaderStageFlagBits::eVertex);
+    // Initialize the main camera
+    camera = new Camera();
+    camera->setPosition({0.0f, 0.0f, 0.0f});
+    camera->setUpVector({0.0f, 1.0f, 0.0f});
+    camera->setFocusPoint({0.0f, 0.0f, 0.0f});
+    camera->setFOV(60.0f);
+    camera->generateViewMatrix();
+    camera->generateProjectionMatrix();
+
+    // REMOVE LATER
+    cubeMesh = Utils::loadOBJFile("assets/objs/cube.obj");
+    cubeMesh->uploadMesh(vulkan.device);
 
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");
@@ -133,6 +140,24 @@ void RenderEngine::initVulkan() {
 
     // Render clear colors creation
     vulkan.clearValues = createClearValues();
+
+    // Default shaders initialization
+    render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.vert.spv"), vk::ShaderStageFlagBits::eVertex));
+    render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.frag.spv"), vk::ShaderStageFlagBits::eFragment));
+
+    // Default pipeline initialization
+    VertexInputDescription vertexDescription = Vertex::getVertexDescription();
+    render.defaultPipeline = new Pipeline(
+        vulkan.device,
+        render.renderPass,
+        render.defaultShaders,
+        vertexDescription.bindings,
+        vertexDescription.attributes,
+        vk::PrimitiveTopology::eTriangleList,
+        vk::PolygonMode::eFill,
+        vulkan.viewport,
+        vulkan.scissor
+    );
 }
 
 Image* RenderEngine::createMultiSampleImage() {
@@ -284,13 +309,48 @@ void RenderEngine::recreateRenderContext() {
 }
 
 void RenderEngine::renderFrame() {
+    // Window poll events
+    window->pollEvents();
+
     // Begin frame rendering
     bool beginStatus = renderBegin();
     if (!beginStatus)
         recreateRenderContext();
 
-    // RENDER MODELS
-    
+    // Bind the default pipeline
+    vk::CommandBuffer commandBuffer = vulkan.commandBuffers[vulkan.currentSwapchainImageIndex];
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.defaultPipeline->getPipeline());
+
+    // Rotate the camera around the scene
+    camera->setPosition({
+        (float)(sin(window->getTime() / 5.0) * 5.0f),  
+        0.0f,
+        (float)(cos(window->getTime() / 5.0) * 5.0f),
+    });
+    camera->generateViewMatrix();
+
+    // Calculate model view projection matrix
+    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
+
+    // Send MVP via push constants
+    commandBuffer.pushConstants (
+        render.defaultPipeline->getPipelineLayout(),
+        vk::ShaderStageFlagBits::eVertex,
+        0,
+        sizeof(glm::mat4),
+        &mvp
+    );
+
+    // Bind the cube vertex and index buffers
+    vk::DeviceSize offsets[]{0};
+    vk::Buffer cubeVertexBuffer = cubeMesh->getVertexBuffer()->getBuffer();
+    commandBuffer.bindVertexBuffers(0, 1, &cubeVertexBuffer, offsets);
+    commandBuffer.bindIndexBuffer(cubeMesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
+
+    // Draw indexed
+    commandBuffer.drawIndexed(cubeMesh->getNumIndices(), 1, 0, 0, 0);
+
     // End frame rendering
     bool endStatus = renderEnd();
     if (!endStatus)

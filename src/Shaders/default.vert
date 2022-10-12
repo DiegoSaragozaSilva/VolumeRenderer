@@ -11,6 +11,7 @@ layout (location = 3) in vec2 inTexCoord;
 
 layout (location = 0) out vec3 outColor;
 layout (location = 1) out vec2 outTexCoord;
+layout (location = 2) out vec3 outNormal;
 
 void main() {
     gl_Position = pushConstants.mvp * vec4(inPosition, 1.0f);
@@ -21,4 +22,5 @@ void main() {
 
     outColor = inColor;
     outTexCoord = inTexCoord;
+    outNormal = inNormal;
 }

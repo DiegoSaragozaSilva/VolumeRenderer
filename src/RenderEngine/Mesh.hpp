@@ -5,14 +5,15 @@
 #include "../Vulkan/Buffer.hpp"
 
 struct VertexInputDescription {
-    std::vector<VkVertexInputBindingDescription> bindings;
-	std::vector<VkVertexInputAttributeDescription> attributes;
+    std::vector<vk::VertexInputBindingDescription> bindings;
+	std::vector<vk::VertexInputAttributeDescription> attributes;
 };
 
 struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec3 color;
+    glm::vec2 uv;
 
     static VertexInputDescription getVertexDescription() {
         VertexInputDescription description;
@@ -36,23 +37,32 @@ struct Vertex {
 
         // Normal binding (1)
         vk::VertexInputAttributeDescription normalAttribute (
-            0,
             1,
+            0,
             vk::Format::eR32G32B32Sfloat,
             offsetof(Vertex, normal)
         );
         
         // Color binding (2)
         vk::VertexInputAttributeDescription colorAttribute (
-            0,
             2,
+            0,
             vk::Format::eR32G32B32Sfloat,
             offsetof(Vertex, color)
+        );
+
+        // UV binding (3)
+        vk::VertexInputAttributeDescription uvAttribute (
+            3,
+            0,
+            vk::Format::eR32G32Sfloat,
+            offsetof(Vertex, uv)
         );
  
         description.attributes.push_back(positionAttribute);
         description.attributes.push_back(normalAttribute);
         description.attributes.push_back(colorAttribute);
+        description.attributes.push_back(uvAttribute);
         return description;
     }
 };
@@ -63,10 +73,16 @@ public:
     ~Mesh();
 
     void setVertices(std::vector<Vertex> vertices);
+    void setIndices(std::vector<uint32_t> indices);
     void uploadMesh(Device* device);
+    Buffer* getVertexBuffer();
+    Buffer* getIndexBuffer();
+    uint32_t getNumIndices();
 private:
     std::vector<Vertex> vertices;
-    Buffer* buffer;
+    std::vector<uint32_t> indices;
+    Buffer* vertexBuffer;
+    Buffer* indexBuffer;
 };
 
 #endif

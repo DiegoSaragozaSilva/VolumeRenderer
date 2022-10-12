@@ -13,3 +13,6 @@
 [submodule "include/SPIRV-Cross"]
 	path = include/SPIRV-Cross
 	url = https://github.com/KhronosGroup/SPIRV-Cross
+[submodule "include/tinyobjloader"]
+	path = include/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader

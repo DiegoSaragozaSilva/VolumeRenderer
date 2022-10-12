@@ -72,6 +72,14 @@ uint32_t Window::getHeight() {
     return height;
 }
 
+double Window::getTime() {
+    return glfwGetTime();
+}
+
+void Window::pollEvents() {
+    glfwPollEvents();
+}
+
 bool Window::shouldClose() {
     return glfwWindowShouldClose(window);
 }

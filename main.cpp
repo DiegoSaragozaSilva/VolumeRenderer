@@ -1,6 +1,3 @@
-#define VMA_IMPLEMENTATION
-#include <vk_mem_alloc.h>
-
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 #include <spdlog/spdlog.h>
@@ -10,7 +7,7 @@
 
 int main() {
     RenderEngine* renderEngine = new RenderEngine();
-    
+
     while (!renderEngine->windowShouldClose()) {
         renderEngine->renderFrame();
     }

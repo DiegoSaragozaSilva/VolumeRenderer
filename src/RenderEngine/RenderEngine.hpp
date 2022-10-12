@@ -1,6 +1,7 @@
 #ifndef _RENDER_ENGINE_H_
 #define _RENDER_ENGINE_H_
 
+#include <cmath>
 #include "../Vulkan/Instance.hpp"
 #include "../Vulkan/Device.hpp"
 #include "../Vulkan/Swapchain.hpp"
@@ -9,6 +10,10 @@
 #include "../Vulkan/Image.hpp"
 #include "../Vulkan/ImageView.hpp"
 #include "../Vulkan/ShaderModule.hpp"
+#include "../Vulkan/Pipeline.hpp"
+#include "Utils.hpp"
+#include "Mesh.hpp"
+#include "Camera.hpp"
 #include "Window.hpp"
 
 // Struct that holds all vulkan context variables
@@ -37,6 +42,8 @@ struct Vulkan {
 struct Render {
     Swapchain* swapchain;
     RenderPass* renderPass;
+    std::vector<ShaderModule*> defaultShaders;
+    Pipeline* defaultPipeline;
 };
 
 class RenderEngine {
@@ -48,8 +55,12 @@ public:
     void renderFrame();
 private:
     Window* window;
+    Camera* camera;
     Vulkan vulkan;
     Render render;
+
+    // REMOVE LATER
+    Mesh* cubeMesh;
 
     void initWindow();
     void initVulkan();

@@ -56,5 +56,5 @@ void Camera::generateViewMatrix() {
 
 void Camera::generateProjectionMatrix() {
     // Projection matrix generation
-    projectionMatrix = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
+    projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
 }

@@ -21,6 +21,9 @@ add_subdirectory("include/glm")
 # Build SPIRV-Cross from include folder
 add_subdirectory("include/SPIRV-Cross")
 
+# Build tinyobjloader from include folder
+add_subdirectory("include/tinyobjloader")
+
 # Force Vulkan packaged be required
 find_package(Vulkan REQUIRED)
 
@@ -70,7 +73,7 @@ add_executable(Renderer main.cpp ${SOURCES})
 include_directories("include")
 
 # Libray linking
-target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core VulkanMemoryAllocator)
+target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core tinyobjloader)
 
 # Shader custom target
 add_custom_target(Shaders ALL DEPENDS ${SPV_SHADERS})
