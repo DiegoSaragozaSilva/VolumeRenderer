@@ -298,14 +298,63 @@ uint32_t RenderEngine::getNextImageIndex(vk::Fence fence, vk::Semaphore semaphor
 }
 
 void RenderEngine::recreateRenderContext() {
-    // Recreate the render context
-    Render newRenderContext;
-    newRenderContext.swapchain = new Swapchain(vulkan.device, window->getSurface(vulkan.instance->getInstance()), window->getWidth(), window->getHeight(), *(render.swapchain->getSwapchain()));
-    newRenderContext.renderPass = new RenderPass(vulkan.device, render.swapchain);
-
-    // Wait for the device to be idle and substitute the render context
+    // Wait for the device to be idle
     vulkan.device->getLogicalDevice()->waitIdle();
-    render = newRenderContext;
+
+    // Force window poll events
+    window->pollEvents();
+
+    // Destroy the old swapchain and render pass
+    vulkan.device->destroyRenderPass(render.renderPass->getRenderPass());
+    delete render.renderPass;
+
+    std::vector<vk::ImageView> swapchainImageViews = render.swapchain->getImageViews();
+    for (vk::ImageView imageView : swapchainImageViews) {
+        vulkan.device->destroyImageView(&imageView);
+    }
+    vulkan.device->destroySwapchain(render.swapchain->getSwapchain());
+    delete render.swapchain;
+
+    // Destroy old framebuffers and image views
+    vulkan.device->destroyImageView(vulkan.multiSampleImageView->getImageView());
+    vulkan.device->freeDeviceMemory(vulkan.multiSampleImage->getImageMemory());
+    vulkan.device->destroyImage(vulkan.multiSampleImage->getImage());
+    delete vulkan.multiSampleImageView;
+    delete vulkan.multiSampleImage;
+
+    vulkan.device->destroyImageView(vulkan.depthImageView->getImageView());
+    vulkan.device->freeDeviceMemory(vulkan.depthImage->getImageMemory());
+    vulkan.device->destroyImage(vulkan.depthImage->getImage());
+    delete vulkan.depthImageView;
+    delete vulkan.depthImage;
+
+    for (vk::Framebuffer framebuffer : vulkan.framebuffers)
+        vulkan.device->destroyFramebuffer(framebuffer);
+    vulkan.framebuffers.clear();
+    #ifndef NDEBUG
+        spdlog::info("Vulkan framebuffers successfully destroyed.");
+    #endif
+
+    // Recreate the render context swapchain and render pass
+    render.swapchain = new Swapchain(vulkan.device, window->getSurface(vulkan.instance->getInstance()), window->getWidth(), window->getHeight(), nullptr);
+    render.renderPass = new RenderPass(vulkan.device, render.swapchain);
+
+    // Recreate the image views
+    vulkan.multiSampleImage = createMultiSampleImage();
+    vulkan.multiSampleImageView = createImageView(vulkan.multiSampleImage, vk::ImageAspectFlagBits::eColor);
+    vulkan.depthImage = createDepthImage();
+    vulkan.depthImageView = createImageView(vulkan.depthImage, vk::ImageAspectFlagBits::eDepth);
+
+    // Recreate the framebuffers
+    vulkan.framebuffers = createFramebuffers();
+
+    // Recreate the viewport and scissor and signal the pipeline dynamic state
+    vulkan.scissor = createScissor();
+    vulkan.viewport = createViewport();
+
+    // Update camera aspect ratio and projection matrix
+    camera->setAspectRatio((float)window->getWidth() / (float)window->getHeight());
+    camera->generateProjectionMatrix();
 }
 
 void RenderEngine::renderFrame() {

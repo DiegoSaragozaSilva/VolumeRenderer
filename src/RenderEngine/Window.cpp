@@ -18,7 +18,7 @@ Window::Window(uint32_t width, uint32_t height, std::string name) {
     #endif
 
     // Window creation
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
 
@@ -48,7 +48,7 @@ std::vector<const char*> Window::getGLFWExtensions() {
     return extensions;
 }
 
-vk::SurfaceKHR* Window::getSurface(vk::Instance* instance) {
+vk::SurfaceKHR* Window::getSurface(vk::Instance* instance) { 
     // If window surface has never been created, create and return it
     if (!hasSurfaceBeenCreated) {
         hasSurfaceBeenCreated = true;
@@ -78,6 +78,17 @@ double Window::getTime() {
 
 void Window::pollEvents() {
     glfwPollEvents();
+
+    // Update size variables if window has been resized
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    if (this->width != (uint32_t)width || this->height != (uint32_t)height) {
+        this->width = (uint32_t)width;
+        this->height = (uint32_t)height;
+
+        // Reenable surface creation
+        hasSurfaceBeenCreated = false;
+    }
 }
 
 bool Window::shouldClose() {

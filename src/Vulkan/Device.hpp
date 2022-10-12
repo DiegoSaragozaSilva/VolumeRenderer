@@ -1,7 +1,6 @@
 #ifndef _DEVICE_H_
 #define _DEVICE_H_
 
-#include <iostream>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
 
