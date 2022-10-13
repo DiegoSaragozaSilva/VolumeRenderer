@@ -388,3 +388,58 @@ vk::Pipeline Pipeline::getPipeline() {
 vk::PipelineLayout Pipeline::getPipelineLayout() {
     return pipelineLayout;
 }
+
+vk::DescriptorSet Pipeline::getTextureSamplerDescriptorSet(Device* device, Texture* texture) {
+    // Check for already existing descriptor set for this texture
+    if (textureSamplerDescriptorSets.count(texture) == 0) {
+        // If not found, create it
+        textureSamplerDescriptorSets.insert(std::make_pair(
+            texture,
+            createTextureSamplerDescriptorSet(
+                device,
+                texture,
+                descriptorSetLayouts[0] // [TODO] Differentiate descriptor sets for different sets
+            )
+        ));
+    }
+
+    // Return found descriptor set
+    return textureSamplerDescriptorSets.at(texture);
+}
+
+vk::DescriptorSet Pipeline::createTextureSamplerDescriptorSet(Device* device, Texture* texture, vk::DescriptorSetLayout descriptorSetLayout) {
+    // Descriptor set allocate info
+    vk::DescriptorSetAllocateInfo setAllocateInfo (
+        descriptorPool,
+        1,
+        &descriptorSetLayout
+    );
+
+    // Descriptor set creation
+    vk::DescriptorSet descriptorSet (
+        std::move(device->getLogicalDevice()->allocateDescriptorSets(setAllocateInfo)[0])
+    );
+
+    // Descriptor image info
+    vk::DescriptorImageInfo descriptorImageInfo (
+        texture->getSampler(),
+        *(texture->getImageView()->getImageView()),
+        vk::ImageLayout::eShaderReadOnlyOptimal
+    );
+
+    // Write descriptor set
+    vk::WriteDescriptorSet writeDescriptorSet (
+        descriptorSet,
+        0,
+        0,
+        1,
+        vk::DescriptorType::eCombinedImageSampler,
+        &descriptorImageInfo,
+        nullptr,
+        nullptr
+    );
+
+    // Update descriptor set and return
+    device->getLogicalDevice()->updateDescriptorSets(1, &writeDescriptorSet, 0, nullptr);
+    return descriptorSet;
+}

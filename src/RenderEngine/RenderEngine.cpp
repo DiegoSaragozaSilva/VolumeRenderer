@@ -14,12 +14,17 @@ RenderEngine::RenderEngine() {
     camera->setUpVector({0.0f, 1.0f, 0.0f});
     camera->setFocusPoint({0.0f, 0.0f, 0.0f});
     camera->setFOV(60.0f);
+    camera->setNearPlane(0.1f);
+    camera->setFarPlane(1000.0f);
     camera->generateViewMatrix();
     camera->generateProjectionMatrix();
 
     // REMOVE LATER
-    cubeMesh = Utils::loadOBJFile("assets/objs/cube.obj");
+    cubeMesh = Utils::loadOBJFile("assets/objs/sponza.obj");
     cubeMesh->uploadMesh(vulkan.device);
+
+    ImageData imageData = Utils::loadImageFile("assets/textures/default.png");
+    defaultTexture = new Texture(vulkan.device, vulkan.commandPool, imageData);
 
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");
@@ -373,13 +378,18 @@ void RenderEngine::renderFrame() {
     // Rotate the camera around the scene
     camera->setPosition({
         (float)(sin(window->getTime() / 5.0) * 5.0f),  
-        0.0f,
+        10.0f,
         (float)(cos(window->getTime() / 5.0) * 5.0f),
+    });
+    camera->setFocusPoint({
+        0.0f,
+        10.0f,
+        0.0f
     });
     camera->generateViewMatrix();
 
     // Calculate model view projection matrix
-    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(0.05f, 0.05f, 0.05f));
     glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
 
     // Send MVP via push constants
@@ -396,6 +406,20 @@ void RenderEngine::renderFrame() {
     vk::Buffer cubeVertexBuffer = cubeMesh->getVertexBuffer()->getBuffer();
     commandBuffer.bindVertexBuffers(0, 1, &cubeVertexBuffer, offsets);
     commandBuffer.bindIndexBuffer(cubeMesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
+
+    // Get texture descriptor set
+    vk::DescriptorSet defaultTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(vulkan.device, defaultTexture);
+
+    // Bind texture descriptor set
+    commandBuffer.bindDescriptorSets(
+        vk::PipelineBindPoint::eGraphics,
+        render.defaultPipeline->getPipelineLayout(),
+        0,
+        1,
+        &defaultTextureSamplerDescriptorSet,
+        0,
+        nullptr
+    );
 
     // Draw indexed
     commandBuffer.drawIndexed(cubeMesh->getNumIndices(), 1, 0, 0, 0);

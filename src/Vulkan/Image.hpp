@@ -15,6 +15,7 @@ public:
     vk::Format getFormat();
     vk::Image getImage();
     vk::DeviceMemory getImageMemory();
+    void generateMipmaps(Device* device, CommandPool* commandPool);
 private:
     vk::Image image;
     vk::DeviceMemory imageMemory;
@@ -23,7 +24,7 @@ private:
 
     vk::DeviceMemory allocateImageMemory(Device* device, vk::MemoryPropertyFlags memoryFlags);
     void transitionLayout(Device* device, CommandPool* commandPool, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
-    void applyTransitionLayoutCommand(Device* device, CommandPool* commandPool, vk::PipelineStageFlags sourceStageFlags, vk::PipelineStageFlags destinationStageFlags, vk::ImageMemoryBarrier barrier);    
+    void applyTransitionLayoutCommand(Device* device, CommandPool* commandPool, vk::PipelineStageFlags sourceStageFlags, vk::PipelineStageFlags destinationStageFlags, vk::ImageMemoryBarrier barrier);
 };
 
 #endif

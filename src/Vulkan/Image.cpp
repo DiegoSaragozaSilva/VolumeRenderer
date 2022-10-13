@@ -101,6 +101,12 @@ void Image::transitionLayout(Device* device, CommandPool* commandPool, vk::Image
         return applyTransitionLayoutCommand(device, commandPool, vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eEarlyFragmentTests, barrier);        
     }
 
+    // Stage: Undefined -> Stage: Transfer destination optimal
+    else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal) {
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+        return applyTransitionLayoutCommand(device, commandPool, vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, barrier);        
+    }
+
     // Unknow transition from old to new layout
     spdlog::error("Unsupported image transition from old to new layout");
     throw 0;
@@ -115,6 +121,137 @@ void Image::applyTransitionLayoutCommand(Device* device, CommandPool* commandPoo
 
     // End the command buffer
     commandPool->endCommandBuffer(commandBuffer, device); 
+}
+
+void Image::generateMipmaps(Device* device, CommandPool* commandPool) {
+    // Image subresource range
+    vk::ImageSubresourceRange barrierSubresourceRange (
+        vk::ImageAspectFlagBits::eColor, 
+        0,                               
+        1,                               
+        0,                               
+        1
+    );
+
+    // Image memory barries
+    vk::ImageMemoryBarrier barrier (
+        vk::AccessFlags(),           
+        vk::AccessFlags(),           
+        vk::ImageLayout::eUndefined, 
+        vk::ImageLayout::eUndefined, 
+        VK_QUEUE_FAMILY_IGNORED,     
+        VK_QUEUE_FAMILY_IGNORED,     
+        image,            
+        barrierSubresourceRange
+    );
+
+    // Begin a new command buffer to transition to shader readining
+    vk::CommandBuffer commandBuffer = commandPool->beginCommandBuffer(*(device->getLogicalDevice()));
+
+    // Generate the mipmap level images
+    int mipWidth = width;
+    int mipHeight = height;
+    int mipLevels = mipmapLevels;
+    for (uint32_t mipLevel = 1; mipLevel < mipLevels; mipLevel++)
+    {
+        barrier.subresourceRange.baseMipLevel = mipLevel - 1;
+        barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+        barrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+
+        commandBuffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::DependencyFlags(),
+            0,
+            nullptr,
+            0,
+            nullptr,
+            1,
+            &barrier
+        );
+
+        vk::ImageSubresourceLayers sourceSubresource(
+            vk::ImageAspectFlagBits::eColor, 
+            mipLevel - 1,                    
+            0,                               
+            1
+        );
+
+        std::array<vk::Offset3D, 2> sourceOffsets = {
+            vk::Offset3D(0, 0, 0),
+            vk::Offset3D(mipWidth, mipHeight, 1)
+        };
+
+        vk::ImageSubresourceLayers destinationSubresource(
+            vk::ImageAspectFlagBits::eColor, 
+            mipLevel,                        
+            0,                               
+            1
+        );
+
+        std::array<vk::Offset3D, 2> destinationOffsets = {
+            vk::Offset3D(0, 0, 0),
+            vk::Offset3D(mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1)
+        };
+
+        vk::ImageBlit blit(
+            sourceSubresource,      
+            sourceOffsets,          
+            destinationSubresource, 
+            destinationOffsets
+        );
+
+        commandBuffer.blitImage(
+            image, vk::ImageLayout::eTransferSrcOptimal,
+            image, vk::ImageLayout::eTransferDstOptimal,
+            1, &blit,
+            vk::Filter::eLinear
+        );
+
+        barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+        barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+        commandBuffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::PipelineStageFlagBits::eFragmentShader,
+            vk::DependencyFlags(),
+            0,
+            nullptr,
+            0,
+            nullptr,
+            1,
+            &barrier
+        );
+
+        if (mipWidth > 1)
+            mipWidth /= 2;
+        if (mipHeight > 1)
+            mipHeight /= 2;
+    }
+
+    barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+    barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+    barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+    commandBuffer.pipelineBarrier(
+        vk::PipelineStageFlagBits::eTransfer,
+        vk::PipelineStageFlagBits::eFragmentShader,
+        vk::DependencyFlags(),
+        0,
+        nullptr,
+        0,
+        nullptr,
+        1,
+        &barrier
+    );
+
+    commandPool->endCommandBuffer(commandBuffer, device);
 }
 
 uint32_t Image::getWidth() {

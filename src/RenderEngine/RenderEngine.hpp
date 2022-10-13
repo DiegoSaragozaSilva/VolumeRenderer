@@ -14,6 +14,7 @@
 #include "Utils.hpp"
 #include "Mesh.hpp"
 #include "Camera.hpp"
+#include "Texture.hpp"
 #include "Window.hpp"
 
 // Struct that holds all vulkan context variables
@@ -61,6 +62,7 @@ private:
 
     // REMOVE LATER
     Mesh* cubeMesh;
+    Texture* defaultTexture;
 
     void initWindow();
     void initVulkan();

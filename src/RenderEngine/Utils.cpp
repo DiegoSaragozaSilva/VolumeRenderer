@@ -1,5 +1,8 @@
 #include "Utils.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
 std::vector<uint32_t> Utils::loadShaderCode(std::string shaderPath) {
     // Load shader code from path and convert to uint32_t vector
     std::ifstream shaderStream(shaderPath, std::ios::binary);
@@ -65,4 +68,28 @@ Mesh* Utils::loadOBJFile(std::string OBJPath) {
     objMesh->setIndices(indices);
 
     return objMesh;
+}
+
+ImageData Utils::loadImageFile(std::string imagePath) {
+    // Image data struct
+    ImageData imageData;
+    imageData.depth = 1;
+
+    // Load image with stb_image.h
+    uint8_t* _data = stbi_load(imagePath.c_str(), &imageData.width, &imageData.height, &imageData.channels, STBI_rgb_alpha);
+
+    // Check for error loading the image
+    if (_data == nullptr) {
+        spdlog::error("Failed to load image file: " + imagePath);
+        throw 0;
+    }
+
+    // Calculate the image data size and store the data into the struct
+    uint32_t _dataSize = (imageData.width * imageData.height * (imageData.channels + 1));
+    std::cout << imageData.channels << std::endl;
+    imageData.data = std::vector<uint8_t>(_data, _data + _dataSize);
+
+    spdlog::info("Image " + imagePath + " successfully loaded.");
+
+    return imageData;
 }

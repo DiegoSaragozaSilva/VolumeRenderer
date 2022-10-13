@@ -20,6 +20,8 @@ public:
     uint32_t getGraphicsQueueIndex();
     uint32_t getPresentationQueueIndex();
     bool hasPresentationQueue();
+    bool isAnisotropicFilteringSupported();
+    bool isShaderMultiSamplingSupported();
     vk::SampleCountFlagBits getMultiSamplingLevel();
     vk::Format getDepthFormat();
     vk::Queue getGraphicsQueue();

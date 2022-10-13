@@ -3,6 +3,9 @@ project(VolumeRenderer)
 
 add_compile_options(-O3)
 
+# Base include directory
+include_directories("include")
+
 # Build GLFW from include folder
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only")
 set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")

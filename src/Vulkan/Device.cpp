@@ -41,6 +41,15 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
 
+    // Physical device features
+    vk::PhysicalDeviceFeatures physicalDeviceFeatures;
+
+    if (isShaderMultiSamplingSupported())
+        physicalDeviceFeatures.sampleRateShading = true;
+
+    if (isAnisotropicFilteringSupported())
+        physicalDeviceFeatures.samplerAnisotropy = true;
+
     // Device create info with queues and extensions data
     vk::DeviceCreateInfo deviceCreateInfo (
         vk::DeviceCreateFlags(),
@@ -50,7 +59,7 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
         nullptr,
         extensionNames.size(),
         extensionNames.data(),
-        nullptr
+        &physicalDeviceFeatures
     );
 
     // Logical device creation
@@ -288,6 +297,14 @@ vk::Format Device::getDepthFormat() {
 
 bool Device::hasPresentationQueue() {
     return queueConfig.hasDifferentIndices;
+}
+
+bool Device::isAnisotropicFilteringSupported() {
+    return physicalDevice.getFeatures().samplerAnisotropy;
+}
+
+bool Device::isShaderMultiSamplingSupported() {
+    return physicalDevice.getFeatures().sampleRateShading;   
 }
 
 void Device::destroySwapchain(vk::SwapchainKHR* swapchain) {
