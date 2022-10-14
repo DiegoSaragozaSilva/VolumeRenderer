@@ -24,11 +24,6 @@ Mesh* Utils::loadOBJFile(std::string OBJPath) {
     }
 
     // Combine all faces vertices and indices 
-    uint32_t loadedIndices = 0;
-    uint32_t totalIndices = 0;
-    for (const auto& shape : shapes)
-        totalIndices += shape.mesh.indices.size();
-
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     for (const auto& shape : shapes) {
@@ -56,9 +51,6 @@ Mesh* Utils::loadOBJFile(std::string OBJPath) {
 
             vertices.push_back(vertex);
             indices.push_back(indices.size());
-
-            loadedIndices++;
-            spdlog::info("Loading OBJ file " + OBJPath + " [" + std::to_string(((float)loadedIndices / (float)totalIndices) * 100) + "%]");
         }
     }
 
@@ -66,6 +58,8 @@ Mesh* Utils::loadOBJFile(std::string OBJPath) {
     Mesh* objMesh = new Mesh();
     objMesh->setVertices(vertices);
     objMesh->setIndices(indices);
+
+    spdlog::info("OBJ file " + OBJPath + " successfully loaded.");
 
     return objMesh;
 }
