@@ -15,5 +15,4 @@ void main() {
     // outColor = vec4(shadedColor, 1.0f);
 
     outColor = texture(texSampler, inTexCoord);
-    outColor.w = 1.0f;
 }

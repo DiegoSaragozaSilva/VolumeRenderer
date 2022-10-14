@@ -12,6 +12,8 @@ public:
     Texture(Device* device, CommandPool* commandPool, ImageData imageData);
     ~Texture();
 
+    std::string name;
+
     ImageView* getImageView();
     vk::Sampler getSampler();
 private:

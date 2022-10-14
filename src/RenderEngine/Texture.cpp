@@ -1,6 +1,8 @@
 #include "Texture.hpp"
 
 Texture::Texture(Device* device, CommandPool* commandPool, ImageData imageData) {
+    this->name = imageData.name;
+
     // Image mipmap levels
     uint32_t mipmapLevels = std::floor(std::log2(std::max(imageData.width, imageData.height))) + 1;
 

@@ -19,12 +19,13 @@ RenderEngine::RenderEngine() {
     camera->generateViewMatrix();
     camera->generateProjectionMatrix();
 
-    // REMOVE LATER
-    cubeMesh = Utils::loadOBJFile("assets/objs/sponza.obj");
-    cubeMesh->uploadMesh(vulkan.device);
+    // Initialize the texture pool and required the default texture
+    texturePool = new TexturePool();
+    texturePool->requireTexture(vulkan.device, vulkan.commandPool, "assets/textures/default.png");
 
-    ImageData imageData = Utils::loadImageFile("assets/textures/default.png");
-    defaultTexture = new Texture(vulkan.device, vulkan.commandPool, imageData);
+    // REMOVE LATER
+    sponzaMesh = Utils::loadOBJFile("assets/objs/sponza.obj", "assets/materials");
+    sponzaMesh->uploadMesh(vulkan.device);
 
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");
@@ -403,26 +404,34 @@ void RenderEngine::renderFrame() {
 
     // Bind the cube vertex and index buffers
     vk::DeviceSize offsets[]{0};
-    vk::Buffer cubeVertexBuffer = cubeMesh->getVertexBuffer()->getBuffer();
+    vk::Buffer cubeVertexBuffer = sponzaMesh->getVertexBuffer()->getBuffer();
     commandBuffer.bindVertexBuffers(0, 1, &cubeVertexBuffer, offsets);
-    commandBuffer.bindIndexBuffer(cubeMesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
+    commandBuffer.bindIndexBuffer(sponzaMesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
 
-    // Get texture descriptor set
-    vk::DescriptorSet defaultTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(vulkan.device, defaultTexture);
+    // Draw indexed per material based configuration
+    uint32_t indexStart = 0;
+    std::vector<Material> sponzaMaterials = sponzaMesh->getMaterials();
+    for (Material material : sponzaMaterials) {
+        // Get texture descriptor set
+        vk::DescriptorSet materialTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(
+                vulkan.device,
+                texturePool->requireTexture(vulkan.device, vulkan.commandPool, material.diffuseTextureMap)
+        );
 
-    // Bind texture descriptor set
-    commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eGraphics,
-        render.defaultPipeline->getPipelineLayout(),
-        0,
-        1,
-        &defaultTextureSamplerDescriptorSet,
-        0,
-        nullptr
-    );
+        // Bind texture descriptor set
+        commandBuffer.bindDescriptorSets(
+            vk::PipelineBindPoint::eGraphics,
+            render.defaultPipeline->getPipelineLayout(),
+            0,
+            1,
+            &materialTextureSamplerDescriptorSet,
+            0,
+            nullptr
+        );
 
-    // Draw indexed
-    commandBuffer.drawIndexed(cubeMesh->getNumIndices(), 1, 0, 0, 0);
+        commandBuffer.drawIndexed(material.indexCount, 1, 0, indexStart, 0);
+        indexStart += material.indexCount;
+    }
 
     // End frame rendering
     bool endStatus = renderEnd();

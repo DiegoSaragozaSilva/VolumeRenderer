@@ -67,6 +67,27 @@ struct Vertex {
     }
 };
 
+struct Material {
+    glm::vec3 ambientColor;
+    glm::vec3 diffuseColor;
+    glm::vec3 specularColor;
+    glm::vec3 transmittanceColor;
+    glm::vec3 emissionColor;
+    float specularExponent;
+    float transparency;
+    float indexOfRefraction;
+    int illuminationModel;
+    std::string ambientTextureMap;
+    std::string diffuseTextureMap;
+    std::string specularColorMap;
+    std::string specularHighlightTextureMap;
+    std::string alphaTextureMap;
+    std::string bumpTextureMap;
+    std::string displacementTextureMap;
+    std::string reflectionTextureMap;
+    uint32_t indexCount;
+};
+
 class Mesh {
 public:
     Mesh();
@@ -74,13 +95,17 @@ public:
 
     void setVertices(std::vector<Vertex> vertices);
     void setIndices(std::vector<uint32_t> indices);
+    void setMaterials(std::vector<Material> materials);
     void uploadMesh(Device* device);
     Buffer* getVertexBuffer();
     Buffer* getIndexBuffer();
+    std::vector<Material> getMaterials();
     uint32_t getNumIndices();
 private:
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
+    std::vector<Material> materials;
+
     Buffer* vertexBuffer;
     Buffer* indexBuffer;
 };

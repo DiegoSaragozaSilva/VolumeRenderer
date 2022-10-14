@@ -15,6 +15,7 @@
 #include "Mesh.hpp"
 #include "Camera.hpp"
 #include "Texture.hpp"
+#include "TexturePool.hpp"
 #include "Window.hpp"
 
 // Struct that holds all vulkan context variables
@@ -57,12 +58,12 @@ public:
 private:
     Window* window;
     Camera* camera;
+    TexturePool* texturePool;
     Vulkan vulkan;
     Render render;
 
     // REMOVE LATER
-    Mesh* cubeMesh;
-    Texture* defaultTexture;
+    Mesh* sponzaMesh;
 
     void initWindow();
     void initVulkan();

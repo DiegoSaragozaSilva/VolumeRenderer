@@ -16,6 +16,10 @@ void Mesh::setIndices(std::vector<uint32_t> indices) {
     this->indices = indices;
 }
 
+void Mesh::setMaterials(std::vector<Material> materials) {
+    this->materials = materials;
+}
+
 void Mesh::uploadMesh(Device* device) {
     // Vertices need to have data
     if (vertices.size() == 0) {
@@ -55,6 +59,10 @@ Buffer* Mesh::getVertexBuffer() {
 
 Buffer* Mesh::getIndexBuffer() {
     return indexBuffer;
+}
+
+std::vector<Material> Mesh::getMaterials() {
+    return materials;
 }
 
 uint32_t Mesh::getNumIndices() {
