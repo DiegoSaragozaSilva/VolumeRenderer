@@ -83,6 +83,7 @@ private:
     void recreateRenderContext();
     bool renderBegin();
     bool renderEnd();
+    void renderUI();
 };
 
 #endif

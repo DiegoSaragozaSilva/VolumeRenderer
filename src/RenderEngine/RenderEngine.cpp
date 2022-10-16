@@ -419,17 +419,16 @@ void RenderEngine::renderFrame() {
     ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 
-	ImGui::NewFrame();
+    // Render Imgui UI
+    renderUI();
 
-    ImGui::ShowDemoWindow();
+    // Imgui render
+    ImGui::Render();
 
     // Begin frame rendering
     bool beginStatus = renderBegin();
     if (!beginStatus)
         recreateRenderContext();
-
-    // Imgui render
-    ImGui::Render();
 
     // Bind the default pipeline
     vk::CommandBuffer commandBuffer = vulkan.commandBuffers[vulkan.currentSwapchainImageIndex];
@@ -521,6 +520,40 @@ void RenderEngine::renderFrame() {
     bool endStatus = renderEnd();
     if (!endStatus)
         recreateRenderContext();
+}
+
+void RenderEngine::renderUI() {
+    // Start frame and UI window
+    ImGui::NewFrame();
+
+    // Main menu bar
+    if (ImGui::BeginMainMenuBar()) {
+        ImGui::Text("Render Engine (RE)");
+        ImGui::Separator();
+        if (ImGui::BeginMenu("Scene")) {
+
+            if (ImGui::MenuItem("Load OBJ")) {
+                spdlog::warn("Not implemented yet!");
+            }
+
+            if (ImGui::MenuItem("Reload shaders")) {
+                spdlog::warn("Not implemented yet!");
+            }
+
+            if (ImGui::MenuItem("Clear scene")) {
+                spdlog::warn("Not implemented yet!");
+            }
+            ImGui::EndMenu();
+        }
+        // FPS Counter
+        std::string fpsStr = std::to_string(1000.0f / ImGui::GetIO().Framerate) + " ms/frame | " + std::to_string(ImGui::GetIO().Framerate) + " FPS";
+        float fpsStrSize = ImGui::CalcTextSize(fpsStr.c_str()).x;
+        ImGui::SameLine(ImGui::GetWindowWidth() - fpsStrSize - 20.0f);
+        ImGui::Text(fpsStr.c_str());
+
+        ImGui::EndMainMenuBar();
+    }
+    ImGui::EndFrame();
 }
 
 bool RenderEngine::renderBegin() {
