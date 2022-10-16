@@ -2,6 +2,9 @@
 #define _RENDER_ENGINE_H_
 
 #include <cmath>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_vulkan.h>
 #include "../Vulkan/Instance.hpp"
 #include "../Vulkan/Device.hpp"
 #include "../Vulkan/Swapchain.hpp"
@@ -46,6 +49,7 @@ struct Render {
     RenderPass* renderPass;
     std::vector<ShaderModule*> defaultShaders;
     Pipeline* defaultPipeline;
+    Material defaultMaterial;
 };
 
 class RenderEngine {
@@ -66,6 +70,7 @@ private:
     Mesh* sponzaMesh;
 
     void initWindow();
+    void initImgui();
     void initVulkan();
     Image* createMultiSampleImage();
     Image* createDepthImage();

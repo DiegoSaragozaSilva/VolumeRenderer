@@ -10,6 +10,7 @@ public:
     Window(uint32_t width, uint32_t height, std::string name);
     ~Window();
 
+    GLFWwindow* getWindow();
     std::vector<const char*> getGLFWExtensions();
     vk::SurfaceKHR* getSurface(vk::Instance* instance);
     uint32_t getWidth();

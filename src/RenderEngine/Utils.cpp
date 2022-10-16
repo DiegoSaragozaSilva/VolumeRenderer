@@ -16,13 +16,13 @@ Mesh* Utils::loadOBJFile(std::string OBJPath, std::string materialsDir) {
     tinyobj::attrib_t attribute;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
-
+    
     std::string warning, error;
     if (!tinyobj::LoadObj(&attribute, &shapes, &materials, &warning, &error, OBJPath.c_str(), materialsDir == "" ? NULL : materialsDir.c_str())) {
         spdlog::error("Failed to load OBJ file: " + warning + error);
         throw 0;
     }
-
+    
     // Parse all the materials
     std::vector<Material> objMaterials(materials.size());
     for (size_t i = 0; i < materials.size(); i++) {
@@ -46,34 +46,43 @@ Mesh* Utils::loadOBJFile(std::string OBJPath, std::string materialsDir) {
         _material.reflectionTextureMap = materials[i].reflection_texname;
         objMaterials[i] = _material;
     }
-
+    
     // Combine all faces vertices and indices 
     uint32_t i = 0;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices; 
     std::vector<Material> _materials;
     for (const auto& shape : shapes) {
-        _materials.push_back(objMaterials[shape.mesh.material_ids[0]]);
-        _materials[_materials.size() - 1].indexCount = shape.mesh.indices.size();
+        
+        if (objMaterials.size() > 0) {
+            _materials.push_back(objMaterials[shape.mesh.material_ids[0]]);
+            _materials[_materials.size() - 1].indexCount = shape.mesh.indices.size();
+        }
         for (const auto& index : shape.mesh.indices) {
             Vertex vertex;
+            
+            if (index.vertex_index != -1) {
+                vertex.position = {
+                    attribute.vertices[3 * index.vertex_index + 0],
+                    attribute.vertices[3 * index.vertex_index + 1],
+                    attribute.vertices[3 * index.vertex_index + 2]
+                };
+            }
 
-            vertex.position = {
-                attribute.vertices[3 * index.vertex_index + 0],
-                attribute.vertices[3 * index.vertex_index + 1],
-                attribute.vertices[3 * index.vertex_index + 2]
-            };
+            if (index.normal_index != -1) {
+                vertex.normal = {
+                    attribute.normals[3 * index.normal_index + 0],
+                    attribute.normals[3 * index.normal_index + 1],
+                    attribute.normals[3 * index.normal_index + 2]
+                };
+            }
 
-            vertex.normal = {
-                attribute.normals[3 * index.normal_index + 0],
-                attribute.normals[3 * index.normal_index + 1],
-                attribute.normals[3 * index.normal_index + 2]
-            };
-
-            vertex.uv = {
-                attribute.texcoords[2 * index.texcoord_index + 0],
-                1.0f - attribute.texcoords[2 * index.texcoord_index + 1]
-            };
+            if (index.texcoord_index != -1) {
+                vertex.uv = {
+                    attribute.texcoords[2 * index.texcoord_index + 0],
+                    1.0f - attribute.texcoords[2 * index.texcoord_index + 1]
+                };
+            }
 
             vertex.color = {1.0f, 1.0f, 1.0f};
 
@@ -83,13 +92,15 @@ Mesh* Utils::loadOBJFile(std::string OBJPath, std::string materialsDir) {
         i++;
     }
 
-    std::cout << _materials.size() << std::endl;
-
     // Mesh creation (GPU data is not uploaded by default)
     Mesh* objMesh = new Mesh();
     objMesh->setVertices(vertices);
     objMesh->setIndices(indices);
     objMesh->setMaterials(_materials);
+    
+    // If no normals are passed, generate them
+    if (attribute.normals.size() == 0)
+        objMesh->generateNormals();
 
     spdlog::info("OBJ file " + OBJPath + " successfully loaded.");
 

@@ -27,6 +27,33 @@ add_subdirectory("include/SPIRV-Cross")
 # Build tinyobjloader from include folder
 add_subdirectory("include/tinyobjloader")
 
+# Set up Imgui
+set(IMGUI_DIR include/imgui)
+add_library(IMGUI STATIC)
+
+target_sources(
+    IMGUI
+    PRIVATE
+    ${IMGUI_DIR}/imgui_demo.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui.cpp
+
+    PRIVATE
+    ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+)
+
+target_include_directories(
+    IMGUI
+    PUBLIC ${IMGUI_DIR}
+    PUBLIC ${IMGUI_DIR}/backends
+    PUBLIC ${GLFW_DIR}/include
+)
+
+target_link_libraries(IMGUI PUBLIC glfw)
+
 # Force Vulkan packaged be required
 find_package(Vulkan REQUIRED)
 
@@ -76,7 +103,7 @@ add_executable(Renderer main.cpp ${SOURCES})
 include_directories("include")
 
 # Libray linking
-target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core tinyobjloader)
+target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core tinyobjloader IMGUI)
 
 # Shader custom target
 add_custom_target(Shaders ALL DEPENDS ${SPV_SHADERS})

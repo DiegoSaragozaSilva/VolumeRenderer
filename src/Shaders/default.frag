@@ -9,10 +9,10 @@ layout (location = 2) in vec3 inNormal;
 layout (location = 0) out vec4 outColor;
 
 void main() {
-    // float ambient = 0.1f;
-    // float diffuse = max(dot(inNormal, normalize(vec3(1.0f, 1.0f, -12.0f))), 0.0f);
-    // vec3 shadedColor = (ambient + diffuse) * inColor;
-    // outColor = vec4(shadedColor, 1.0f);
+    vec3 texColor = texture(texSampler, inTexCoord).xyz * inColor;
 
-    outColor = texture(texSampler, inTexCoord);
+    float ambient = 0.1f;
+    float diffuse = max(dot(inNormal, normalize(vec3(1.0f, 1.0f, -12.0f))), 0.0f);
+    vec3 shadedColor = (ambient + diffuse) * texColor;
+    outColor = vec4(shadedColor, 1.0f);
 }

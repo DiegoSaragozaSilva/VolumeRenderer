@@ -93,6 +93,8 @@ public:
     Mesh();
     ~Mesh();
 
+    bool hasNormals;
+
     void setVertices(std::vector<Vertex> vertices);
     void setIndices(std::vector<uint32_t> indices);
     void setMaterials(std::vector<Material> materials);
@@ -101,6 +103,7 @@ public:
     Buffer* getIndexBuffer();
     std::vector<Material> getMaterials();
     uint32_t getNumIndices();
+    void generateNormals();
 private:
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;

@@ -7,6 +7,7 @@ RenderEngine::RenderEngine() {
     // Initializing all basic componentes and Vulkan
     initWindow();
     initVulkan();
+    initImgui();
 
     // Initialize the main camera
     camera = new Camera();
@@ -90,6 +91,53 @@ void RenderEngine::initWindow() {
     window = new Window(800, 600, "Render Engine");
 }
 
+void RenderEngine::initImgui() {
+    // Creating a descriptor pool for the library
+    vk::DescriptorPoolSize poolSizes[] = {
+        vk::DescriptorPoolSize(vk::DescriptorType::eSampler, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformTexelBuffer, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageTexelBuffer, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBufferDynamic, 1000),
+		vk::DescriptorPoolSize(vk::DescriptorType::eInputAttachment, 1000)
+	};
+
+    vk::DescriptorPoolCreateInfo poolInfo (
+        vk::DescriptorPoolCreateFlags(),
+        1000,
+        std::size(poolSizes),
+        poolSizes
+    );
+
+    vk::DescriptorPool imguiPool = vulkan.device->getLogicalDevice()->createDescriptorPool(poolInfo);
+
+	// Initialize the library
+	ImGui::CreateContext();
+	ImGui_ImplGlfw_InitForVulkan(window->getWindow(), true);
+
+	ImGui_ImplVulkan_InitInfo initInfo = {};
+	initInfo.Instance = *(vulkan.instance->getInstance());
+	initInfo.PhysicalDevice = *(vulkan.device->getPhysicalDevice());
+	initInfo.Device = *(vulkan.device->getLogicalDevice());
+	initInfo.Queue = vulkan.device->getGraphicsQueue();
+	initInfo.DescriptorPool = imguiPool;
+	initInfo.MinImageCount = 3;
+	initInfo.ImageCount = 3;
+	initInfo.MSAASamples = (VkSampleCountFlagBits)vulkan.device->getMultiSamplingLevel();
+	ImGui_ImplVulkan_Init(&initInfo, *(render.renderPass->getRenderPass()));
+
+    // Upload Imgui fonts
+    vk::CommandBuffer commandBuffer = vulkan.commandPool->beginCommandBuffer(*(vulkan.device->getLogicalDevice()));
+    ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+    vulkan.commandPool->endCommandBuffer(commandBuffer, vulkan.device);
+    ImGui_ImplVulkan_DestroyFontUploadObjects();
+}
+
 void RenderEngine::initVulkan() {
     // Vulkan instance initialization
     vulkan.instance = new Instance("Render Engine", "Render Engine", window->getGLFWExtensions());    
@@ -164,6 +212,9 @@ void RenderEngine::initVulkan() {
         vulkan.viewport,
         vulkan.scissor
     );
+
+    // Default material initialization
+    render.defaultMaterial.diffuseTextureMap = "assets/textures/default.png";
 }
 
 Image* RenderEngine::createMultiSampleImage() {
@@ -271,10 +322,7 @@ std::vector<vk::ClearValue> RenderEngine::createClearValues() {
     // Sky clear color
     vk::ClearValue skyColor;
     skyColor.color = vk::ClearColorValue(std::array<float, 4> {
-        1.0f,
-        0.0f,
-        0.0f,
-        1.0f
+        135.f / 255.f, 206.f / 255.f, 235.f / 255.f, 1.0f
     });
 
     // Depth clear color
@@ -367,10 +415,21 @@ void RenderEngine::renderFrame() {
     // Window poll events
     window->pollEvents();
 
+    // Start Imgui frame
+    ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+
+	ImGui::NewFrame();
+
+    ImGui::ShowDemoWindow();
+
     // Begin frame rendering
     bool beginStatus = renderBegin();
     if (!beginStatus)
         recreateRenderContext();
+
+    // Imgui render
+    ImGui::Render();
 
     // Bind the default pipeline
     vk::CommandBuffer commandBuffer = vulkan.commandBuffers[vulkan.currentSwapchainImageIndex];
@@ -390,7 +449,7 @@ void RenderEngine::renderFrame() {
     camera->generateViewMatrix();
 
     // Calculate model view projection matrix
-    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(0.05f, 0.05f, 0.05f));
+    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f)), glm::vec3(0.05f, 0.05f, 0.05f));
     glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
 
     // Send MVP via push constants
@@ -411,11 +470,34 @@ void RenderEngine::renderFrame() {
     // Draw indexed per material based configuration
     uint32_t indexStart = 0;
     std::vector<Material> sponzaMaterials = sponzaMesh->getMaterials();
-    for (Material material : sponzaMaterials) {
+    if (sponzaMaterials.size() > 0) {
+        for (Material material : sponzaMaterials) {
+            // Get texture descriptor set
+            vk::DescriptorSet materialTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(
+                    vulkan.device,
+                    texturePool->requireTexture(vulkan.device, vulkan.commandPool, material.diffuseTextureMap)
+            );
+
+            // Bind texture descriptor set
+            commandBuffer.bindDescriptorSets(
+                vk::PipelineBindPoint::eGraphics,
+                render.defaultPipeline->getPipelineLayout(),
+                0,
+                1,
+                &materialTextureSamplerDescriptorSet,
+                0,
+                nullptr
+            );
+
+            commandBuffer.drawIndexed(material.indexCount, 1, 0, indexStart, 0);
+            indexStart += material.indexCount;
+        }
+    }
+    else {
         // Get texture descriptor set
         vk::DescriptorSet materialTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(
                 vulkan.device,
-                texturePool->requireTexture(vulkan.device, vulkan.commandPool, material.diffuseTextureMap)
+                texturePool->requireTexture(vulkan.device, vulkan.commandPool, render.defaultMaterial.diffuseTextureMap)
         );
 
         // Bind texture descriptor set
@@ -429,9 +511,11 @@ void RenderEngine::renderFrame() {
             nullptr
         );
 
-        commandBuffer.drawIndexed(material.indexCount, 1, 0, indexStart, 0);
-        indexStart += material.indexCount;
+        commandBuffer.drawIndexed(sponzaMesh->getNumIndices(), 1, 0, 0, 0);
     }
+
+    // Imgui end render
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
     // End frame rendering
     bool endStatus = renderEnd();

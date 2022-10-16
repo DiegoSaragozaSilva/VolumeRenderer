@@ -38,6 +38,10 @@ Window::~Window() {
     #endif
 }
 
+GLFWwindow* Window::getWindow() {
+    return window;
+}
+
 std::vector<const char*> Window::getGLFWExtensions() {
     // Enumerate all the glfw instance required extensions
     const char** glfwExtensions;
