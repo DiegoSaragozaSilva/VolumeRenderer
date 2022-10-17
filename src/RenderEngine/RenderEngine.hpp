@@ -65,9 +65,7 @@ private:
     TexturePool* texturePool;
     Vulkan vulkan;
     Render render;
-
-    // REMOVE LATER
-    Mesh* sponzaMesh;
+    std::vector<Mesh*> scene;
 
     void initWindow();
     void initImgui();
@@ -84,6 +82,8 @@ private:
     bool renderBegin();
     bool renderEnd();
     void renderUI();
+    void addOBJToScene(std::string objPath);
+    void clearScene();
 };
 
 #endif

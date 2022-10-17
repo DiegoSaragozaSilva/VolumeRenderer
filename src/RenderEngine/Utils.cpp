@@ -132,3 +132,11 @@ ImageData Utils::loadImageFile(std::string imagePath) {
 
     return imageData;
 }
+
+std::vector<std::string> Utils::listFolderFiles(std::string folderPath) {
+    // List files in folder and return a vector with them
+    std::vector<std::string> files;
+    for (const auto& file : std::filesystem::directory_iterator(folderPath))
+        files.push_back(file.path());
+    return files;
+}

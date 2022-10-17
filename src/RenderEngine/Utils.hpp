@@ -8,6 +8,7 @@
 #include <vector>
 #include <fstream>
 #include <iterator>
+#include <filesystem>
 #include "Mesh.hpp"
 
 struct ImageData {
@@ -22,7 +23,7 @@ public:
     static std::vector<uint32_t> loadShaderCode(std::string shaderPath);
     static Mesh* loadOBJFile(std::string OBJPath, std::string materialsDir = "");
     static ImageData loadImageFile(std::string imagePath);
-    static glm::vec3 calculateFaceNormal(std::vector<glm::vec3> face);
+    static std::vector<std::string> listFolderFiles(std::string folderPath);
 private:
     Utils();
 };

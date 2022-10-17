@@ -24,10 +24,6 @@ RenderEngine::RenderEngine() {
     texturePool = new TexturePool();
     texturePool->requireTexture(vulkan.device, vulkan.commandPool, "assets/textures/default.png");
 
-    // REMOVE LATER
-    sponzaMesh = Utils::loadOBJFile("assets/objs/sponza.obj", "assets/materials");
-    sponzaMesh->uploadMesh(vulkan.device);
-
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");
     #endif
@@ -460,21 +456,45 @@ void RenderEngine::renderFrame() {
         &mvp
     );
 
-    // Bind the cube vertex and index buffers
-    vk::DeviceSize offsets[]{0};
-    vk::Buffer cubeVertexBuffer = sponzaMesh->getVertexBuffer()->getBuffer();
-    commandBuffer.bindVertexBuffers(0, 1, &cubeVertexBuffer, offsets);
-    commandBuffer.bindIndexBuffer(sponzaMesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
+    // For each mesh in scene bind it and send descriptors
+    for (Mesh* mesh : scene) {
+        // Bind the mesh vertex and index buffers
+        vk::DeviceSize offsets[]{0};
+        vk::Buffer meshVertexBuffer = mesh->getVertexBuffer()->getBuffer();
+        commandBuffer.bindVertexBuffers(0, 1, &meshVertexBuffer, offsets);
+        commandBuffer.bindIndexBuffer(mesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
 
-    // Draw indexed per material based configuration
-    uint32_t indexStart = 0;
-    std::vector<Material> sponzaMaterials = sponzaMesh->getMaterials();
-    if (sponzaMaterials.size() > 0) {
-        for (Material material : sponzaMaterials) {
+        // Draw indexed per material based configuration
+        uint32_t indexStart = 0;
+        std::vector<Material> meshMaterials = mesh->getMaterials();
+        if (meshMaterials.size() > 0) {
+            for (Material material : meshMaterials) {
+                // Get texture descriptor set
+                vk::DescriptorSet materialTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(
+                        vulkan.device,
+                        texturePool->requireTexture(vulkan.device, vulkan.commandPool, material.diffuseTextureMap)
+                );
+
+                // Bind texture descriptor set
+                commandBuffer.bindDescriptorSets(
+                    vk::PipelineBindPoint::eGraphics,
+                    render.defaultPipeline->getPipelineLayout(),
+                    0,
+                    1,
+                    &materialTextureSamplerDescriptorSet,
+                    0,
+                    nullptr
+                );
+
+                commandBuffer.drawIndexed(material.indexCount, 1, 0, indexStart, 0);
+                indexStart += material.indexCount;
+            }
+        }
+        else {
             // Get texture descriptor set
             vk::DescriptorSet materialTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(
                     vulkan.device,
-                    texturePool->requireTexture(vulkan.device, vulkan.commandPool, material.diffuseTextureMap)
+                    texturePool->requireTexture(vulkan.device, vulkan.commandPool, render.defaultMaterial.diffuseTextureMap)
             );
 
             // Bind texture descriptor set
@@ -488,31 +508,9 @@ void RenderEngine::renderFrame() {
                 nullptr
             );
 
-            commandBuffer.drawIndexed(material.indexCount, 1, 0, indexStart, 0);
-            indexStart += material.indexCount;
+            commandBuffer.drawIndexed(mesh->getNumIndices(), 1, 0, 0, 0);
         }
     }
-    else {
-        // Get texture descriptor set
-        vk::DescriptorSet materialTextureSamplerDescriptorSet = render.defaultPipeline->getTextureSamplerDescriptorSet(
-                vulkan.device,
-                texturePool->requireTexture(vulkan.device, vulkan.commandPool, render.defaultMaterial.diffuseTextureMap)
-        );
-
-        // Bind texture descriptor set
-        commandBuffer.bindDescriptorSets(
-            vk::PipelineBindPoint::eGraphics,
-            render.defaultPipeline->getPipelineLayout(),
-            0,
-            1,
-            &materialTextureSamplerDescriptorSet,
-            0,
-            nullptr
-        );
-
-        commandBuffer.drawIndexed(sponzaMesh->getNumIndices(), 1, 0, 0, 0);
-    }
-
     // Imgui end render
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
@@ -532,17 +530,21 @@ void RenderEngine::renderUI() {
         ImGui::Separator();
         if (ImGui::BeginMenu("Scene")) {
 
-            if (ImGui::MenuItem("Load OBJ")) {
-                spdlog::warn("Not implemented yet!");
+            if (ImGui::BeginMenu("Load OBJ")) {
+                std::vector<std::string> objFiles = Utils::listFolderFiles("assets/objs");
+                for (const auto& file : objFiles)
+                    if (ImGui::MenuItem(file.c_str()))
+                        addOBJToScene(file);
+                ImGui::EndMenu();
             }
 
             if (ImGui::MenuItem("Reload shaders")) {
                 spdlog::warn("Not implemented yet!");
             }
 
-            if (ImGui::MenuItem("Clear scene")) {
-                spdlog::warn("Not implemented yet!");
-            }
+            if (ImGui::MenuItem("Clear scene"))
+                clearScene();
+
             ImGui::EndMenu();
         }
         // FPS Counter
@@ -673,4 +675,16 @@ bool RenderEngine::renderEnd() {
 bool RenderEngine::windowShouldClose() {
     // Return the window should close state
     return window->shouldClose();
+}
+
+void RenderEngine::addOBJToScene(std::string objPath) {
+    // Load model from obj path and add it to scene
+    Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
+    newMesh->uploadMesh(vulkan.device);
+    scene.push_back(newMesh);
+}
+
+void RenderEngine::clearScene() {
+    // Clear scene
+    scene.clear();
 }
