@@ -2,17 +2,40 @@
 
 layout (binding = 0) uniform sampler2D texSampler;
 
-layout (location = 0) in vec3 inColor;
-layout (location = 1) in vec2 inTexCoord;
-layout (location = 2) in vec3 inNormal;
+layout (location = 0) in vec3 inPosition;
+layout (location = 1) in vec3 inColor;
+layout (location = 2) in vec2 inTexCoord;
+layout (location = 3) in vec3 inNormal;
 
 layout (location = 0) out vec4 outColor;
 
-void main() {
-    vec3 texColor = texture(texSampler, inTexCoord).xyz * inColor;
+vec3 phongBRDF(vec3 lightDir, vec3 viewDir, vec3 normal, vec3 diffuseColor, vec3 specularColor, float shininess) {
+    vec3 resultColor = diffuseColor;
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float specDot = max(dot(reflectDir, viewDir), 0.0f);
+    resultColor += pow(specDot, shininess) * specularColor;
+    return resultColor;
+}
 
-    float ambient = 0.1f;
-    float diffuse = max(dot(inNormal, normalize(vec3(1.0f, 1.0f, -12.0f))), 0.0f);
-    vec3 shadedColor = (ambient + diffuse) * texColor;
-    outColor = vec4(shadedColor, 1.0f);
+void main() {
+    vec3 lightDir = normalize(vec3(1.0f, 0.25f, 0.15f));
+    vec3 viewDir = normalize(-inPosition);
+   
+    vec3 lightColor = vec3(0.25f);
+    vec3 specularColor = vec3(1.0f);
+    vec3 ambientColor = vec3(0.01f);
+    vec3 texColor = texture(texSampler, inTexCoord).xyz;
+    vec3 diffuseColor = texColor == vec3(0) ? inColor : texColor;
+    vec3 radiance = ambientColor; 
+
+    float shininess = 50.0f;
+    float irradiancePerb = 1.0f;
+    float irradiance = max(dot(lightDir, inNormal), 0.0f) * irradiancePerb;
+    if (irradiance > 0.0f) {
+      vec3 brdf = phongBRDF(lightDir, viewDir, inNormal, diffuseColor, specularColor, shininess);
+      radiance += brdf * irradiance * lightColor;
+    }
+
+    radiance = pow(radiance, vec3(1.0f / 2.2f));
+    outColor = vec4(radiance, 1.0f);
 }

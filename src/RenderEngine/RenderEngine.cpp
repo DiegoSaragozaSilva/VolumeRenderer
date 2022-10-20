@@ -685,6 +685,11 @@ void RenderEngine::addOBJToScene(std::string objPath) {
 }
 
 void RenderEngine::clearScene() {
-    // Clear scene
+    // Clear scene and free resources
+    for (Mesh* mesh : scene) {
+        vulkan.device->freeDeviceMemory(mesh->getVertexBuffer()->getDeviceMemory());
+        vulkan.device->freeDeviceMemory(mesh->getIndexBuffer()->getDeviceMemory());
+        delete mesh;
+    }
     scene.clear();
 }

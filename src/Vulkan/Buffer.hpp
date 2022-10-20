@@ -9,6 +9,7 @@ public:
     ~Buffer();
 
     vk::Buffer getBuffer();
+    vk::DeviceMemory getDeviceMemory();
 private:
     vk::Buffer buffer;
     vk::DeviceMemory deviceMemory;

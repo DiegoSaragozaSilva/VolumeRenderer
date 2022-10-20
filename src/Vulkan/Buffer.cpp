@@ -45,3 +45,7 @@ Buffer::~Buffer() {
 vk::Buffer Buffer::getBuffer() {
     return buffer;
 }
+
+vk::DeviceMemory Buffer::getDeviceMemory() {
+    return deviceMemory;
+}
