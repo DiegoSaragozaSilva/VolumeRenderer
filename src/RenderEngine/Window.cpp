@@ -98,3 +98,8 @@ void Window::pollEvents() {
 bool Window::shouldClose() {
     return glfwWindowShouldClose(window);
 }
+
+void Window::setKeyboardCallback(void (*callback)(GLFWwindow*, int, int, int, int)) {
+    // Set GLFW keyboard callback to the specified function
+    glfwSetKeyCallback(window, callback);
+}

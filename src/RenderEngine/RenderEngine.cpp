@@ -13,7 +13,7 @@ RenderEngine::RenderEngine() {
     camera = new Camera();
     camera->setPosition({0.0f, 0.0f, 0.0f});
     camera->setUpVector({0.0f, 1.0f, 0.0f});
-    camera->setFocusPoint({0.0f, 0.0f, 0.0f});
+    camera->setFrontVector({0.0f, 0.0f, -1.0f});
     camera->setFOV(60.0f);
     camera->setNearPlane(0.1f);
     camera->setFarPlane(1000.0f);
@@ -23,6 +23,13 @@ RenderEngine::RenderEngine() {
     // Initialize the texture pool and required the default texture
     texturePool = new TexturePool();
     texturePool->requireTexture(vulkan.device, vulkan.commandPool, "assets/textures/default.png");
+
+    // Initialize the UIStates
+    uiStates.showCameraProperties = false;
+
+    // Initialize time data
+    deltaTime = 0.0;
+    lastTime = 0.0;
 
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");
@@ -411,6 +418,11 @@ void RenderEngine::renderFrame() {
     // Window poll events
     window->pollEvents();
 
+    // Update delta time
+    double currentTime = window->getTime();
+    deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
     // Start Imgui frame
     ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -430,21 +442,8 @@ void RenderEngine::renderFrame() {
     vk::CommandBuffer commandBuffer = vulkan.commandBuffers[vulkan.currentSwapchainImageIndex];
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.defaultPipeline->getPipeline());
 
-    // Rotate the camera around the scene
-    camera->setPosition({
-        (float)(sin(window->getTime() / 5.0) * 5.0f),  
-        10.0f,
-        (float)(cos(window->getTime() / 5.0) * 5.0f),
-    });
-    camera->setFocusPoint({
-        0.0f,
-        10.0f,
-        0.0f
-    });
-    camera->generateViewMatrix();
-
     // Calculate model view projection matrix
-    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f)), glm::vec3(0.05f, 0.05f, 0.05f));
+    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
     glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
 
     // Send MVP via push constants
@@ -529,7 +528,6 @@ void RenderEngine::renderUI() {
         ImGui::Text("Render Engine (RE)");
         ImGui::Separator();
         if (ImGui::BeginMenu("Scene")) {
-
             if (ImGui::BeginMenu("Load OBJ")) {
                 std::vector<std::string> objFiles = Utils::listFolderFiles("assets/objs");
                 for (const auto& file : objFiles)
@@ -547,6 +545,12 @@ void RenderEngine::renderUI() {
 
             ImGui::EndMenu();
         }
+        if (ImGui::BeginMenu("Options")) {
+            ImGui::Checkbox("Show camera properties", &uiStates.showCameraProperties);
+            
+            ImGui::EndMenu();
+        }
+        
         // FPS Counter
         std::string fpsStr = std::to_string(1000.0f / ImGui::GetIO().Framerate) + " ms/frame | " + std::to_string(ImGui::GetIO().Framerate) + " FPS";
         float fpsStrSize = ImGui::CalcTextSize(fpsStr.c_str()).x;
@@ -555,6 +559,29 @@ void RenderEngine::renderUI() {
 
         ImGui::EndMainMenuBar();
     }
+
+    // Camera properties window
+    if (uiStates.showCameraProperties) {
+        glm::vec3 position = camera->getPosition();
+        glm::vec3 upVector = camera->getUpVector();
+        glm::vec3 frontVector = camera->getFrontVector();
+        float yaw = camera->getYaw();
+        float pitch = camera->getPitch();
+
+        std::string positionStr = "Position: " + std::to_string(position.x) + " " + std::to_string(position.y) + " " + std::to_string(position.z);
+        std::string frontVectorStr = "Front vector: " + std::to_string(frontVector.x) + " " + std::to_string(frontVector.y) + " " + std::to_string(frontVector.z);
+        std::string upVectorStr = "Up vector: " + std::to_string(upVector.x) + " " + std::to_string(upVector.y) + " " + std::to_string(upVector.z);
+        std::string rotationStr = "Rotation: " + std::to_string(yaw) + " " + std::to_string(pitch) + " " + std::to_string(0.0f);
+
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
+        ImGui::Begin("Camera properties", &uiStates.showCameraProperties, windowFlags);
+        ImGui::Text(positionStr.c_str());
+        ImGui::Text(rotationStr.c_str());
+        ImGui::Text(frontVectorStr.c_str());
+        ImGui::Text(upVectorStr.c_str());
+        ImGui::End();
+    }
+
     ImGui::EndFrame();
 }
 
@@ -672,11 +699,6 @@ bool RenderEngine::renderEnd() {
     return true;
 }
 
-bool RenderEngine::windowShouldClose() {
-    // Return the window should close state
-    return window->shouldClose();
-}
-
 void RenderEngine::addOBJToScene(std::string objPath) {
     // Load model from obj path and add it to scene
     Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
@@ -692,4 +714,8 @@ void RenderEngine::clearScene() {
         delete mesh;
     }
     scene.clear();
+}
+
+double RenderEngine::getDeltaTime() {
+    return deltaTime;
 }

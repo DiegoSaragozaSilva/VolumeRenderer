@@ -21,8 +21,8 @@ void Camera::setUpVector(glm::vec3 up) {
     this->up = up;
 }
 
-void Camera::setFocusPoint(glm::vec3 focusPoint) {
-    this->focusPoint = focusPoint;
+void Camera::setFrontVector(glm::vec3 front) {
+    this->front = front;
 }
 
 void Camera::setAspectRatio(float aspectRatio) {
@@ -41,6 +41,14 @@ void Camera::setFarPlane(float farPlane) {
     this->farPlane = farPlane;
 }
 
+void Camera::setPitch(float pitch) {
+    this->pitch = pitch;
+}
+
+void Camera::setYaw(float yaw) {
+    this->yaw = yaw;
+}
+
 glm::mat4 Camera::getViewMatrix() {
     return viewMatrix;
 }
@@ -49,9 +57,37 @@ glm::mat4 Camera::getProjectionMatrix() {
     return projectionMatrix;
 }
 
+glm::vec3 Camera::getPosition() {
+    return position;
+}
+
+glm::vec3 Camera::getUpVector() {
+    return up;
+}
+
+glm::vec3 Camera::getFrontVector() {
+    return front;
+}
+
+float Camera::getPitch() {
+    return pitch;
+}
+
+float Camera::getYaw() {
+    return yaw;
+}
+
 void Camera::generateViewMatrix() {
     // View matrix generation
-    viewMatrix = glm::lookAt(position, focusPoint, up);
+    glm::mat4 translation = glm::mat4(1.0f);
+    translation = glm::rotate(translation, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+    translation = glm::rotate(translation, pitch, glm::vec3(-1.0f, 0.0f, 0.0f));
+
+    front = glm::normalize(translation * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+    glm::vec3 right = glm::normalize(translation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)) * glm::tan(glm::radians(fov) * 0.5f) * aspectRatio;
+    up = glm::normalize(glm::cross(front, right)) * glm::tan(glm::radians(fov) * 0.5f);
+
+    viewMatrix = glm::lookAt(position, position + front, up);
 }
 
 void Camera::generateProjectionMatrix() {

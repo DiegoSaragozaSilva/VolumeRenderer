@@ -24,8 +24,8 @@ void main() {
     vec3 lightColor = vec3(0.25f);
     vec3 specularColor = vec3(1.0f);
     vec3 ambientColor = vec3(0.01f);
-    vec3 texColor = texture(texSampler, inTexCoord).xyz;
-    vec3 diffuseColor = texColor == vec3(0) ? inColor : texColor;
+    vec4 texColor = texture(texSampler, inTexCoord);
+    vec3 diffuseColor = texColor.xyz == vec3(0) ? inColor : texColor.xyz;
     vec3 radiance = ambientColor; 
 
     float shininess = 50.0f;
@@ -37,5 +37,5 @@ void main() {
     }
 
     radiance = pow(radiance, vec3(1.0f / 2.2f));
-    outColor = vec4(radiance, 1.0f);
+    outColor = vec4(radiance, texColor.w);
 }

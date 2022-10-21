@@ -52,20 +52,28 @@ struct Render {
     Material defaultMaterial;
 };
 
+// Struct that holds all the UI states
+struct UIStates {
+    bool showCameraProperties;
+};
+
 class RenderEngine {
 public:
     RenderEngine();
     ~RenderEngine();
 
-    bool windowShouldClose();
-    void renderFrame();
-private:
     Window* window;
     Camera* camera;
+
+    void renderFrame();
+    double getDeltaTime();
+private:
     TexturePool* texturePool;
     Vulkan vulkan;
     Render render;
     std::vector<Mesh*> scene;
+    UIStates uiStates;
+    double deltaTime, lastTime;
 
     void initWindow();
     void initImgui();
