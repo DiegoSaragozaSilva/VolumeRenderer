@@ -1,7 +1,7 @@
 #include <iostream>
 #include "src/RenderEngine/RenderEngine.hpp"
 
-#define CAMERA_SPEED 50.0f
+#define CAMERA_SPEED 10.0f
 #define CAMERA_ROTATE_SPEED 0.01f
 
 glm::vec2 previousMousePos = {-1.0f, -1.0f};
@@ -12,14 +12,16 @@ void processInput(Window* window) {
     if (glfwGetKey(window->getWindow(), GLFW_KEY_W) == GLFW_PRESS) {
         glm::vec3 oldPosition = renderEngine->camera->getPosition();
         glm::vec3 frontVector = renderEngine->camera->getFrontVector();
-        renderEngine->camera->setPosition(oldPosition + (float)(CAMERA_SPEED * renderEngine->getDeltaTime()) * frontVector);
+        float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
+        renderEngine->camera->setPosition(oldPosition + (float)(camSpeed * renderEngine->getDeltaTime()) * frontVector);
         renderEngine->camera->generateViewMatrix();
     }
 
     if (glfwGetKey(window->getWindow(), GLFW_KEY_S) == GLFW_PRESS) {
         glm::vec3 oldPosition = renderEngine->camera->getPosition();
         glm::vec3 frontVector = renderEngine->camera->getFrontVector();
-        renderEngine->camera->setPosition(oldPosition - (float)(CAMERA_SPEED * renderEngine->getDeltaTime()) * frontVector);
+        float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
+        renderEngine->camera->setPosition(oldPosition - (float)(camSpeed * renderEngine->getDeltaTime()) * frontVector);
         renderEngine->camera->generateViewMatrix();
     }
 
@@ -28,7 +30,8 @@ void processInput(Window* window) {
         glm::vec3 frontVector = renderEngine->camera->getFrontVector();
         glm::vec3 upVector = renderEngine->camera->getUpVector();
         glm::vec3 rightVector = glm::normalize(glm::cross(frontVector, upVector));
-        renderEngine->camera->setPosition(oldPosition + (float)(CAMERA_SPEED * renderEngine->getDeltaTime()) * rightVector);
+        float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
+        renderEngine->camera->setPosition(oldPosition + (float)(camSpeed * renderEngine->getDeltaTime()) * rightVector);
         renderEngine->camera->generateViewMatrix();
     }
     
@@ -37,7 +40,8 @@ void processInput(Window* window) {
         glm::vec3 frontVector = renderEngine->camera->getFrontVector();
         glm::vec3 upVector = renderEngine->camera->getUpVector();
         glm::vec3 rightVector = glm::normalize(glm::cross(frontVector, upVector));
-        renderEngine->camera->setPosition(oldPosition - (float)(CAMERA_SPEED * renderEngine->getDeltaTime()) * rightVector);
+        float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
+        renderEngine->camera->setPosition(oldPosition - (float)(camSpeed * renderEngine->getDeltaTime()) * rightVector);
         renderEngine->camera->generateViewMatrix();
     }
 

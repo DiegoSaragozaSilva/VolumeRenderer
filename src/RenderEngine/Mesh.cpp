@@ -70,7 +70,7 @@ uint32_t Mesh::getNumIndices() {
 }
 
 void Mesh::generateNormals() {
-    // For each mesh face, generate a normal
+    // For each mesh face, generate a weighted normal
     for (uint32_t i = 0; i < vertices.size(); i += 3) {
         glm::vec3 p1 = vertices[i + 0].position;
         glm::vec3 p2 = vertices[i + 1].position;
@@ -79,14 +79,14 @@ void Mesh::generateNormals() {
         glm::vec3 U = p2 - p1;
         glm::vec3 V = p3 - p2;
 
-        glm::vec3 n = {
-            U.y * V.z - U.z * V.y,
-            U.z * V.x - U.x * V.z,
-            U.x * V.y - U.y * V.x
-        };
-
-        vertices[i + 0].normal = n;
-        vertices[i + 1].normal = n;
-        vertices[i + 2].normal = n;
+        glm::vec3 n = glm::cross(U, V);
+ 
+        vertices[i + 0].normal += glm::normalize(n);
+        vertices[i + 1].normal += glm::normalize(n);
+        vertices[i + 2].normal += glm::normalize(n);
     }
+
+    // For each vertex, normalize the normal
+    for (uint32_t i = 0; i < vertices.size(); i++)
+        vertices[i].normal = glm::normalize(vertices[i].normal);
 }
