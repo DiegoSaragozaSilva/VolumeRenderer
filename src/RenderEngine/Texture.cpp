@@ -106,6 +106,10 @@ Texture::~Texture() {
 
 }
 
+Image* Texture::getImage() {
+    return image;
+}
+
 ImageView* Texture::getImageView() {
     return imageView;
 }

@@ -70,20 +70,28 @@ uint32_t Mesh::getNumIndices() {
 }
 
 void Mesh::generateNormals() {
+    // Reset all the normals
+    for (uint32_t i = 0; i < vertices.size(); i++)
+        vertices[i].normal = {0.0f, 0.0f, 0.0f};
+
     // For each mesh face, generate a weighted normal
-    for (uint32_t i = 0; i < vertices.size(); i += 3) {
-        glm::vec3 p1 = vertices[i + 0].position;
-        glm::vec3 p2 = vertices[i + 1].position;
-        glm::vec3 p3 = vertices[i + 2].position;
+    for (uint32_t i = 0; i < indices.size(); i += 3) {
+        glm::vec3 p1 = vertices[indices[i + 0]].position;
+        glm::vec3 p2 = vertices[indices[i + 1]].position;
+        glm::vec3 p3 = vertices[indices[i + 2]].position;
 
         glm::vec3 U = p2 - p1;
         glm::vec3 V = p3 - p2;
 
         glm::vec3 n = glm::cross(U, V);
- 
-        vertices[i + 0].normal += glm::normalize(n);
-        vertices[i + 1].normal += glm::normalize(n);
-        vertices[i + 2].normal += glm::normalize(n);
+
+        float a1 = glm::acos(glm::dot(glm::normalize(p2 - p1), glm::normalize(p3 - p1)));
+        float a2 = glm::acos(glm::dot(glm::normalize(p3 - p2), glm::normalize(p1 - p2)));
+        float a3 = glm::acos(glm::dot(glm::normalize(p1 - p3), glm::normalize(p2 - p3)));
+
+        vertices[indices[i + 0]].normal += n * a1;
+        vertices[indices[i + 1]].normal += n * a2;
+        vertices[indices[i + 2]].normal += n * a3;
     }
 
     // For each vertex, normalize the normal

@@ -68,6 +68,7 @@ void processInput(Window* window) {
 
         previousMousePos = mousePos;
     }
+
     if (glfwGetMouseButton(window->getWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
         // Reset previous mouse position
         previousMousePos.x = -1.0f;

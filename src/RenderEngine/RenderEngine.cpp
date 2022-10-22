@@ -37,6 +37,15 @@ RenderEngine::RenderEngine() {
 }
 
 RenderEngine::~RenderEngine() {
+    // Destroy the scene
+    clearScene();
+
+    // Default pipeline destruction
+    deletePipeline(render.defaultPipeline);
+
+    // Terminate ImGui
+    ImGui::DestroyContext();
+
     // Render pass destruction
     vulkan.device->destroyRenderPass(render.renderPass->getRenderPass());
     delete render.renderPass;
@@ -77,8 +86,21 @@ RenderEngine::~RenderEngine() {
     #ifndef NDEBUG
         spdlog::info("Vulkan framebuffers successfully destroyed.");
     #endif
-    
-        // Device destruction
+   
+    // Sync objects destruction
+    for (vk::Semaphore semaphore : vulkan.graphicsSemaphores)
+        vulkan.device->destroySemaphore(semaphore);
+    for (vk::Semaphore semaphore : vulkan.presentationSemaphores)
+        vulkan.device->destroySemaphore(semaphore);
+    for (vk::Fence fence : vulkan.graphicsFences)
+        vulkan.device->destroyFence(fence);
+
+    // Texture pool cleanup
+    std::map<std::string, Texture*> pool = texturePool->getPool();
+    for (const auto& poolItem : pool)
+        deleteTexture(poolItem.second);
+
+    // Device destruction 
     delete vulkan.device;
 
     // Instance destruction
@@ -569,8 +591,8 @@ void RenderEngine::renderUI() {
         float pitch = camera->getPitch();
 
         std::string positionStr = "Position: " + std::to_string(position.x) + " " + std::to_string(position.y) + " " + std::to_string(position.z);
-        std::string frontVectorStr = "Front vector: " + std::to_string(frontVector.x) + " " + std::to_string(frontVector.y) + " " + std::to_string(frontVector.z);
-        std::string upVectorStr = "Up vector: " + std::to_string(upVector.x) + " " + std::to_string(upVector.y) + " " + std::to_string(upVector.z);
+        std::string frontVectorStr = "Front: " + std::to_string(frontVector.x) + " " + std::to_string(frontVector.y) + " " + std::to_string(frontVector.z);
+        std::string upVectorStr = "Up: " + std::to_string(upVector.x) + " " + std::to_string(upVector.y) + " " + std::to_string(upVector.z);
         std::string rotationStr = "Rotation: " + std::to_string(yaw) + " " + std::to_string(pitch) + " " + std::to_string(0.0f);
 
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
@@ -718,4 +740,27 @@ void RenderEngine::clearScene() {
 
 double RenderEngine::getDeltaTime() {
     return deltaTime;
+}
+
+void RenderEngine::deletePipeline(Pipeline* pipeline) {
+    // Destroy the pipeline components
+    vulkan.device->destroyDescriptorPool(pipeline->getDescriptorPool());
+    
+    std::vector<vk::DescriptorSetLayout> descriptorSetLayouts = pipeline->getDescriptorSetLayouts();
+    for (vk::DescriptorSetLayout layout : descriptorSetLayouts)
+        vulkan.device->destroyDescriptorSetLayout(layout);
+
+    vulkan.device->destroyPipelineLayout(pipeline->getPipelineLayout());
+    vulkan.device->destroyPipeline(pipeline->getPipeline());
+
+    delete pipeline;
+}
+
+void RenderEngine::deleteTexture(Texture* texture) {
+    // Destroy the texture components
+    vulkan.device->destroySampler(texture->getSampler());
+    vulkan.device->destroyImageView(texture->getImageView()->getImageView());
+    vulkan.device->freeDeviceMemory(texture->getImage()->getImageMemory());
+    vulkan.device->destroyImage(texture->getImage()->getImage());
+    delete texture;
 }

@@ -16,6 +16,8 @@ public:
 
     vk::Pipeline getPipeline();
     vk::PipelineLayout getPipelineLayout();
+    vk::DescriptorPool getDescriptorPool();
+    std::vector<vk::DescriptorSetLayout> getDescriptorSetLayouts();
     vk::DescriptorSet getTextureSamplerDescriptorSet(Device* device, Texture* texture);
 private:
     vk::Pipeline pipeline;

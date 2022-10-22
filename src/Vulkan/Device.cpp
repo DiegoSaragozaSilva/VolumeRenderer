@@ -321,6 +321,10 @@ void Device::destroyImageView(vk::ImageView* imageView) {
     imageView = nullptr;
 }
 
+void Device::destroySampler(vk::Sampler sampler) {
+    logicalDevice.destroySampler(sampler);
+}
+
 void Device::destroyRenderPass(vk::RenderPass* renderPass) {
     logicalDevice.destroyRenderPass(*renderPass);
     renderPass = nullptr;
@@ -336,6 +340,30 @@ void Device::destroyFramebuffer(vk::Framebuffer framebuffer) {
 
 void Device::destroyShaderModule(vk::ShaderModule shaderModule) {
     logicalDevice.destroyShaderModule(shaderModule);
+}
+
+void Device::destroyDescriptorSetLayout(vk::DescriptorSetLayout descriptorSetLayout) {
+    logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout);
+}
+
+void Device::destroyDescriptorPool(vk::DescriptorPool descriptorPool) {
+    logicalDevice.destroyDescriptorPool(descriptorPool);
+}
+
+void Device::destroyPipelineLayout(vk::PipelineLayout pipelineLayout) {
+    logicalDevice.destroyPipelineLayout(pipelineLayout);
+}
+
+void Device::destroyPipeline(vk::Pipeline pipeline) {
+    logicalDevice.destroyPipeline(pipeline);
+}
+
+void Device::destroySemaphore(vk::Semaphore semaphore) {
+    logicalDevice.destroySemaphore(semaphore);
+}
+
+void Device::destroyFence(vk::Fence fence) {
+    logicalDevice.destroyFence(fence);
 }
 
 void Device::freeDeviceMemory(vk::DeviceMemory deviceMemory) {

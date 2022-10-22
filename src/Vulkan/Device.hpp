@@ -32,10 +32,17 @@ public:
     void destroySwapchain(vk::SwapchainKHR* swapchain);
     void destroyImage(vk::Image image);
     void destroyImageView(vk::ImageView* imageView);
+    void destroySampler(vk::Sampler sampler);
     void destroyRenderPass(vk::RenderPass* renderPass);
     void destroyCommandPool(vk::CommandPool commandPool);
     void destroyFramebuffer(vk::Framebuffer framebuffer);
     void destroyShaderModule(vk::ShaderModule shaderModule);
+    void destroyDescriptorSetLayout(vk::DescriptorSetLayout descriptorSetLayout);
+    void destroyDescriptorPool(vk::DescriptorPool descriptorPool);
+    void destroyPipelineLayout(vk::PipelineLayout pipelineLayout);
+    void destroyPipeline(vk::Pipeline pipeline);
+    void destroySemaphore(vk::Semaphore semaphore);
+    void destroyFence(vk::Fence fence);
     void freeDeviceMemory(vk::DeviceMemory deviceMemory);
 private:
     vk::PhysicalDevice physicalDevice;

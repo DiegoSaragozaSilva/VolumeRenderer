@@ -92,6 +92,8 @@ private:
     void renderUI();
     void addOBJToScene(std::string objPath);
     void clearScene();
+    void deletePipeline(Pipeline* pipeline);
+    void deleteTexture(Texture* texture);
 };
 
 #endif

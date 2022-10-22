@@ -23,3 +23,7 @@ Texture* TexturePool::requireTexture(Device* device, CommandPool* commandPool, s
     }
     return pool[textureName];
 }
+
+std::map<std::string, Texture*> TexturePool::getPool() {
+    return pool;
+}

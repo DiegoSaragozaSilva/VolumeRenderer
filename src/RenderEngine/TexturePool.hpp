@@ -13,6 +13,7 @@ public:
     ~TexturePool();
 
     Texture* requireTexture(Device* device, CommandPool* commandPool, std::string textureName);
+    std::map<std::string, Texture*> getPool();
 private:
     std::map<std::string, Texture*> pool;
 };

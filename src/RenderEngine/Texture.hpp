@@ -14,6 +14,7 @@ public:
 
     std::string name;
 
+    Image* getImage();
     ImageView* getImageView();
     vk::Sampler getSampler();
 private:

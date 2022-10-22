@@ -389,6 +389,14 @@ vk::PipelineLayout Pipeline::getPipelineLayout() {
     return pipelineLayout;
 }
 
+vk::DescriptorPool Pipeline::getDescriptorPool() {
+    return descriptorPool;
+}
+
+std::vector<vk::DescriptorSetLayout> Pipeline::getDescriptorSetLayouts() {
+    return descriptorSetLayouts;
+}
+
 vk::DescriptorSet Pipeline::getTextureSamplerDescriptorSet(Device* device, Texture* texture) {
     // Check for already existing descriptor set for this texture
     if (textureSamplerDescriptorSets.count(texture) == 0) {
