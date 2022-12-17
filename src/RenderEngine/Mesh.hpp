@@ -2,6 +2,8 @@
 #define _MESH_H_
 
 #include <glm/glm.hpp>
+#include <limits>
+#include "Geometry.hpp"
 #include "../Vulkan/Buffer.hpp"
 
 struct VertexInputDescription {
@@ -98,12 +100,16 @@ public:
     void setVertices(std::vector<Vertex> vertices);
     void setIndices(std::vector<uint32_t> indices);
     void setMaterials(std::vector<Material> materials);
-    void uploadMesh(Device* device);
+    std::vector<Vertex> getVertices();
+    std::vector<uint32_t> getIndices();
     Buffer* getVertexBuffer();
     Buffer* getIndexBuffer();
     std::vector<Material> getMaterials();
     uint32_t getNumIndices();
+    AABB getBoundingBox();
+    void uploadMesh(Device* device);
     void generateNormals();
+    void translateByMatrix(glm::mat4 translationMatrix);
 private:
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;

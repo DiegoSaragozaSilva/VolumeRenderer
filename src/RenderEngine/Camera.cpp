@@ -5,6 +5,9 @@ Camera::Camera() {
     aspectRatio = 4.0f / 3.0f;
     nearPlane = 0.1f;
     farPlane = 100.0f;
+    isOrbital = false;
+
+    pivot = glm::vec3(0, 0, 0);
 
     #ifndef NDEBUG
         spdlog::info("New camera successfully created.");
@@ -23,6 +26,10 @@ void Camera::setUpVector(glm::vec3 up) {
 
 void Camera::setFrontVector(glm::vec3 front) {
     this->front = front;
+}
+
+void Camera::setPivot(glm::vec3 pivot) {
+    this->pivot = pivot;
 }
 
 void Camera::setAspectRatio(float aspectRatio) {
@@ -69,6 +76,14 @@ glm::vec3 Camera::getFrontVector() {
     return front;
 }
 
+glm::vec3 Camera::getPivotPoint() {
+    return pivot;
+}
+
+glm::vec3 Camera::getRightVector() {
+    return glm::transpose(viewMatrix)[0];
+}
+
 float Camera::getPitch() {
     return pitch;
 }
@@ -77,17 +92,44 @@ float Camera::getYaw() {
     return yaw;
 }
 
+float Camera::getFOV() {
+    return fov;
+}
+
 void Camera::generateViewMatrix() {
-    // View matrix generation
-    glm::mat4 translation = glm::mat4(1.0f);
-    translation = glm::rotate(translation, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-    translation = glm::rotate(translation, pitch, glm::vec3(-1.0f, 0.0f, 0.0f));
+    if (!isOrbital) {
+        glm::mat4 rotation = glm::mat4(1.0f);
+        rotation = glm::rotate(rotation, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+        rotation = glm::rotate(rotation, pitch, glm::vec3(-1.0f, 0.0f, 0.0f));
 
-    front = glm::normalize(translation * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-    glm::vec3 right = glm::normalize(translation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)) * glm::tan(glm::radians(fov) * 0.5f) * aspectRatio;
-    up = glm::normalize(glm::cross(front, right)) * glm::tan(glm::radians(fov) * 0.5f);
+        front = glm::normalize(rotation * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+        glm::vec3 right = glm::normalize(rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)) * glm::tan(glm::radians(fov) * 0.5f) * aspectRatio;
+        up = glm::normalize(glm::cross(front, right)) * glm::tan(glm::radians(fov) * 0.5f);
 
-    viewMatrix = glm::lookAt(position, position + front, up);
+        viewMatrix = glm::lookAt(position, position + front, up);
+    }
+    else {
+        glm::mat4 rotation = glm::mat4(1.0f);
+        rotation = glm::rotate(rotation, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+        rotation = glm::rotate(rotation, pitch, glm::vec3(-1.0f, 0.0f, 0.0f));
+
+        front = glm::normalize(rotation * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+        glm::vec3 right = glm::normalize(rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)) * glm::tan(glm::radians(fov) * 0.5f) * aspectRatio;
+        up = glm::normalize(glm::cross(front, right)) * glm::tan(glm::radians(fov) * 0.5f);
+
+        glm::vec4 focus = glm::vec4(position - pivot, 1);
+    
+        rotation = glm::mat4(1.0f);
+        rotation = glm::rotate(rotation, yaw, up);
+        focus = rotation * focus;
+
+        rotation = glm::mat4(1.0f);
+        rotation = glm::rotate(rotation, pitch, right);
+        focus = rotation * focus;
+
+        position = pivot + glm::vec3(focus);
+        viewMatrix = glm::lookAt(position, pivot, glm::vec3(0, 1, 0));
+    }
 }
 
 void Camera::generateProjectionMatrix() {

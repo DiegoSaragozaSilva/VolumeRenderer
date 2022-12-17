@@ -20,6 +20,14 @@ void Mesh::setMaterials(std::vector<Material> materials) {
     this->materials = materials;
 }
 
+std::vector<Vertex> Mesh::getVertices() {
+    return vertices;
+}
+
+std::vector<uint32_t> Mesh::getIndices() {
+    return indices;
+}
+
 void Mesh::uploadMesh(Device* device) {
     // Vertices need to have data
     if (vertices.size() == 0) {
@@ -69,6 +77,30 @@ uint32_t Mesh::getNumIndices() {
     return indices.size();
 }
 
+AABB Mesh::getBoundingBox() {
+    AABB boundingBox = {
+        .min = glm::vec3(std::numeric_limits<float>::max()),
+        .max = glm::vec3(std::numeric_limits<float>::min()),
+        .center = glm::vec3(0.0f)
+    };
+
+    for (uint32_t i = 0; i < vertices.size(); i++) {
+        glm::vec3 vertexPosition = vertices[i].position;
+        
+        boundingBox.min.x = vertexPosition.x < boundingBox.min.x ? vertexPosition.x : boundingBox.min.x;
+        boundingBox.min.y = vertexPosition.y < boundingBox.min.y ? vertexPosition.y : boundingBox.min.y;
+        boundingBox.min.z = vertexPosition.z < boundingBox.min.z ? vertexPosition.z : boundingBox.min.z;
+
+        boundingBox.max.x = vertexPosition.x > boundingBox.max.x ? vertexPosition.x : boundingBox.max.x;
+        boundingBox.max.y = vertexPosition.y > boundingBox.max.y ? vertexPosition.y : boundingBox.max.y;
+        boundingBox.max.z = vertexPosition.z > boundingBox.max.z ? vertexPosition.z : boundingBox.max.z;
+    }
+
+    boundingBox.center = (boundingBox.max + boundingBox.min) / 2.0f;
+
+    return boundingBox;
+}
+
 void Mesh::generateNormals() {
     // Reset all the normals
     for (uint32_t i = 0; i < vertices.size(); i++)
@@ -97,4 +129,9 @@ void Mesh::generateNormals() {
     // For each vertex, normalize the normal
     for (uint32_t i = 0; i < vertices.size(); i++)
         vertices[i].normal = glm::normalize(vertices[i].normal);
+}
+
+void Mesh::translateByMatrix(glm::mat4 translationMatrix) {
+    for (uint32_t i = 0; i < vertices.size(); i++)
+        vertices[i].position = glm::vec3(translationMatrix * glm::vec4(vertices[i].position, 1.0f));
 }

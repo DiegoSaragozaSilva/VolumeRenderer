@@ -567,8 +567,22 @@ void RenderEngine::renderUI() {
 
             ImGui::EndMenu();
         }
+
+        if (ImGui::BeginMenu("Voxelizer")) {
+            if (ImGui::BeginMenu("Voxelize OBJ")) {
+                std::vector<std::string> objFiles = Utils::listFolderFiles("assets/objs");
+                for (const auto& file : objFiles)
+                    if (ImGui::MenuItem(file.c_str()))
+                        addVoxelizedOBJToScene(file);
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Options")) {
             ImGui::Checkbox("Show camera properties", &uiStates.showCameraProperties);
+            ImGui::InputInt("Voxel scale", &Voxelizer::scale);
+            ImGui::InputInt("Voxel density", &Voxelizer::density);
             
             ImGui::EndMenu();
         }
@@ -726,6 +740,22 @@ void RenderEngine::addOBJToScene(std::string objPath) {
     Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
     newMesh->uploadMesh(vulkan.device);
     scene.push_back(newMesh);
+
+    AABB meshAABB = newMesh->getBoundingBox();
+    camera->setPivot(meshAABB.center);
+}
+
+void RenderEngine::addVoxelizedOBJToScene(std::string objPath) {
+    // Load model from obj path, voxelize it and add to the scene
+    Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
+    Volume meshVolume = Voxelizer::voxelizeMesh(newMesh);
+    Mesh* volumeMesh = Voxelizer::triangulateVolume(meshVolume);
+
+    volumeMesh->uploadMesh(vulkan.device);
+    scene.push_back(volumeMesh);
+
+    AABB meshAABB = volumeMesh->getBoundingBox();
+    camera->setPivot(meshAABB.center);
 }
 
 void RenderEngine::clearScene() {

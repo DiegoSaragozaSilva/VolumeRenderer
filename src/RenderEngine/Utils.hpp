@@ -4,6 +4,7 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <tinyobjloader/tiny_obj_loader.h>
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 #include <fstream>

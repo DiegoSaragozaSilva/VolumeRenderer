@@ -20,6 +20,7 @@
 #include "Texture.hpp"
 #include "TexturePool.hpp"
 #include "Window.hpp"
+#include "Voxelizer.hpp"
 
 // Struct that holds all vulkan context variables
 struct Vulkan {
@@ -91,6 +92,7 @@ private:
     bool renderEnd();
     void renderUI();
     void addOBJToScene(std::string objPath);
+    void addVoxelizedOBJToScene(std::string objPath);
     void clearScene();
     void deletePipeline(Pipeline* pipeline);
     void deleteTexture(Texture* texture);

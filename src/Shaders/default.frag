@@ -30,9 +30,9 @@ void main() {
 
     float shininess = 50.0f;
     float irradiancePerb = 1.0f;
-    float irradiance = max(dot(lightDir, inNormal), 0.0f) * irradiancePerb;
+    float irradiance = max(dot(lightDir, normalize(inNormal)), 0.0f) * irradiancePerb;
     if (irradiance > 0.0f) {
-      vec3 brdf = phongBRDF(lightDir, viewDir, inNormal, diffuseColor, specularColor, shininess);
+      vec3 brdf = phongBRDF(lightDir, viewDir, normalize(inNormal), diffuseColor, specularColor, shininess);
       radiance += brdf * irradiance * lightColor;
     }
 
