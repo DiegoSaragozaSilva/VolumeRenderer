@@ -255,7 +255,6 @@ std::vector<vk::PushConstantRange> Pipeline::createPushConstantRanges(std::vecto
     }
 
     return pushConstantRanges;
-
 }
 
 vk::PipelineShaderStageCreateInfo Pipeline::initShaderStage(ShaderModule* shaderModule) {

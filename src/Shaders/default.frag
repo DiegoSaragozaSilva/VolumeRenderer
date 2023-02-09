@@ -6,6 +6,8 @@ layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inColor;
 layout (location = 2) in vec2 inTexCoord;
 layout (location = 3) in vec3 inNormal;
+layout (location = 4) in vec3 inViewPosition;
+layout (location = 5) in vec3 inViewDirection;
 
 layout (location = 0) out vec4 outColor;
 
@@ -18,8 +20,8 @@ vec3 phongBRDF(vec3 lightDir, vec3 viewDir, vec3 normal, vec3 diffuseColor, vec3
 }
 
 void main() {
-    vec3 lightDir = normalize(vec3(1.0f, 0.25f, 0.15f));
-    vec3 viewDir = normalize(-inPosition);
+    vec3 lightDir = normalize(-inViewDirection);
+    vec3 viewDir = normalize(-inViewPosition);
    
     vec3 lightColor = vec3(0.25f);
     vec3 specularColor = vec3(1.0f);

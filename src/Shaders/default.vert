@@ -1,6 +1,8 @@
 #version 460
 
-layout (push_constant) uniform PushConstants {
+layout (std430, push_constant) uniform PushConstants {
+    vec4 viewPosition;
+    vec4 viewDirection;
     mat4 mvp;
 } pushConstants;
 
@@ -13,6 +15,8 @@ layout (location = 0) out vec3 outPosition;
 layout (location = 1) out vec3 outColor;
 layout (location = 2) out vec2 outTexCoord;
 layout (location = 3) out vec3 outNormal;
+layout (location = 4) out vec3 outViewPosition;
+layout (location = 5) out vec3 outViewDirection;
 
 void main() {
     gl_Position = pushConstants.mvp * vec4(inPosition, 1.0f);
@@ -25,4 +29,6 @@ void main() {
     outColor = inColor;
     outTexCoord = inTexCoord;
     outNormal = inNormal;
+    outViewPosition = pushConstants.viewPosition.xyz;
+    outViewDirection = pushConstants.viewDirection.xyz;
 }

@@ -53,6 +53,13 @@ struct Render {
     Material defaultMaterial;
 };
 
+// Struct for basic push constants
+struct PushConstants {
+    glm::vec4 viewPosition;
+    glm::vec4 viewDirection;
+    glm::mat4 mvp;
+};
+
 // Struct that holds all the UI states
 struct UIStates {
     bool showCameraProperties;

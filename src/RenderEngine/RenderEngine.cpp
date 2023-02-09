@@ -468,13 +468,25 @@ void RenderEngine::renderFrame() {
     glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
     glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
 
-    // Send MVP via push constants
+    // Get the camera position and direction
+    glm::vec3 _camPosition = camera->getPosition();
+    glm::vec3 _camDirection = camera->getFrontVector();
+    glm::vec4 camPosition = glm::vec4(_camPosition.x, _camPosition.y, _camPosition.z, 1.0f);
+    glm::vec4 camDirection = glm::vec4(_camDirection.x, _camDirection.y, _camDirection.z, 1.0f);
+
+    // Fill the push constants struct and send it
+    PushConstants pushConstants = { 
+        camPosition,
+        camDirection,
+        mvp
+    };
+
     commandBuffer.pushConstants (
         render.defaultPipeline->getPipelineLayout(),
         vk::ShaderStageFlagBits::eVertex,
         0,
-        sizeof(glm::mat4),
-        &mvp
+        sizeof(PushConstants),
+        &pushConstants
     );
 
     // For each mesh in scene bind it and send descriptors

@@ -140,7 +140,10 @@ Mesh* Voxelizer::triangulateVolume(Volume volume) {
 }
 
 void Voxelizer::removeDuplicatedVoxels(std::vector<glm::vec3>& voxels) {
-    std::unordered_set<glm::vec3> voxelSet;
-    for(uint32_t i = 0; i < voxels.size(); i++ ) voxelSet.insert(voxels[i]);
-    voxels.assign(voxelSet.begin(), voxelSet.end());
+    std::cout << "N° of voxels before duplicate removal: " << voxels.size() << std::endl;
+    std::sort(voxels.begin(), voxels.end(), [](const glm::vec3& a, const glm::vec3& b) -> bool {
+                return glm::all(glm::lessThan(a, b));
+            });
+    voxels.erase(std::unique(voxels.begin(), voxels.end()), voxels.end());
+    std::cout << "N° of voxels after duplicate removal: " << voxels.size() << std::endl;
 }
