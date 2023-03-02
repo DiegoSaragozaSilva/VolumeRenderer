@@ -5,7 +5,7 @@ int Voxelizer::density = 20;
 
 Volume Voxelizer::voxelizeMesh(Mesh* mesh) {
     normalizeMesh(mesh);
-    std::vector<glm::vec3> voxels = getMeshSurfacePoints(mesh);
+    std::vector<Voxel> voxels = getMeshSurfacePoints(mesh);
     removeDuplicatedVoxels(voxels);
 
     Volume volume = {
@@ -42,14 +42,14 @@ void Voxelizer::normalizeMesh(Mesh* mesh) {
     mesh->translateByMatrix(finalMatrix);
 }
 
-std::vector<glm::vec3> Voxelizer::getMeshSurfacePoints(Mesh* mesh) {
+std::vector<Voxel> Voxelizer::getMeshSurfacePoints(Mesh* mesh) {
     std::vector<Vertex> vertices = mesh->getVertices();
     std::vector<uint32_t> indices = mesh->getIndices();
 
     uint32_t numPoints;
     float a, b, c, p, area, lambda, mu;
-    glm::vec3 v0, v1, v2, v3, v4, v5, point;
-    std::vector<glm::vec3> points;
+    glm::vec3 v0, v1, v2, v3, v4, v5, point, normal;
+    std::vector<Voxel> voxels;
     for (uint32_t i = 0; i < indices.size(); i += 3) {
         v0 = vertices[indices[i + 0]].position;
         v1 = vertices[indices[i + 1]].position;
@@ -57,6 +57,7 @@ std::vector<glm::vec3> Voxelizer::getMeshSurfacePoints(Mesh* mesh) {
         v3 = v0 - v1;
         v4 = v1 - v2;
         v5 = v0 - v2;
+        normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
         a = glm::length(v3);
         b = glm::length(v4);
@@ -68,10 +69,21 @@ std::vector<glm::vec3> Voxelizer::getMeshSurfacePoints(Mesh* mesh) {
             lambda = glm::linearRand(0.0f, 1.0f);
             mu = glm::linearRand(0.0f, 1.0f);
             point = (v0 + (lambda * v3)) + (v4 * (lambda * mu));
-            points.push_back(point);
+            
+            Voxel v;
+            v.position = point;
+            v.normal = normal;
+
+            glm::vec3 color = glm::vec3(0.75f); // glm::linearRand(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+            v.renderData = 0;
+            v.renderData += (uint8_t)(color.z * 255.0f);
+            v.renderData += (uint8_t)(color.y * 255.0f) << 8;
+            v.renderData += (uint8_t)(color.x * 255.0f) << 16;
+
+            voxels.push_back(v);
         }
     }
-    return points;
+    return voxels;
 }
 
 Mesh* Voxelizer::triangulateVolume(Volume volume) {
@@ -79,46 +91,56 @@ Mesh* Voxelizer::triangulateVolume(Volume volume) {
     std::vector<uint32_t> indices;
 
     uint32_t index = 0;
-    float voxelSize = 1.0f;
+    float voxelSize = 0.3f;
     for (uint32_t i = 0; i < volume.voxels.size(); i++, index += 8) {
+        uint32_t voxelColor = volume.voxels[i].renderData;
+        glm::vec3 color = glm::vec3((voxelColor & 0x00110000) >> 16, (voxelColor & 0x00001100) >> 8, voxelColor & 0x0000011);
         Vertex v1 = {
-            .position = glm::vec3(-voxelSize, -voxelSize, voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(-voxelSize, -voxelSize, voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         Vertex v2 = {
-            .position = glm::vec3(voxelSize, -voxelSize, voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(voxelSize, -voxelSize, voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         Vertex v3 = {
-            .position = glm::vec3(voxelSize, voxelSize, voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(voxelSize, voxelSize, voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         Vertex v4 = {
-            .position = glm::vec3(-voxelSize, voxelSize, voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(-voxelSize, voxelSize, voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         Vertex v5 = {
-            .position = glm::vec3(-voxelSize, -voxelSize, -voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(-voxelSize, -voxelSize, -voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         Vertex v6 = {
-            .position = glm::vec3(voxelSize, -voxelSize, -voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(voxelSize, -voxelSize, -voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         Vertex v7 = {
-            .position = glm::vec3(voxelSize, voxelSize, -voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(voxelSize, voxelSize, -voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         Vertex v8 = {
-            .position = glm::vec3(-voxelSize, voxelSize, -voxelSize) + volume.voxels[i],
-            .color = glm::vec3(0.5f)
+            .position = glm::vec3(-voxelSize, voxelSize, -voxelSize) + volume.voxels[i].position,
+            .normal = volume.voxels[i].normal,
+            .color = color
         };
 
         vertices.insert(vertices.end(), {v1, v2, v3, v4, v5, v6, v7, v8});
@@ -139,11 +161,11 @@ Mesh* Voxelizer::triangulateVolume(Volume volume) {
     return volumeMesh;
 }
 
-void Voxelizer::removeDuplicatedVoxels(std::vector<glm::vec3>& voxels) {
+void Voxelizer::removeDuplicatedVoxels(std::vector<Voxel>& voxels) {
     std::cout << "N° of voxels before duplicate removal: " << voxels.size() << std::endl;
-    std::sort(voxels.begin(), voxels.end(), [](const glm::vec3& a, const glm::vec3& b) -> bool {
-                return glm::all(glm::lessThan(a, b));
-            });
+    std::sort(voxels.begin(), voxels.end(), [](Voxel& a, Voxel& b) -> bool {
+        return a < b;
+    });
     voxels.erase(std::unique(voxels.begin(), voxels.end()), voxels.end());
     std::cout << "N° of voxels after duplicate removal: " << voxels.size() << std::endl;
 }

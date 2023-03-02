@@ -1,6 +1,6 @@
 #include "Pipeline.hpp"
 
-Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderModule*> shaderModules, std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription, vk::PrimitiveTopology topology, vk::PolygonMode polygonMode, vk::Viewport viewport, vk::Rect2D scissor) {
+Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderModule*> shaderModules, std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription, vk::PrimitiveTopology topology, vk::PolygonMode polygonMode, vk::Viewport viewport, vk::Rect2D scissor, float lineWidth) {
     // Create the pipeline descriptor pool
     descriptorPool = createDescriptorPool(device);
     
@@ -25,7 +25,7 @@ Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderMod
     );
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = initInputAssembly(topology);
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = initRasterizationState(polygonMode);
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = initRasterizationState(polygonMode, lineWidth);
     vk::PipelineMultisampleStateCreateInfo multiSampleStateCreateInfo = initMultiSamplingState(device->getMultiSamplingLevel());
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = initDepthStencilState();
  
@@ -289,7 +289,7 @@ vk::PipelineInputAssemblyStateCreateInfo Pipeline::initInputAssembly(vk::Primiti
     return inputAssemblyStateCreateInfo;
 }
 
-vk::PipelineRasterizationStateCreateInfo Pipeline::initRasterizationState(vk::PolygonMode polygonMode) {
+vk::PipelineRasterizationStateCreateInfo Pipeline::initRasterizationState(vk::PolygonMode polygonMode, float lineWidth) {
     // Rasterization state create info creation and return
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo (
         vk::PipelineRasterizationStateCreateFlags(),
@@ -302,7 +302,7 @@ vk::PipelineRasterizationStateCreateInfo Pipeline::initRasterizationState(vk::Po
         0.0f,
         0.0f,
         0.0f,
-        1.0f
+        lineWidth
     );
     return rasterizationStateCreateInfo;
 }

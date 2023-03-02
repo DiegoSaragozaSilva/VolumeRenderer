@@ -26,6 +26,8 @@ RenderEngine::RenderEngine() {
 
     // Initialize the UIStates
     uiStates.showCameraProperties = false;
+    uiStates.showDebugStructures = false;
+    uiStates.octreeMaxDepth = 5;
 
     // Initialize time data
     deltaTime = 0.0;
@@ -224,6 +226,14 @@ void RenderEngine::initVulkan() {
     render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.vert.spv"), vk::ShaderStageFlagBits::eVertex));
     render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.frag.spv"), vk::ShaderStageFlagBits::eFragment));
 
+    // Voxel shaders initialization
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.vert.spv"), vk::ShaderStageFlagBits::eVertex));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.frag.spv"), vk::ShaderStageFlagBits::eFragment));
+
+    // Debug shaders initialization
+    render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.vert.spv"), vk::ShaderStageFlagBits::eVertex));
+    render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.frag.spv"), vk::ShaderStageFlagBits::eFragment));
+
     // Default pipeline initialization
     VertexInputDescription vertexDescription = Vertex::getVertexDescription();
     render.defaultPipeline = new Pipeline(
@@ -235,7 +245,36 @@ void RenderEngine::initVulkan() {
         vk::PrimitiveTopology::eTriangleList,
         vk::PolygonMode::eFill,
         vulkan.viewport,
-        vulkan.scissor
+        vulkan.scissor,
+        1.0f
+    );
+
+    // Voxel pipeline initialization
+    render.voxelPipeline = new Pipeline(
+        vulkan.device,
+        render.renderPass,
+        render.voxelShaders,
+        vertexDescription.bindings,
+        vertexDescription.attributes,
+        vk::PrimitiveTopology::ePointList,
+        vk::PolygonMode::eFill,
+        vulkan.viewport,
+        vulkan.scissor,
+        1.0f
+    );
+
+    // Debug pipeline initialization
+    render.debugPipeline = new Pipeline(
+        vulkan.device,
+        render.renderPass,
+        render.debugShaders,
+        vertexDescription.bindings,
+        vertexDescription.attributes,
+        vk::PrimitiveTopology::eLineList,
+        vk::PolygonMode::eFill,
+        vulkan.viewport,
+        vulkan.scissor,
+        1.0f
     );
 
     // Default material initialization
@@ -445,6 +484,16 @@ void RenderEngine::renderFrame() {
     deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 
+    // Calculate model view projection matrix
+    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+    glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
+
+    // Get the camera position and direction
+    glm::vec3 _camPosition = camera->getPosition();
+    glm::vec3 _camDirection = camera->getFrontVector();
+    glm::vec4 camPosition = glm::vec4(_camPosition.x, _camPosition.y, _camPosition.z, 1.0f);
+    glm::vec4 camDirection = glm::vec4(_camDirection.x, _camDirection.y, _camDirection.z, 1.0f);
+
     // Start Imgui frame
     ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -463,16 +512,6 @@ void RenderEngine::renderFrame() {
     // Bind the default pipeline
     vk::CommandBuffer commandBuffer = vulkan.commandBuffers[vulkan.currentSwapchainImageIndex];
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.defaultPipeline->getPipeline());
-
-    // Calculate model view projection matrix
-    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
-    glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
-
-    // Get the camera position and direction
-    glm::vec3 _camPosition = camera->getPosition();
-    glm::vec3 _camDirection = camera->getFrontVector();
-    glm::vec4 camPosition = glm::vec4(_camPosition.x, _camPosition.y, _camPosition.z, 1.0f);
-    glm::vec4 camDirection = glm::vec4(_camDirection.x, _camDirection.y, _camDirection.z, 1.0f);
 
     // Fill the push constants struct and send it
     PushConstants pushConstants = { 
@@ -544,6 +583,54 @@ void RenderEngine::renderFrame() {
             commandBuffer.drawIndexed(mesh->getNumIndices(), 1, 0, 0, 0);
         }
     }
+
+    // Bind volume pipeline
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.voxelPipeline->getPipeline());
+
+    // Push constants
+    commandBuffer.pushConstants (
+        render.voxelPipeline->getPipelineLayout(),
+        vk::ShaderStageFlagBits::eVertex,
+        0,
+        sizeof(PushConstants),
+        &pushConstants
+    );
+
+    for (Mesh* mesh : voxelScene) {
+        vk::DeviceSize offsets[]{0};
+        vk::Buffer volumeVertexBuffer = mesh->getVertexBuffer()->getBuffer();
+        commandBuffer.bindVertexBuffers(0, 1, &volumeVertexBuffer, offsets);
+        commandBuffer.bindIndexBuffer(mesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
+
+        // Draw indexed
+        commandBuffer.drawIndexed(mesh->getNumIndices(), 1, 0, 0, 0);
+    }
+
+    if (uiStates.showDebugStructures) {
+        // Bind debug pipeline
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.debugPipeline->getPipeline());
+
+        // Push constants
+        commandBuffer.pushConstants (
+            render.debugPipeline->getPipelineLayout(),
+            vk::ShaderStageFlagBits::eVertex,
+            0,
+            sizeof(PushConstants),
+            &pushConstants
+        );
+
+        // Bind the mesh vertex and index buffers
+        for (Mesh* mesh : debugScene) {
+            vk::DeviceSize offsets[]{0};
+            vk::Buffer debugVertexBuffer = mesh->getVertexBuffer()->getBuffer();
+            commandBuffer.bindVertexBuffers(0, 1, &debugVertexBuffer, offsets);
+            commandBuffer.bindIndexBuffer(mesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
+
+            // Draw indexed
+            commandBuffer.drawIndexed(mesh->getNumIndices(), 1, 0, 0, 0);
+        }
+    }
+
     // Imgui end render
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
@@ -593,9 +680,10 @@ void RenderEngine::renderUI() {
 
         if (ImGui::BeginMenu("Options")) {
             ImGui::Checkbox("Show camera properties", &uiStates.showCameraProperties);
+            ImGui::Checkbox("Show debug structures", &uiStates.showDebugStructures);
             ImGui::InputInt("Voxel scale", &Voxelizer::scale);
             ImGui::InputInt("Voxel density", &Voxelizer::density);
-            
+            ImGui::SliderInt("Octree max depth", &uiStates.octreeMaxDepth, 1, 10); 
             ImGui::EndMenu();
         }
         
@@ -705,12 +793,13 @@ bool RenderEngine::renderEnd() {
     vk::PipelineStageFlags pipelineStageFlags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
     // Create a submit info for the graphics queue
+    std::vector<vk::CommandBuffer> commandBuffers = {commandBuffer};
     vk::SubmitInfo submitInfo (
         1,
         &graphicsSemaphore,
         &pipelineStageFlags,
         1,
-        &commandBuffer,
+        commandBuffers.data(),
         1,
         &presentationSemaphore
     );
@@ -750,24 +839,36 @@ bool RenderEngine::renderEnd() {
 void RenderEngine::addOBJToScene(std::string objPath) {
     // Load model from obj path and add it to scene
     Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
-    newMesh->uploadMesh(vulkan.device);
-    scene.push_back(newMesh);
-
-    AABB meshAABB = newMesh->getBoundingBox();
-    camera->setPivot(meshAABB.center);
+    addMeshToScene(newMesh);
 }
 
 void RenderEngine::addVoxelizedOBJToScene(std::string objPath) {
     // Load model from obj path, voxelize it and add to the scene
     Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
     Volume meshVolume = Voxelizer::voxelizeMesh(newMesh);
-    Mesh* volumeMesh = Voxelizer::triangulateVolume(meshVolume);
 
-    volumeMesh->uploadMesh(vulkan.device);
-    scene.push_back(volumeMesh);
+    Octree* volumeOctree = new Octree();
+    volumeOctree->build(meshVolume.voxels, uiStates.octreeMaxDepth);
+    addVolumeMeshToScene(volumeOctree->compressToMesh(uiStates.octreeMaxDepth));
 
-    AABB meshAABB = volumeMesh->getBoundingBox();
-    camera->setPivot(meshAABB.center);
+    // std::vector<Mesh*> debugOctreeMeshes = volumeOctree->getDebugMeshes();
+    // for (Mesh* debugMesh : debugOctreeMeshes)
+    //     addDebugMeshToScene(debugMesh); 
+}
+
+void RenderEngine::addMeshToScene(Mesh* mesh) {
+    mesh->uploadMesh(vulkan.device);
+    scene.push_back(mesh);
+}
+
+void RenderEngine::addVolumeMeshToScene(Mesh* mesh) {
+    mesh->uploadMesh(vulkan.device);
+    voxelScene.push_back(mesh);
+}
+
+void RenderEngine::addDebugMeshToScene(Mesh* mesh) {
+    mesh->uploadMesh(vulkan.device);
+    debugScene.push_back(mesh);
 }
 
 void RenderEngine::clearScene() {
@@ -775,9 +876,23 @@ void RenderEngine::clearScene() {
     for (Mesh* mesh : scene) {
         vulkan.device->freeDeviceMemory(mesh->getVertexBuffer()->getDeviceMemory());
         vulkan.device->freeDeviceMemory(mesh->getIndexBuffer()->getDeviceMemory());
-        delete mesh;
+            delete mesh;
     }
     scene.clear();
+
+    for (Mesh* mesh : voxelScene) {
+        vulkan.device->freeDeviceMemory(mesh->getVertexBuffer()->getDeviceMemory());
+        vulkan.device->freeDeviceMemory(mesh->getIndexBuffer()->getDeviceMemory());
+        delete mesh;
+    }
+    voxelScene.clear();
+
+    for (Mesh* mesh : debugScene) {
+        vulkan.device->freeDeviceMemory(mesh->getVertexBuffer()->getDeviceMemory());
+        vulkan.device->freeDeviceMemory(mesh->getIndexBuffer()->getDeviceMemory());
+        delete mesh;
+    }
+    debugScene.clear();
 }
 
 double RenderEngine::getDeltaTime() {

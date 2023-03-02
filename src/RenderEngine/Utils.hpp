@@ -10,7 +10,9 @@
 #include <fstream>
 #include <iterator>
 #include <filesystem>
+
 #include "Mesh.hpp"
+#include "Geometry.hpp"
 
 struct ImageData {
     std::string name;
@@ -25,6 +27,7 @@ public:
     static Mesh* loadOBJFile(std::string OBJPath, std::string materialsDir = "");
     static ImageData loadImageFile(std::string imagePath);
     static std::vector<std::string> listFolderFiles(std::string folderPath);
+    static Mesh* getDebugBoxMesh(AABB aabb, glm::vec3 color);
 private:
     Utils();
 };

@@ -1,4 +1,5 @@
 #include "src/RenderEngine/RenderEngine.hpp"
+#include "src/RenderEngine/Octree.hpp"
 
 #define FREE_CAMERA
 

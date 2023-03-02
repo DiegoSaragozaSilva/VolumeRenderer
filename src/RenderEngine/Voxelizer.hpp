@@ -13,10 +13,11 @@
 #include <iostream>
 
 #include "Mesh.hpp"
+#include "Geometry.hpp"
 
 struct Volume {
     int scale;
-    std::vector<glm::vec3> voxels; // Change vector data type to a Voxel struct that contains per voxel data
+    std::vector<Voxel> voxels;
 };
 
 class Voxelizer {
@@ -25,13 +26,13 @@ public:
     static int density;
 
     static Volume voxelizeMesh(Mesh* mesh);
-    static void normalizeMesh(Mesh* mesh);
     static Mesh* triangulateVolume(Volume volume);
 private:
     Voxelizer();
 
-    static std::vector<glm::vec3> getMeshSurfacePoints(Mesh* mesh);
-    static void removeDuplicatedVoxels(std::vector<glm::vec3>& voxels);
+    static std::vector<Voxel> getMeshSurfacePoints(Mesh* mesh);
+    static void normalizeMesh(Mesh* mesh);
+    static void removeDuplicatedVoxels(std::vector<Voxel>& voxels);
 };
 
 #endif

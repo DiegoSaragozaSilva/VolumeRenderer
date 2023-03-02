@@ -11,7 +11,7 @@
 
 class Pipeline {
 public:
-    Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderModule*> shaderModules, std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription, vk::PrimitiveTopology topology, vk::PolygonMode polygonMode, vk::Viewport viewport, vk::Rect2D scissor);
+    Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderModule*> shaderModules, std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription, vk::PrimitiveTopology topology, vk::PolygonMode polygonMode, vk::Viewport viewport, vk::Rect2D scissor, float lineWidth);
     ~Pipeline();
 
     vk::Pipeline getPipeline();
@@ -33,7 +33,7 @@ private:
     vk::PipelineShaderStageCreateInfo initShaderStage(ShaderModule* shaderModule);
     vk::PipelineVertexInputStateCreateInfo initVertexInputState(std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription);
     vk::PipelineInputAssemblyStateCreateInfo initInputAssembly(vk::PrimitiveTopology topology);
-    vk::PipelineRasterizationStateCreateInfo initRasterizationState(vk::PolygonMode polygonMode); 
+    vk::PipelineRasterizationStateCreateInfo initRasterizationState(vk::PolygonMode polygonMode, float lineWidth); 
     vk::PipelineMultisampleStateCreateInfo initMultiSamplingState(vk::SampleCountFlagBits multiSamplingLevel);
     vk::PipelineDepthStencilStateCreateInfo initDepthStencilState();
     vk::PipelineColorBlendStateCreateInfo initColorBlendState();

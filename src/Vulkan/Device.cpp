@@ -44,6 +44,9 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
     // Physical device features
     vk::PhysicalDeviceFeatures physicalDeviceFeatures;
 
+    if (isLargePointsSupported())
+        physicalDeviceFeatures.largePoints = true;
+
     if (isShaderMultiSamplingSupported())
         physicalDeviceFeatures.sampleRateShading = true;
 
@@ -112,6 +115,8 @@ void Device::pickPhysicalDevice(vk::Instance* instance) {
             }
         }
     }
+
+    std::cout << selectedProperties.limits.pointSizeGranularity << std::endl;
 
     // Check support for swap chain
     bool swapchainSupported = false;
@@ -305,6 +310,10 @@ bool Device::isAnisotropicFilteringSupported() {
 
 bool Device::isShaderMultiSamplingSupported() {
     return physicalDevice.getFeatures().sampleRateShading;   
+}
+
+bool Device::isLargePointsSupported() {
+    return physicalDevice.getFeatures().largePoints;
 }
 
 void Device::destroySwapchain(vk::SwapchainKHR* swapchain) {

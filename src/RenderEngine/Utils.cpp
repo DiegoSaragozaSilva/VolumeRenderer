@@ -140,3 +140,70 @@ std::vector<std::string> Utils::listFolderFiles(std::string folderPath) {
         files.push_back(file.path());
     return files;
 }
+
+Mesh* Utils::getDebugBoxMesh(AABB aabb, glm::vec3 color) {
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices; 
+    std::vector<Material> _materials;
+
+    glm::vec3 aabbSize = aabb.max - aabb.min;
+
+    Vertex v1 = {
+        .position = aabb.min,
+        .normal = glm::vec3(0.0f),
+        .color = color
+    };
+
+    Vertex v2 = {
+        .position = aabb.min + glm::vec3(aabbSize.x, 0.0f, 0.0f),
+        .normal = glm::vec3(0.0f),
+        .color = color
+    };
+
+    Vertex v3 = {
+        .position = aabb.min + glm::vec3(aabbSize.x, aabbSize.y, 0.0f),
+        .normal = glm::vec3(0.0f),
+        .color = color
+    };
+
+    Vertex v4 = {
+        .position = aabb.min + glm::vec3(0.0f, aabbSize.y, 0.0f),
+        .normal = glm::vec3(0.0f),
+        .color = color
+    };
+
+    Vertex v5 = {
+        .position = aabb.min + glm::vec3(0.0f, 0.0f, aabbSize.z),
+        .normal = aabb.min,
+        .color = color
+    };
+
+    Vertex v6 = {
+        .position = aabb.min + glm::vec3(aabbSize.x, 0.0f, aabbSize.z),
+        .normal = glm::vec3(0.0f),
+        .color = color
+    };
+
+    Vertex v7 = {
+        .position = aabb.min + glm::vec3(aabbSize.x, aabbSize.y, aabbSize.z),
+        .normal = glm::vec3(0.0f),
+        .color = color
+    };
+
+    Vertex v8 = {
+        .position = aabb.min + glm::vec3(0.0f, aabbSize.y, aabbSize.z),
+        .normal = glm::vec3(0.0f),
+        .color = color
+    };
+
+    vertices.insert(vertices.end(), {v1, v2, v3, v4, v5, v6, v7, v8});
+
+    indices.insert(indices.end(), {0, 1, 1, 2, 2, 3, 3, 0});
+    indices.insert(indices.end(), {4, 5, 5, 6, 6, 7, 7, 4});
+    indices.insert(indices.end(), {0, 4, 1, 5, 2, 6, 3, 7});
+
+    Mesh* debugBoxMesh = new Mesh();
+    debugBoxMesh->setVertices(vertices);
+    debugBoxMesh->setIndices(indices);
+    return debugBoxMesh;
+}

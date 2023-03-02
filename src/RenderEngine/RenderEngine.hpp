@@ -21,6 +21,7 @@
 #include "TexturePool.hpp"
 #include "Window.hpp"
 #include "Voxelizer.hpp"
+#include "Octree.hpp"
 
 // Struct that holds all vulkan context variables
 struct Vulkan {
@@ -49,7 +50,11 @@ struct Render {
     Swapchain* swapchain;
     RenderPass* renderPass;
     std::vector<ShaderModule*> defaultShaders;
+    std::vector<ShaderModule*> voxelShaders;
+    std::vector<ShaderModule*> debugShaders;
     Pipeline* defaultPipeline;
+    Pipeline* voxelPipeline;
+    Pipeline* debugPipeline;
     Material defaultMaterial;
 };
 
@@ -63,6 +68,8 @@ struct PushConstants {
 // Struct that holds all the UI states
 struct UIStates {
     bool showCameraProperties;
+    bool showDebugStructures;
+    int octreeMaxDepth;
 };
 
 class RenderEngine {
@@ -75,11 +82,16 @@ public:
 
     void renderFrame();
     double getDeltaTime();
+    void addMeshToScene(Mesh* mesh);
+    void addVolumeMeshToScene(Mesh* mesh);
+    void addDebugMeshToScene(Mesh* mesh);
 private:
-    TexturePool* texturePool;
     Vulkan vulkan;
     Render render;
+    TexturePool* texturePool;
     std::vector<Mesh*> scene;
+    std::vector<Mesh*> voxelScene;
+    std::vector<Mesh*> debugScene;
     UIStates uiStates;
     double deltaTime, lastTime;
 

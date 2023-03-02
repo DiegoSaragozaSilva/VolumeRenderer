@@ -1,6 +1,8 @@
 #ifndef _DEVICE_H_
 #define _DEVICE_H_
 
+#include <iostream>
+
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
 
@@ -22,6 +24,7 @@ public:
     bool hasPresentationQueue();
     bool isAnisotropicFilteringSupported();
     bool isShaderMultiSamplingSupported();
+    bool isLargePointsSupported();
     vk::SampleCountFlagBits getMultiSamplingLevel();
     vk::Format getDepthFormat();
     vk::Queue getGraphicsQueue();
