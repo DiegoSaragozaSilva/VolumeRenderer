@@ -16,9 +16,9 @@ void Octree::build(std::vector<Voxel> data, uint32_t maxDepth) {
     rootVoxel.aabb.center = glm::vec3(0.0f, 0.0f, 0.0f);
 
     for (const auto voxel : data) {
-        if (rootVoxel.aabb.min.x >= voxel.position.x) rootVoxel.aabb.min.x = voxel.position.x;
-        if (rootVoxel.aabb.min.y >= voxel.position.y) rootVoxel.aabb.min.y = voxel.position.y;
-        if (rootVoxel.aabb.min.z >= voxel.position.z) rootVoxel.aabb.min.z = voxel.position.z;
+        if (rootVoxel.aabb.min.x > voxel.position.x) rootVoxel.aabb.min.x = voxel.position.x;
+        if (rootVoxel.aabb.min.y > voxel.position.y) rootVoxel.aabb.min.y = voxel.position.y;
+        if (rootVoxel.aabb.min.z > voxel.position.z) rootVoxel.aabb.min.z = voxel.position.z;
 
         if (rootVoxel.aabb.max.x < voxel.position.x) rootVoxel.aabb.max.x = voxel.position.x;
         if (rootVoxel.aabb.max.y < voxel.position.y) rootVoxel.aabb.max.y = voxel.position.y;
@@ -27,9 +27,7 @@ void Octree::build(std::vector<Voxel> data, uint32_t maxDepth) {
 
     rootVoxel.aabb.min -= LENGTH_EPSILON;
     rootVoxel.aabb.max += LENGTH_EPSILON;
-    rootVoxel.aabb.center = glm::vec3(
-        (rootVoxel.aabb.min + rootVoxel.aabb.max) / 2.0f
-    );
+    rootVoxel.aabb.center = (rootVoxel.aabb.min + rootVoxel.aabb.max) / 2.0f;
 
     root = new ONode();
     root->setVoxel(rootVoxel);
@@ -60,7 +58,7 @@ void Octree::subdivideNode(ONode* node, std::vector<Voxel> data, uint32_t depth)
                 if (subData.size() > 0) {
                     Voxel subNodeVoxel;
                     subNodeVoxel.aabb = subAABB;
-                    subNodeVoxel.normal = {0.0f, 0.0f, 0.0f};
+                    subNodeVoxel.normal = getVoxelDataAverageNormal(subData);
                     subNodeVoxel.renderData = 0x00FF8040;
 
                     ONode* subNode = new ONode();
@@ -126,6 +124,13 @@ void Octree::traverseGettingMeshes(ONode* node, uint32_t depth, std::vector<Mesh
     meshes.push_back(Utils::getDebugBoxMesh(nodeAABB, glm::vec3(r, g, b)));
     for (ONode* child : node->children)
         traverseGettingMeshes(child, depth + 1, meshes);
+}
+
+glm::vec3 Octree::getVoxelDataAverageNormal(std::vector<Voxel> data) {
+    glm::vec3 averageNormal = glm::vec3(0.0f);
+    for (Voxel v : data)
+        averageNormal += v.normal;
+    return glm::normalize(averageNormal);
 }
 
 ONode* Octree::getRoot() {

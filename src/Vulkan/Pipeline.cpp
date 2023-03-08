@@ -9,12 +9,7 @@ Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderMod
     
     // Create the push constant ranges
     pushConstantRanges = createPushConstantRanges(shaderModules);
-    
-    // Querying all the necessary states information
-    std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStageCreateInfos;
-    for (size_t i = 0; i < shaderModules.size(); i++)
-        shaderStageCreateInfos[i] = initShaderStage(shaderModules[i]);
-    
+
     // Vertex input state (No function for this one)
     vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo (
         vk::PipelineVertexInputStateCreateFlags(),
@@ -83,26 +78,60 @@ Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderMod
     // Pipeline layout creation
     pipelineLayout = device->getLogicalDevice()->createPipelineLayout(pipelineLayoutCreateInfo); 
     
-    // Pipeline create info creation
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo (
-        vk::PipelineCreateFlags(),
-        shaderStageCreateInfos,
-        &vertexInputStateCreateInfo,
-        &inputAssemblyStateCreateInfo,
-        nullptr,
-        &viewportStateCreateInfo,
-        &rasterizationStateCreateInfo,
-        &multiSampleStateCreateInfo,
-        &depthStencilStateCreateInfo,
-        &colorBlendStateCreateInfo,
-        &dynamicStateCreateInfo,
-        pipelineLayout,
-        *(renderPass->getRenderPass()) 
-    );
-    
-    // Pipeline creation
+    // Querying all the necessary states information
+    size_t numShaderStages = shaderModules.size();
     vk::Result result;
-    std::tie(result, pipeline) = device->getLogicalDevice()->createGraphicsPipeline(nullptr, pipelineCreateInfo);
+
+    if (numShaderStages == 2) { 
+        std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStageCreateInfos;
+        for (size_t i = 0; i < numShaderStages; i++)
+            shaderStageCreateInfos[i] = initShaderStage(shaderModules[i]); 
+
+        // Pipeline create info creation
+        vk::GraphicsPipelineCreateInfo pipelineCreateInfo (
+            vk::PipelineCreateFlags(),
+            shaderStageCreateInfos,
+            &vertexInputStateCreateInfo,
+            &inputAssemblyStateCreateInfo,
+            nullptr,
+            &viewportStateCreateInfo,
+            &rasterizationStateCreateInfo,
+            &multiSampleStateCreateInfo,
+            &depthStencilStateCreateInfo,
+            &colorBlendStateCreateInfo,
+            &dynamicStateCreateInfo,
+            pipelineLayout,
+            *(renderPass->getRenderPass()) 
+        );
+    
+        // Pipeline creation
+        std::tie(result, pipeline) = device->getLogicalDevice()->createGraphicsPipeline(nullptr, pipelineCreateInfo);
+    }
+    else if (numShaderStages == 3) {
+        std::array<vk::PipelineShaderStageCreateInfo, 3> shaderStageCreateInfos;
+        for (size_t i = 0; i < numShaderStages; i++)
+            shaderStageCreateInfos[i] = initShaderStage(shaderModules[i]); 
+    
+        // Pipeline create info creation
+        vk::GraphicsPipelineCreateInfo pipelineCreateInfo (
+            vk::PipelineCreateFlags(),
+            shaderStageCreateInfos,
+            &vertexInputStateCreateInfo,
+            &inputAssemblyStateCreateInfo,
+            nullptr,
+            &viewportStateCreateInfo,
+            &rasterizationStateCreateInfo,
+            &multiSampleStateCreateInfo,
+            &depthStencilStateCreateInfo,
+            &colorBlendStateCreateInfo,
+            &dynamicStateCreateInfo,
+            pipelineLayout,
+            *(renderPass->getRenderPass()) 
+        );
+    
+        // Pipeline creation
+        std::tie(result, pipeline) = device->getLogicalDevice()->createGraphicsPipeline(nullptr, pipelineCreateInfo);
+    }
 
     // Error checking
     switch (result) {
@@ -232,28 +261,16 @@ std::vector<vk::DescriptorSetLayout> Pipeline::createDescriptorSetLayouts(Device
 }
 
 std::vector<vk::PushConstantRange> Pipeline::createPushConstantRanges(std::vector<ShaderModule*> shaderModules) {
-    // For each shader module that will be attached to the pipeline, query information about descriptor sets
+    // For each shader module that will be attached to the pipeline, query information about push constant ranges
     std::vector<vk::PushConstantRange> pushConstantRanges;
     for (ShaderModule* shaderModule : shaderModules) {
-        // Query information about the shader module resources
-        std::vector<uint32_t> shaderSPIRVCode = shaderModule->getSPIRVCode();
-        spirv_cross::Compiler compiler(std::move(shaderSPIRVCode));
-        spirv_cross::ShaderResources shaderResources = compiler.get_shader_resources();
-        
-        for (const spirv_cross::Resource& resource : shaderResources.push_constant_buffers) {
-            // Query information about the push constant active buffer range
-            spirv_cross::BufferRange bufferRange = compiler.get_active_buffer_ranges(resource.id)[0];
-
-            vk::PushConstantRange pushConstantRange (
-                shaderModule->getShaderStage(),
-                bufferRange.offset,
-                bufferRange.range
-            );
-
-            pushConstantRanges.push_back(pushConstantRange);
-        }
+        vk::PushConstantRange pushConstantRange (
+            shaderModule->getShaderStage(),
+            shaderModule->getPushConstantOffset(),
+            shaderModule->getPushConstantRange()
+        );
+        pushConstantRanges.push_back(pushConstantRange);
     }
-
     return pushConstantRanges;
 }
 
@@ -412,6 +429,16 @@ vk::DescriptorSet Pipeline::getTextureSamplerDescriptorSet(Device* device, Textu
 
     // Return found descriptor set
     return textureSamplerDescriptorSets.at(texture);
+}
+
+vk::PushConstantRange Pipeline::getPushConstantRange(vk::ShaderStageFlagBits shaderStage) {
+    for (vk::PushConstantRange range : pushConstantRanges) {
+        if (range.stageFlags == shaderStage)
+            return range;
+    }
+
+    spdlog::error("No push constant range found with provided shader stage flags");
+    throw 0;
 }
 
 vk::DescriptorSet Pipeline::createTextureSamplerDescriptorSet(Device* device, Texture* texture, vk::DescriptorSetLayout descriptorSetLayout) {

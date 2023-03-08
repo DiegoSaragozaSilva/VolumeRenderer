@@ -71,6 +71,7 @@ file(
     GLOB SHADERS
     ${SHADER_SOURCE_DIR}/*.vert
     ${SHADER_SOURCE_DIR}/*.frag
+    ${SHADER_SOURCE_DIR}/*.geom
 )
 
 add_custom_command(
@@ -85,7 +86,7 @@ foreach(source IN LISTS SHADERS)
     add_custom_command(
         COMMAND
         ${glslc_executable}
-        -O
+        -O0
         -c
         -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
         ${source}

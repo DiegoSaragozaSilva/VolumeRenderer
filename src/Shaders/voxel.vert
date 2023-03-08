@@ -1,26 +1,22 @@
 #version 450
 
-layout (std430, push_constant) uniform PushConstants {
-    vec4 viewPosition;
-    vec4 viewDirection;
-    mat4 mvp;
-} pushConstants;
-
-layout (location = 0) in vec3 inPosition;
+layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec3 inColor;
-layout (location = 3) in vec2 inTexCoord;
+layout (location = 3) in vec2 inUV;
 
-layout (location = 0) out vec3 outColor;
+layout (location = 0) out vec4 pPosition;
+layout (location = 1) out vec3 pNormal;
+layout (location = 2) out vec3 pColor;
+layout (location = 3) out vec2 pUV;
 
 void main() {
-    gl_Position = pushConstants.mvp * vec4(inPosition, 1.0f);
+    gl_Position = inPosition;
 
-    // Account for Vulkan coordinate system
-    gl_Position.y = -gl_Position.y;
-    gl_Position.z = (gl_Position.z + gl_Position.w) / 2.0f;
+    gl_PointSize = 1.0f;
 
-    gl_PointSize = 5.0f;
-
-    outColor = inColor;
+    pPosition = inPosition;
+    pColor = inColor;
+    pUV = inUV;
+    pNormal = inNormal;
 }

@@ -19,9 +19,9 @@ Volume Voxelizer::voxelizeMesh(Mesh* mesh) {
 void Voxelizer::normalizeMesh(Mesh* mesh) {
     AABB meshBounds = mesh->getBoundingBox();
     glm::vec3 boundSize = {
-        std::abs(meshBounds.max.x - meshBounds.min.x),
-        std::abs(meshBounds.max.y - meshBounds.min.y),
-        std::abs(meshBounds.max.z - meshBounds.min.z)
+        std::abs(meshBounds.min.x - meshBounds.max.x),
+        std::abs(meshBounds.min.y - meshBounds.max.y),
+        std::abs(meshBounds.min.z - meshBounds.max.z)
     };
 
     float scaleFactor = std::min(scale / boundSize.x, std::min(scale / boundSize.y, scale / boundSize.z));
@@ -30,15 +30,15 @@ void Voxelizer::normalizeMesh(Mesh* mesh) {
     scaleMatrix = glm::scale(scaleMatrix, glm::vec3(scaleFactor));
 
     glm::vec3 normalizedCenter = {
-        -meshBounds.max.x + (boundSize.z / 2.0f),
-        (boundSize.y / 2.0f) - meshBounds.center.y,
-        -meshBounds.max.z + (boundSize.z / 2.0f)
+        -meshBounds.max.x + (boundSize.x / 2.0f),
+        (boundSize.y / 2.0f) - meshBounds.max.y,
+        -meshBounds.center.z + (boundSize.z / 2.0f)
     };
 
     glm::mat4 translationMatrix = glm::mat4(1.0f);
     translationMatrix = glm::translate(translationMatrix, normalizedCenter);
 
-    glm::mat4 finalMatrix = translationMatrix * scaleMatrix;
+    glm::mat4 finalMatrix = scaleMatrix * translationMatrix;
     mesh->translateByMatrix(finalMatrix);
 }
 
@@ -74,7 +74,7 @@ std::vector<Voxel> Voxelizer::getMeshSurfacePoints(Mesh* mesh) {
             v.position = point;
             v.normal = normal;
 
-            glm::vec3 color = glm::vec3(0.75f); // glm::linearRand(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+            glm::vec3 color = glm::vec3(0.25f); // glm::linearRand(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
             v.renderData = 0;
             v.renderData += (uint8_t)(color.z * 255.0f);
             v.renderData += (uint8_t)(color.y * 255.0f) << 8;

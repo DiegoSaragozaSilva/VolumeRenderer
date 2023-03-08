@@ -19,6 +19,7 @@ public:
     vk::DescriptorPool getDescriptorPool();
     std::vector<vk::DescriptorSetLayout> getDescriptorSetLayouts();
     vk::DescriptorSet getTextureSamplerDescriptorSet(Device* device, Texture* texture);
+    vk::PushConstantRange getPushConstantRange(vk::ShaderStageFlagBits shaderStage);
 private:
     vk::Pipeline pipeline;
     vk::PipelineLayout pipelineLayout;

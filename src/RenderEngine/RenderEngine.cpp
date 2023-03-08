@@ -27,11 +27,14 @@ RenderEngine::RenderEngine() {
     // Initialize the UIStates
     uiStates.showCameraProperties = false;
     uiStates.showDebugStructures = false;
-    uiStates.octreeMaxDepth = 5;
+    uiStates.octreeTargetDepth = 5;
 
     // Initialize time data
     deltaTime = 0.0;
     lastTime = 0.0;
+
+    // Initialize octree
+    targetOctree = nullptr;
 
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");
@@ -223,16 +226,17 @@ void RenderEngine::initVulkan() {
     vulkan.clearValues = createClearValues();
 
     // Default shaders initialization
-    render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.vert.spv"), vk::ShaderStageFlagBits::eVertex));
-    render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.frag.spv"), vk::ShaderStageFlagBits::eFragment));
+    render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 64));
+    render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.frag.spv"), vk::ShaderStageFlagBits::eFragment, 64, 32));
 
     // Voxel shaders initialization
-    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.vert.spv"), vk::ShaderStageFlagBits::eVertex));
-    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.frag.spv"), vk::ShaderStageFlagBits::eFragment));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.geom.spv"), vk::ShaderStageFlagBits::eGeometry, 0, 80));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 0));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.frag.spv"), vk::ShaderStageFlagBits::eFragment, 80, 32));
 
     // Debug shaders initialization
-    render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.vert.spv"), vk::ShaderStageFlagBits::eVertex));
-    render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.frag.spv"), vk::ShaderStageFlagBits::eFragment));
+    render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 64));
+    render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.frag.spv"), vk::ShaderStageFlagBits::eFragment, 0, 0));
 
     // Default pipeline initialization
     VertexInputDescription vertexDescription = Vertex::getVertexDescription();
@@ -494,6 +498,16 @@ void RenderEngine::renderFrame() {
     glm::vec4 camPosition = glm::vec4(_camPosition.x, _camPosition.y, _camPosition.z, 1.0f);
     glm::vec4 camDirection = glm::vec4(_camDirection.x, _camDirection.y, _camDirection.z, 1.0f);
 
+    // Get Octree information
+    glm::vec4 octreeData = glm::vec4(0.0f);
+    if (targetOctree != nullptr) {
+        float octreeDepth = (float)uiStates.octreeTargetDepth;
+        glm::vec4 octreeAABBMin = glm::vec4(targetOctree->getRoot()->getVoxel().aabb.min, 1.0f);
+        glm::vec4 octreeAABBMax = glm::vec4(targetOctree->getRoot()->getVoxel().aabb.max, 1.0f);
+        octreeData = octreeAABBMax - octreeAABBMin;
+        octreeData.w = octreeDepth;
+    }
+
     // Start Imgui frame
     ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -514,18 +528,33 @@ void RenderEngine::renderFrame() {
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.defaultPipeline->getPipeline());
 
     // Fill the push constants struct and send it
-    PushConstants pushConstants = { 
+    PushConstants pushConstants = {
+        mvp,
+        octreeData,
         camPosition,
-        camDirection,
-        mvp
+        camDirection
     };
 
+    vk::PushConstantRange range = render.defaultPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eVertex);
     commandBuffer.pushConstants (
         render.defaultPipeline->getPipelineLayout(),
         vk::ShaderStageFlagBits::eVertex,
         0,
-        sizeof(PushConstants),
-        &pushConstants
+        64,
+        &mvp
+    );
+
+    FragmentConstants fragmentConstants = {
+        .viewPosition = camPosition,
+        .viewDirection = camDirection
+    };
+    range = render.defaultPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eFragment);
+    commandBuffer.pushConstants (
+        render.defaultPipeline->getPipelineLayout(),
+        vk::ShaderStageFlagBits::eFragment,
+        64,
+        32,
+        &fragmentConstants
     );
 
     // For each mesh in scene bind it and send descriptors
@@ -588,12 +617,26 @@ void RenderEngine::renderFrame() {
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.voxelPipeline->getPipeline());
 
     // Push constants
+    GeometryConstants geometryConstants = {
+        .mvp = mvp,
+        .octreeData = octreeData
+    };
+    range = render.voxelPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eGeometry);
     commandBuffer.pushConstants (
         render.voxelPipeline->getPipelineLayout(),
-        vk::ShaderStageFlagBits::eVertex,
+        vk::ShaderStageFlagBits::eGeometry,
         0,
-        sizeof(PushConstants),
-        &pushConstants
+        sizeof(geometryConstants),
+        &geometryConstants
+    );
+
+    range = render.voxelPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eFragment);
+    commandBuffer.pushConstants (
+        render.voxelPipeline->getPipelineLayout(),
+        vk::ShaderStageFlagBits::eFragment,
+        80,
+        32,
+        &fragmentConstants
     );
 
     for (Mesh* mesh : voxelScene) {
@@ -615,8 +658,8 @@ void RenderEngine::renderFrame() {
             render.debugPipeline->getPipelineLayout(),
             vk::ShaderStageFlagBits::eVertex,
             0,
-            sizeof(PushConstants),
-            &pushConstants
+            64,
+            &mvp
         );
 
         // Bind the mesh vertex and index buffers
@@ -683,7 +726,7 @@ void RenderEngine::renderUI() {
             ImGui::Checkbox("Show debug structures", &uiStates.showDebugStructures);
             ImGui::InputInt("Voxel scale", &Voxelizer::scale);
             ImGui::InputInt("Voxel density", &Voxelizer::density);
-            ImGui::SliderInt("Octree max depth", &uiStates.octreeMaxDepth, 1, 10); 
+            ImGui::SliderInt("Octree rendering depth", &uiStates.octreeTargetDepth, 1, 10); 
             ImGui::EndMenu();
         }
         
@@ -843,15 +886,19 @@ void RenderEngine::addOBJToScene(std::string objPath) {
 }
 
 void RenderEngine::addVoxelizedOBJToScene(std::string objPath) {
+    // Clear octree if it exists
+    if (targetOctree != nullptr)
+        delete targetOctree;
+
     // Load model from obj path, voxelize it and add to the scene
     Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
     Volume meshVolume = Voxelizer::voxelizeMesh(newMesh);
 
-    Octree* volumeOctree = new Octree();
-    volumeOctree->build(meshVolume.voxels, uiStates.octreeMaxDepth);
-    addVolumeMeshToScene(volumeOctree->compressToMesh(uiStates.octreeMaxDepth));
+    targetOctree = new Octree();
+    targetOctree->build(meshVolume.voxels, uiStates.octreeTargetDepth);
+    addVolumeMeshToScene(targetOctree->compressToMesh(uiStates.octreeTargetDepth));
 
-    // std::vector<Mesh*> debugOctreeMeshes = volumeOctree->getDebugMeshes();
+    // std::vector<Mesh*> debugOctreeMeshes = targetOctree->getDebugMeshes();
     // for (Mesh* debugMesh : debugOctreeMeshes)
     //     addDebugMeshToScene(debugMesh); 
 }

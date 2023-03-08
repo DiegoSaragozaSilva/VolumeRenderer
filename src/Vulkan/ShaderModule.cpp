@@ -1,8 +1,10 @@
 #include "ShaderModule.hpp"
 
-ShaderModule::ShaderModule(Device* device, std::vector<uint32_t> shaderCode, vk::ShaderStageFlagBits shaderStage) {
+ShaderModule::ShaderModule(Device* device, std::vector<uint32_t> shaderCode, vk::ShaderStageFlagBits shaderStage, uint32_t pushConstantOffset, uint32_t pushConstantRange) {
     this->shaderStage = shaderStage;
     this->shaderCode = shaderCode;
+    this->pushConstantOffset = pushConstantOffset;
+    this->pushConstantRange = pushConstantRange;
 
     // Shader module create info
     vk::ShaderModuleCreateInfo shaderModuleCreateInfo (
@@ -35,4 +37,12 @@ vk::ShaderStageFlagBits ShaderModule::getShaderStage() {
 
 std::vector<uint32_t> ShaderModule::getSPIRVCode() {
     return shaderCode;
+}
+
+uint32_t ShaderModule::getPushConstantOffset() {
+    return pushConstantOffset;
+}
+
+uint32_t ShaderModule::getPushConstantRange() {
+    return pushConstantRange;
 }

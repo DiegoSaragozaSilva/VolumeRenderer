@@ -53,6 +53,8 @@ Device::Device(vk::Instance* instance, vk::SurfaceKHR* windowSurface) {
     if (isAnisotropicFilteringSupported())
         physicalDeviceFeatures.samplerAnisotropy = true;
 
+    physicalDeviceFeatures.geometryShader = true;
+
     // Device create info with queues and extensions data
     vk::DeviceCreateInfo deviceCreateInfo (
         vk::DeviceCreateFlags(),

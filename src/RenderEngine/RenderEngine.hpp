@@ -60,16 +60,27 @@ struct Render {
 
 // Struct for basic push constants
 struct PushConstants {
+    glm::mat4 mvp;
+    glm::vec4 octreeData;
     glm::vec4 viewPosition;
     glm::vec4 viewDirection;
+};
+
+struct GeometryConstants {
     glm::mat4 mvp;
+    glm::vec4 octreeData;
+};
+
+struct FragmentConstants { 
+    glm::vec4 viewPosition;
+    glm::vec4 viewDirection;
 };
 
 // Struct that holds all the UI states
 struct UIStates {
     bool showCameraProperties;
     bool showDebugStructures;
-    int octreeMaxDepth;
+    int octreeTargetDepth;
 };
 
 class RenderEngine {
@@ -92,6 +103,7 @@ private:
     std::vector<Mesh*> scene;
     std::vector<Mesh*> voxelScene;
     std::vector<Mesh*> debugScene;
+    Octree* targetOctree;
     UIStates uiStates;
     double deltaTime, lastTime;
 

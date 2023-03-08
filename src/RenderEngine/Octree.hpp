@@ -28,6 +28,7 @@ private:
     void subdivideNode(ONode* node, std::vector<Voxel> data, uint32_t depth);
     void traverseGettingMeshes(ONode* node, uint32_t depth, std::vector<Mesh*>& meshes);
     void traverseGettingLeaves(ONode* node, uint32_t depth, uint32_t maxTraverseDepth, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices); 
+    glm::vec3 getVoxelDataAverageNormal(std::vector<Voxel> data);
 };
 
 #endif
