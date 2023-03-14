@@ -6,35 +6,6 @@
 RenderEngine::RenderEngine() {
     // Initializing all basic componentes and Vulkan
     initWindow();
-    initVulkan();
-    initImgui();
-
-    // Initialize the main camera
-    camera = new Camera();
-    camera->setPosition({0.0f, 0.0f, 0.0f});
-    camera->setUpVector({0.0f, 1.0f, 0.0f});
-    camera->setFrontVector({0.0f, 0.0f, -1.0f});
-    camera->setFOV(60.0f);
-    camera->setNearPlane(0.1f);
-    camera->setFarPlane(1000.0f);
-    camera->generateViewMatrix();
-    camera->generateProjectionMatrix();
-
-    // Initialize the texture pool and required the default texture
-    texturePool = new TexturePool();
-    texturePool->requireTexture(vulkan.device, vulkan.commandPool, "assets/textures/default.png");
-
-    // Initialize the UIStates
-    uiStates.showCameraProperties = false;
-    uiStates.showDebugStructures = false;
-    uiStates.octreeTargetDepth = 5;
-
-    // Initialize time data
-    deltaTime = 0.0;
-    lastTime = 0.0;
-
-    // Initialize octree
-    targetOctree = nullptr;
 
     #ifndef NDEBUG
         spdlog::info("Render engine successfully initialized");
@@ -114,6 +85,38 @@ RenderEngine::~RenderEngine() {
     #ifndef NDEBUG
         spdlog::info("Render engine successfully destroyed");
     #endif
+}
+
+void RenderEngine::init() {
+    initVulkan();
+    initImgui();
+
+    // Initialize the main camera
+    camera = new Camera();
+    camera->setPosition({0.0f, 0.0f, 0.0f});
+    camera->setUpVector({0.0f, 1.0f, 0.0f});
+    camera->setFrontVector({0.0f, 0.0f, -1.0f});
+    camera->setFOV(60.0f);
+    camera->setNearPlane(0.1f);
+    camera->setFarPlane(1000.0f);
+    camera->generateViewMatrix();
+    camera->generateProjectionMatrix();
+
+    // Initialize the texture pool and required the default texture
+    texturePool = new TexturePool();
+    texturePool->requireTexture(vulkan.device, vulkan.commandPool, "assets/textures/default.png");
+
+    // Initialize the UIStates
+    uiStates.showCameraProperties = false;
+    uiStates.showDebugStructures = false;
+    uiStates.octreeTargetDepth = 5;
+
+    // Initialize time data
+    deltaTime = 0.0;
+    lastTime = 0.0;
+
+    // Initialize octree
+    targetOctree = nullptr;
 }
 
 void RenderEngine::initWindow() {
@@ -230,9 +233,9 @@ void RenderEngine::initVulkan() {
     render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.frag.spv"), vk::ShaderStageFlagBits::eFragment, 64, 32));
 
     // Voxel shaders initialization
-    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.geom.spv"), vk::ShaderStageFlagBits::eGeometry, 0, 80));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.geom.spv"), vk::ShaderStageFlagBits::eGeometry, 0, 96));
     render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 0));
-    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.frag.spv"), vk::ShaderStageFlagBits::eFragment, 80, 32));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.frag.spv"), vk::ShaderStageFlagBits::eFragment, 80, 96));
 
     // Debug shaders initialization
     render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 64));
@@ -530,7 +533,6 @@ void RenderEngine::renderFrame() {
     // Fill the push constants struct and send it
     PushConstants pushConstants = {
         mvp,
-        octreeData,
         camPosition,
         camDirection
     };
@@ -544,17 +546,13 @@ void RenderEngine::renderFrame() {
         &mvp
     );
 
-    FragmentConstants fragmentConstants = {
-        .viewPosition = camPosition,
-        .viewDirection = camDirection
-    };
     range = render.defaultPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eFragment);
     commandBuffer.pushConstants (
         render.defaultPipeline->getPipelineLayout(),
         vk::ShaderStageFlagBits::eFragment,
         64,
         32,
-        &fragmentConstants
+        &pushConstants
     );
 
     // For each mesh in scene bind it and send descriptors
@@ -619,7 +617,8 @@ void RenderEngine::renderFrame() {
     // Push constants
     GeometryConstants geometryConstants = {
         .mvp = mvp,
-        .octreeData = octreeData
+        .octreeData = octreeData,
+        .viewDirection = camDirection
     };
     range = render.voxelPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eGeometry);
     commandBuffer.pushConstants (
@@ -629,13 +628,18 @@ void RenderEngine::renderFrame() {
         sizeof(geometryConstants),
         &geometryConstants
     );
-
+    
+    FragmentConstants fragmentConstants = {
+        .viewMatrix = camera->getViewMatrix(),
+        .viewPosition = camPosition,
+        .viewDirection = camDirection
+    };
     range = render.voxelPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eFragment);
     commandBuffer.pushConstants (
         render.voxelPipeline->getPipelineLayout(),
         vk::ShaderStageFlagBits::eFragment,
         80,
-        32,
+        sizeof(fragmentConstants),
         &fragmentConstants
     );
 

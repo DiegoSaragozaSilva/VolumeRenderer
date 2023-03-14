@@ -34,12 +34,15 @@ public:
     float getYaw();
     float getFOV();
 
+    void rotateWorld(float radians, glm::vec3 axis);
+    void rotateView(float radians, glm::vec3 axis);
+
     void generateViewMatrix();
     void generateProjectionMatrix();
 private:
     float aspectRatio, fov, nearPlane, farPlane, pitch, yaw;
     glm::vec3 position, up, front, pivot;
-    glm::mat4 viewMatrix, projectionMatrix;
+    glm::mat4 worldMatrix, viewMatrix, projectionMatrix;
 };
 
 #endif

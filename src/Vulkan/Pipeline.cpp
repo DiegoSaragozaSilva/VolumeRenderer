@@ -264,12 +264,16 @@ std::vector<vk::PushConstantRange> Pipeline::createPushConstantRanges(std::vecto
     // For each shader module that will be attached to the pipeline, query information about push constant ranges
     std::vector<vk::PushConstantRange> pushConstantRanges;
     for (ShaderModule* shaderModule : shaderModules) {
-        vk::PushConstantRange pushConstantRange (
-            shaderModule->getShaderStage(),
-            shaderModule->getPushConstantOffset(),
-            shaderModule->getPushConstantRange()
-        );
-        pushConstantRanges.push_back(pushConstantRange);
+        uint32_t offset = shaderModule->getPushConstantOffset();
+        uint32_t range = shaderModule->getPushConstantRange();
+        if (range > 0) {
+            vk::PushConstantRange pushConstantRange (
+                shaderModule->getShaderStage(),
+                offset,
+                range
+            );
+            pushConstantRanges.push_back(pushConstantRange);
+        }
     }
     return pushConstantRanges;
 }

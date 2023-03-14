@@ -17,9 +17,14 @@ layout (location = 3) out vec2 fragUV;
 layout (std430, push_constant) uniform PushConstants {
     mat4 mvp;
     vec4 octreeData;
+    vec4 viewDirection;
 } pushConstants;
 
 void main() {
+    // vec4 a = pushConstants.viewDirection;
+    // vec3 b = pNormal[0];
+    // if (a.x * b.x + a.y * b.y + a.z * b.z < 0) return;
+
     float octreeDepth = pushConstants.octreeData.w;
     vec3 octreeSize = pushConstants.octreeData.xyz;
     vec3 voxelDimensions = vec3(

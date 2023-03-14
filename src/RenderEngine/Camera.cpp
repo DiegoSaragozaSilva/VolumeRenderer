@@ -9,6 +9,8 @@ Camera::Camera() {
 
     pivot = glm::vec3(0, 0, 0);
 
+    worldMatrix = glm::mat4(1.0f);
+
     #ifndef NDEBUG
         spdlog::info("New camera successfully created.");
     #endif
@@ -135,4 +137,12 @@ void Camera::generateViewMatrix() {
 void Camera::generateProjectionMatrix() {
     // Projection matrix generation
     projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
+}
+
+void Camera::rotateWorld(float radians, glm::vec3 axis) {
+    glm::rotate(worldMatrix, radians, axis);
+}
+
+void Camera::rotateView(float radians, glm::vec3 axis) {
+    glm::rotate(viewMatrix, radians, axis);
 }

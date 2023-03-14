@@ -7,88 +7,81 @@
 #define CAMERA_ROTATE_SPEED 0.01f
 #define CAMERA_ZOOM_SPEED 15.0f
 
-glm::vec2 previousMousePos = {-1.0f, -1.0f};
-
+bool arcEnabled = false;
+glm::vec2 lastMousePos = glm::vec2(0.0f);
+glm::vec2 cameraRotation = glm::vec2(0.0f);
 RenderEngine* renderEngine;
 
-void processInput(Window* window) {
-    // Free camera
-    #ifdef FREE_CAMERA
-        // Keyboard movement
-        if (glfwGetKey(window->getWindow(), GLFW_KEY_W) == GLFW_PRESS) {
-            glm::vec3 oldPosition = renderEngine->camera->getPosition();
-            glm::vec3 frontVector = renderEngine->camera->getFrontVector();
-            float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
-            renderEngine->camera->setPosition(oldPosition + (float)(camSpeed * renderEngine->getDeltaTime()) * frontVector);
-            renderEngine->camera->generateViewMatrix();
+void mouseCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+        lastMousePos = glm::vec2(x, y);
+        arcEnabled = true;
+    }
+ 
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+        arcEnabled = false;
+}
+
+void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+}
+
+void processInput(GLFWwindow* window) {
+    // Arcball camera
+    if (arcEnabled) {
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+
+        double dx = x - lastMousePos.x;
+        double dy = y - lastMousePos.y;
+
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        double scaleX = std::abs(dx) / width;
+        double scaleY = std::abs(dy) / height;
+
+        if (dx < 0) {
+            renderEngine->camera->rotateWorld((float)glm::radians(-CAMERA_ROTATE_SPEED * scaleX), glm::vec3(0, 1, 0));
+            cameraRotation.x -= CAMERA_ROTATE_SPEED * scaleX;
+        }
+        else if (dx > 0) {
+            renderEngine->camera->rotateWorld((float)glm::radians(CAMERA_ROTATE_SPEED * scaleX), glm::vec3(0, 1, 0));
+            cameraRotation.x += CAMERA_ROTATE_SPEED * scaleX; 
         }
 
-        if (glfwGetKey(window->getWindow(), GLFW_KEY_S) == GLFW_PRESS) {
-            glm::vec3 oldPosition = renderEngine->camera->getPosition();
-            glm::vec3 frontVector = renderEngine->camera->getFrontVector();
-            float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
-            renderEngine->camera->setPosition(oldPosition - (float)(camSpeed * renderEngine->getDeltaTime()) * frontVector);
-            renderEngine->camera->generateViewMatrix();
+        float rotation = CAMERA_ROTATE_SPEED * scaleY;
+        if (dy < 0) {
+            if (cameraRotation.y + rotation > 90.0f)
+               rotation = 90.0f - cameraRotation.y;
+
+            renderEngine->camera->rotateView((float)glm::radians(rotation), glm::vec3(1, 0, 0));
+            cameraRotation.y += rotation;
+        }
+        else if (dy > 0) {
+            if (cameraRotation.y - rotation < -90.0f)
+               rotation = 90.0f + cameraRotation.y;
+
+            renderEngine->camera->rotateView((float)glm::radians(-rotation), glm::vec3(1, 0, 0));
+            cameraRotation.y -= rotation;
         }
 
-        if (glfwGetKey(window->getWindow(), GLFW_KEY_D) == GLFW_PRESS) {
-            glm::vec3 oldPosition = renderEngine->camera->getPosition();
-            glm::vec3 frontVector = renderEngine->camera->getFrontVector();
-            glm::vec3 upVector = renderEngine->camera->getUpVector();
-            glm::vec3 rightVector = glm::normalize(glm::cross(frontVector, upVector));
-            float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
-            renderEngine->camera->setPosition(oldPosition + (float)(camSpeed * renderEngine->getDeltaTime()) * rightVector);
-            renderEngine->camera->generateViewMatrix();
-        }
-        
-        if (glfwGetKey(window->getWindow(), GLFW_KEY_A) == GLFW_PRESS) {
-            glm::vec3 oldPosition = renderEngine->camera->getPosition();
-            glm::vec3 frontVector = renderEngine->camera->getFrontVector();
-            glm::vec3 upVector = renderEngine->camera->getUpVector();
-            glm::vec3 rightVector = glm::normalize(glm::cross(frontVector, upVector));
-            float camSpeed = glfwGetKey(window->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? CAMERA_SPEED * 10.0f : CAMERA_SPEED;
-            renderEngine->camera->setPosition(oldPosition - (float)(camSpeed * renderEngine->getDeltaTime()) * rightVector);
-            renderEngine->camera->generateViewMatrix();
-        }
-
-        // Mouse rotation
-        if (glfwGetMouseButton(window->getWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            double mouseX, mouseY;
-            glfwGetCursorPos(window->getWindow(), &mouseX, &mouseY);
-            glm::vec2 mousePos = {(float)mouseX, (float)mouseY};
-
-            if (previousMousePos.x == -1.0f && previousMousePos.y == -1.0f)
-                previousMousePos = mousePos;
-
-            glm::vec2 delta = {mousePos.x - previousMousePos.x, mousePos.y - previousMousePos.y};
-            delta *= CAMERA_ROTATE_SPEED;
-
-            float newYaw = renderEngine->camera->getYaw() - delta.x;
-            float newPitch = renderEngine->camera->getPitch() - delta.y;
-            newYaw = glm::mod(newYaw, glm::pi<float>() * 2.0f);
-            newPitch = glm::clamp(newPitch, -(glm::pi<float>() * 0.5f), glm::pi<float>() * 0.5f);
-
-            renderEngine->camera->setYaw(newYaw);
-            renderEngine->camera->setPitch(newPitch);
-            renderEngine->camera->generateViewMatrix();
-
-            previousMousePos = mousePos;
-        }
-
-        if (glfwGetMouseButton(window->getWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
-            // Reset previous mouse position
-            previousMousePos.x = -1.0f;
-            previousMousePos.y = -1.0f;
-        }
-    #endif
+        lastMousePos.x = x;
+        lastMousePos.y = y;
+    }
 }
 
 int main() {
     renderEngine = new RenderEngine();
 
-    while (!renderEngine->window->shouldClose()) {
-        processInput(renderEngine->window);
+    renderEngine->window->setMouseCallback(&mouseCallback);
+    renderEngine->window->setKeyboardCallback(&keyboardCallback);
 
+    renderEngine->init();
+    while (!renderEngine->window->shouldClose()) {
+        processInput(renderEngine->window->getWindow());
         renderEngine->renderFrame();
     }
 

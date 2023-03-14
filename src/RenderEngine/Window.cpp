@@ -103,3 +103,7 @@ void Window::setKeyboardCallback(void (*callback)(GLFWwindow*, int, int, int, in
     // Set GLFW keyboard callback to the specified function
     glfwSetKeyCallback(window, callback);
 }
+
+void Window::setMouseCallback(void (*callback)(GLFWwindow*, int, int, int)) {
+    glfwSetMouseButtonCallback(window, callback);
+}

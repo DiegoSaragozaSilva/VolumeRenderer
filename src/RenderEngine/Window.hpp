@@ -14,6 +14,7 @@ public:
     std::vector<const char*> getGLFWExtensions();
     vk::SurfaceKHR* getSurface(vk::Instance* instance);
     void setKeyboardCallback(void (*callback)(GLFWwindow*, int, int, int, int));
+    void setMouseCallback(void (*callback)(GLFWwindow*, int, int, int));
     uint32_t getWidth();
     uint32_t getHeight();
     double getTime();

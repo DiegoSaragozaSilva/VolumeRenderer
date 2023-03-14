@@ -61,7 +61,6 @@ struct Render {
 // Struct for basic push constants
 struct PushConstants {
     glm::mat4 mvp;
-    glm::vec4 octreeData;
     glm::vec4 viewPosition;
     glm::vec4 viewDirection;
 };
@@ -69,9 +68,11 @@ struct PushConstants {
 struct GeometryConstants {
     glm::mat4 mvp;
     glm::vec4 octreeData;
+    glm::vec4 viewDirection;
 };
 
-struct FragmentConstants { 
+struct FragmentConstants {
+    glm::mat4 viewMatrix;
     glm::vec4 viewPosition;
     glm::vec4 viewDirection;
 };
@@ -91,6 +92,7 @@ public:
     Window* window;
     Camera* camera;
 
+    void init();
     void renderFrame();
     double getDeltaTime();
     void addMeshToScene(Mesh* mesh);
