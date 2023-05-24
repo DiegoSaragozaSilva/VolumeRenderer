@@ -4,7 +4,7 @@ project(VolumeRenderer)
 add_compile_options(-O3)
 
 # Base include directory
-include_directories("include")
+include_directories("include" "/usr/lib/stb")
 
 # Build GLFW from include folder
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only")
@@ -26,6 +26,9 @@ add_subdirectory("include/SPIRV-Cross")
 
 # Build tinyobjloader from include folder
 add_subdirectory("include/tinyobjloader")
+
+# Build libtiff from include folder
+add_subdirectory("include/libtiff")
 
 # Set up Imgui
 set(IMGUI_DIR include/imgui)
@@ -100,11 +103,11 @@ endforeach()
 # Executable
 add_executable(Renderer main.cpp ${SOURCES})
 
-# Include directory
-include_directories("include")
-
 # Libray linking
-target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core tinyobjloader IMGUI)
+target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core tinyobjloader IMGUI tiff)
+
+# Include directiries
+include_directories("include")
 
 # Shader custom target
 add_custom_target(Shaders ALL DEPENDS ${SPV_SHADERS})

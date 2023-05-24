@@ -1,22 +1,24 @@
 #include "Image.hpp"
 
-Image::Image(Device* device, CommandPool* commandPool, uint32_t width, uint32_t height, uint32_t mipmapLevels, vk::SampleCountFlagBits sampleCount, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usageFlags, vk::MemoryPropertyFlags memoryFlags, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) {
+Image::Image(Device* device, CommandPool* commandPool, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipmapLevels, vk::SampleCountFlagBits sampleCount, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usageFlags, vk::MemoryPropertyFlags memoryFlags, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) {
     this->width = width;
     this->height = height;
+    this->depth = depth;
+    this->type = depth == 0 ? vk::ImageType::e1D : (depth == 1 ? vk::ImageType::e2D : vk::ImageType::e3D);
     this->mipmapLevels = mipmapLevels;
     this->format = format;
 
-    // Image extent [TODO]: Enable 3D images
+    // Image extent
     vk::Extent3D extent (
         width,
         height,
-        1
+        depth
     );
 
     // Image creation
     vk::ImageCreateInfo imageCreateInfo (
         vk::ImageCreateFlags(),
-        vk::ImageType::e2D,
+        type,
         format,
         extent,
         mipmapLevels,
@@ -39,7 +41,7 @@ Image::Image(Device* device, CommandPool* commandPool, uint32_t width, uint32_t 
     transitionLayout(device, commandPool, oldLayout, newLayout);
 
     #ifndef NDEBUG
-        std::string imageInfo = "Extent: (" + std::to_string(width) + ", " + std::to_string(height) + ") | " +
+        std::string imageInfo = "Extent: (" + std::to_string(width) + ", " + std::to_string(height) + ", " + std::to_string(depth) + ") | " +
                                 "Mip mapping level: " + std::to_string(mipmapLevels) + " | " +
                                 "Sample count: " + std::to_string((int)sampleCount);
         spdlog::info("Vulkan image successfully created. " + imageInfo);
@@ -278,3 +280,6 @@ vk::DeviceMemory Image::getImageMemory() {
     return imageMemory;
 }
 
+vk::ImageType Image::getImageType() {
+    return type;
+}

@@ -2,20 +2,20 @@
 #define _CAMERA_H_
 
 #include <spdlog/spdlog.h>
+#include <iostream>
 #include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
 
 class Camera {
 public:
     Camera();
     ~Camera();
 
-    bool isOrbital;
-
     void setPosition(glm::vec3 position);
     void setUpVector(glm::vec3 up);
     void setFrontVector(glm::vec3 front);
-    void setPivot(glm::vec3 pivot);
     void setAspectRatio(float aspectRatio);
     void setFOV(float fov);
     void setNearPlane(float nearPlane);
@@ -27,21 +27,20 @@ public:
     glm::vec3 getUpVector();
     glm::vec3 getRightVector();
     glm::vec3 getFrontVector();
-    glm::vec3 getPivotPoint();
     glm::mat4 getViewMatrix();
     glm::mat4 getProjectionMatrix();
+    glm::mat4 getWorldMatrix();
     float getPitch();
     float getYaw();
     float getFOV();
 
-    void rotateWorld(float radians, glm::vec3 axis);
-    void rotateView(float radians, glm::vec3 axis);
-
+    void updateVectors();
     void generateViewMatrix();
     void generateProjectionMatrix();
+    void generateWorldMatrix();
 private:
     float aspectRatio, fov, nearPlane, farPlane, pitch, yaw;
-    glm::vec3 position, up, front, pivot;
+    glm::vec3 position, up, front, right;
     glm::mat4 worldMatrix, viewMatrix, projectionMatrix;
 };
 

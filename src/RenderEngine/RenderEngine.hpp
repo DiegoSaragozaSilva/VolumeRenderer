@@ -65,23 +65,27 @@ struct PushConstants {
     glm::vec4 viewDirection;
 };
 
-struct GeometryConstants {
-    glm::mat4 mvp;
-    glm::vec4 octreeData;
-    glm::vec4 viewDirection;
-};
-
-struct FragmentConstants {
-    glm::mat4 viewMatrix;
-    glm::vec4 viewPosition;
-    glm::vec4 viewDirection;
+struct VoxelConstants {
+    glm::mat4 cameraView;
+    glm::mat4 cameraProjection;
+    glm::vec4 cameraPos;
+    glm::vec4 windowDimesions;
+    glm::vec4 octreeMin;
+    glm::vec4 octreeMax;
+    glm::vec4 planeCutoff;
+    float octreeDepth;
+    float opacityCutoffMin;
+    float opacityCutoffMax;
 };
 
 // Struct that holds all the UI states
 struct UIStates {
     bool showCameraProperties;
-    bool showDebugStructures;
+    bool invertPlaneCutoff;
     int octreeTargetDepth;
+    float opacityCutoffMin;
+    float opacityCutoffMax;
+    glm::vec3 planeCutoff;
 };
 
 class RenderEngine {
@@ -126,6 +130,8 @@ private:
     void renderUI();
     void addOBJToScene(std::string objPath);
     void addVoxelizedOBJToScene(std::string objPath);
+    void addVoxelizedVolumeToScene(std::string folderPath);
+    void addRayTraceQuadToScene();
     void clearScene();
     void deletePipeline(Pipeline* pipeline);
     void deleteTexture(Texture* texture);

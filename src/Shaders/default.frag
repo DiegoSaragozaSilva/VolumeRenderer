@@ -15,11 +15,11 @@ layout (std430, push_constant) uniform PushConstants {
 } pushConstants;
 
 void main() {
-    vec3 lightColor = vec3(0.025f);
+    vec3 lightColor = vec3(0.25f);
     vec3 lightPosition = pushConstants.viewPosition.xyz;
-    vec3 lightDirection = normalize(lightPosition - fragPosition.xyz);
+    vec3 lightDirection = pushConstants.viewDirection.xyz;
 
-    float ambientStrength = 0.01f;
+    float ambientStrength = 0.1f;
     vec3 ambientLight = ambientStrength * lightColor; 
 
     float diffuse = max(dot(fragNormal, lightDirection), 0.0);

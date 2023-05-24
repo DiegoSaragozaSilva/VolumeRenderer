@@ -37,8 +37,8 @@ Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderMod
             vk::BlendFactor::eSrcAlpha,  
             vk::BlendFactor::eOneMinusSrcAlpha,  
             vk::BlendOp::eAdd,       
-            vk::BlendFactor::eOne,  
-            vk::BlendFactor::eZero,  
+            vk::BlendFactor::eSrcAlpha,  
+            vk::BlendFactor::eOneMinusSrcAlpha,  
             vk::BlendOp::eAdd,       
             colorComponentFlags
     );
@@ -46,10 +46,10 @@ Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderMod
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo (
             vk::PipelineColorBlendStateCreateFlags(),  
             VK_FALSE,                                     
-            vk::LogicOp::eClear,
+            vk::LogicOp::eCopy,
             1,
             &colorBlendAttachmentState,         
-            { { 0.0f, 0.0f, 0.0f, 0.0f } }             
+            { { 1.0f, 1.0f, 1.0f, 1.0f } }             
     );
 
     // Viewport state creation
@@ -317,8 +317,8 @@ vk::PipelineRasterizationStateCreateInfo Pipeline::initRasterizationState(vk::Po
         false,
         false,
         polygonMode,
-        vk::CullModeFlagBits::eBack,
-        vk::FrontFace::eCounterClockwise,
+        vk::CullModeFlagBits::eNone,
+        vk::FrontFace::eClockwise,
         false,
         0.0f,
         0.0f,
@@ -380,11 +380,11 @@ vk::PipelineColorBlendStateCreateInfo Pipeline::initColorBlendState() {
 
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo (
             vk::PipelineColorBlendStateCreateFlags(),  
-            VK_FALSE,                                     
+            VK_TRUE,                                     
             vk::LogicOp::eClear,
             1,
             &colorBlendAttachmentState,         
-            { { 0.0f, 0.0f, 0.0f, 0.0f } }             
+            { { 1.0f, 1.0f, 1.0f, 1.0f } }             
     );
 
     return colorBlendStateCreateInfo;

@@ -21,7 +21,8 @@ Texture::Texture(Device* device, CommandPool* commandPool, ImageData imageData) 
         commandPool,
         imageData.width,
         imageData.height,
-        mipmapLevels,
+        imageData.depth,
+        1,
         vk::SampleCountFlagBits::e1,
         vk::Format::eR8G8B8A8Unorm,
         vk::ImageTiling::eOptimal,
@@ -62,10 +63,10 @@ Texture::Texture(Device* device, CommandPool* commandPool, ImageData imageData) 
     commandPool->endCommandBuffer(commandBuffer, device);
 
     // Create the image view
-    imageView = new ImageView (
+    imageView = new ImageView (  
         device->getLogicalDevice(),
         image->getImage(),
-        imageData.depth > 1 ? vk::ImageViewType::e3D : vk::ImageViewType::e2D,
+        image->getImageType() == vk::ImageType::e1D ? vk::ImageViewType::e1D : (image->getImageType() == vk::ImageType::e2D ? vk::ImageViewType::e2D : vk::ImageViewType::e3D),
         image->getFormat(),
         vk::ImageAspectFlagBits::eColor,
         image->getMipmapLevels()

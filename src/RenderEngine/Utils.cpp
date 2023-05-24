@@ -84,7 +84,7 @@ Mesh* Utils::loadOBJFile(std::string OBJPath, std::string materialsDir) {
                 };
             }
 
-            vertex.color = {1.0f, 1.0f, 1.0f};
+            vertex.color = {1.0f, 1.0f, 1.0f, 1.0f};
 
             vertices.push_back(vertex);
             indices.push_back(indices.size());
@@ -141,7 +141,7 @@ std::vector<std::string> Utils::listFolderFiles(std::string folderPath) {
     return files;
 }
 
-Mesh* Utils::getDebugBoxMesh(AABB aabb, glm::vec3 color) {
+Mesh* Utils::getDebugBoxMesh(AABB aabb, glm::vec4 color) {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices; 
     std::vector<Material> _materials;
@@ -206,4 +206,61 @@ Mesh* Utils::getDebugBoxMesh(AABB aabb, glm::vec3 color) {
     debugBoxMesh->setVertices(vertices);
     debugBoxMesh->setIndices(indices);
     return debugBoxMesh;
+}
+
+TIFFData Utils::loadTIFFile(std::string TIFFPath) {
+    TIFF* file = TIFFOpen(TIFFPath.c_str(), "r");
+    if (file == NULL) {
+         spdlog::warn("Unable to read TIFF file " + TIFFPath);
+         return {};
+    }
+
+    TIFFData data;
+    data.name = TIFFPath;
+    TIFFGetField(file, TIFFTAG_IMAGEWIDTH, &data.width);
+    TIFFGetField(file, TIFFTAG_IMAGELENGTH, &data.height);
+
+    uint32_t* rasterData = (uint32_t*)_TIFFmalloc((data.width * data.height) * sizeof(uint32_t));
+    if (rasterData != NULL) {
+        if (TIFFReadRGBAImage(file, data.width, data.height, rasterData, 0)) {
+            
+            for (uint32_t y = 0; y < data.height; y++)
+                for (uint32_t x = 0; x < data.width; x++) {
+                    uint32_t pixel = rasterData[y * data.width + x];
+                    glm::vec4 pixelData = glm::vec4(
+                        TIFFGetR(pixel),
+                        TIFFGetG(pixel),
+                        TIFFGetB(pixel),
+                        TIFFGetA(pixel)
+                    );
+                    pixelData /= 255.0f;
+                    data.data.push_back(pixelData);
+                }
+        }
+        _TIFFfree(rasterData);
+    }
+    TIFFClose(file);
+
+    return data;
+}
+
+VolumetricData Utils::loadVolumetricData(std::string folderPath) {
+    std::vector<std::string> TIFFiles = listFolderFiles(folderPath);
+    std::sort(TIFFiles.begin(), TIFFiles.end());
+
+    VolumetricData volumetricData;
+    volumetricData.width = 0;
+    volumetricData.height = 0;
+    volumetricData.depth = TIFFiles.size();
+    for (auto TIFFile : TIFFiles) {
+        TIFFData data = loadTIFFile(TIFFile);
+        volumetricData.data.insert(volumetricData.data.end(), data.data.begin(), data.data.end());
+
+        if (volumetricData.width == 0 && volumetricData.height == 0) {
+            volumetricData.width = data.width;
+            volumetricData.height = data.height;
+        }
+    }
+
+    return volumetricData;
 }

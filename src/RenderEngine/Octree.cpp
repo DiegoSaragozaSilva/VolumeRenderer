@@ -36,14 +36,14 @@ void Octree::build(std::vector<Voxel> data, uint32_t maxDepth) {
 }
 
 void Octree::subdivideNode(ONode* node, std::vector<Voxel> data, uint32_t depth) {
-    if (depth >= maxDepth || data.size() == 0) return;
+    if (depth >= maxDepth) return;
 
     Voxel nodeVoxel = node->getVoxel();
     AABB nodeAABB = nodeVoxel.aabb;
     glm::vec3 aabbSize = nodeAABB.max - nodeAABB.min;
-    for (float j = nodeAABB.min.y; j < nodeAABB.max.y; j += aabbSize.y / 2.0f)
-        for (float k = nodeAABB.min.z; k < nodeAABB.max.z; k += aabbSize.z / 2.0f) 
-            for (float i = nodeAABB.min.x; i < nodeAABB.max.x; i += aabbSize.x / 2.0f) {
+    for (float j = nodeAABB.min.y; j < nodeAABB.max.y - LENGTH_EPSILON; j += aabbSize.y / 2.0f)
+        for (float k = nodeAABB.min.z; k < nodeAABB.max.z - LENGTH_EPSILON; k += aabbSize.z / 2.0f) 
+            for (float i = nodeAABB.min.x; i < nodeAABB.max.x - LENGTH_EPSILON; i += aabbSize.x / 2.0f) {
                 AABB subAABB;
                 subAABB.min = {i, j ,k};
                 subAABB.max = subAABB.min + aabbSize / 2.0f;
@@ -59,7 +59,18 @@ void Octree::subdivideNode(ONode* node, std::vector<Voxel> data, uint32_t depth)
                     Voxel subNodeVoxel;
                     subNodeVoxel.aabb = subAABB;
                     subNodeVoxel.normal = getVoxelDataAverageNormal(subData);
-                    subNodeVoxel.renderData = 0x00FF8040;
+                    subNodeVoxel.color = getVoxelDataAverageColor(subData);
+
+                    ONode* subNode = new ONode();
+                    subNode->setVoxel(subNodeVoxel);
+                    node->addChild(subNode);
+                    subdivideNode(subNode, subData, depth + 1);
+                }
+                else {
+                    Voxel subNodeVoxel;
+                    subNodeVoxel.aabb = subAABB;
+                    subNodeVoxel.normal = glm::vec3(0.0f);
+                    subNodeVoxel.color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
                     ONode* subNode = new ONode();
                     subNode->setVoxel(subNodeVoxel);
@@ -69,51 +80,69 @@ void Octree::subdivideNode(ONode* node, std::vector<Voxel> data, uint32_t depth)
             }
 }
 
-Mesh* Octree::compressToMesh(uint32_t depth) {
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    std::vector<Material> materials;
-    traverseGettingLeaves(root, 1, depth, vertices, indices);
+ImageData Octree::compressToImage(uint32_t depth) {
+    uint32_t textureSize = std::pow(2, depth - 1);
+    std::vector<uint8_t> voxelData(textureSize * textureSize * textureSize * 4);
+    std::fill(voxelData.begin(), voxelData.end(), 0);
 
-    Mesh* volumeRenderMesh = new Mesh();
-    volumeRenderMesh->setVertices(vertices);
-    volumeRenderMesh->setIndices(indices);
-    return volumeRenderMesh;
+    traverseGettingLeaves(root, 1, depth, voxelData);
+
+    ImageData octreeImageData;
+    octreeImageData.name = "Octree Image Data";
+    octreeImageData.width = textureSize;
+    octreeImageData.height = textureSize;
+    octreeImageData.depth = textureSize;
+    octreeImageData.data = voxelData;
+    return octreeImageData;
 }
 
-void Octree::traverseGettingLeaves(ONode* node, uint32_t depth, uint32_t maxTraverseDepth, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
+void Octree::traverseGettingLeaves(ONode* node, uint32_t depth, uint32_t maxTraverseDepth, std::vector<uint8_t>& voxelData) {
     if (depth > maxTraverseDepth || depth > maxDepth)
         return;
-
-    if (node->children.size() == 0) {
-        // Is leaf
+    
+    if (node != nullptr && depth == maxTraverseDepth) {
         Voxel voxel = node->getVoxel();
+        glm::vec4 voxelColor = voxel.color;
+        
+        Voxel rootVoxel = this->root->getVoxel(); 
+        
+        glm::vec3 offset = glm::abs(rootVoxel.aabb.min);
+        glm::vec3 shiftedMin = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 shiftedMax = rootVoxel.aabb.max + offset;
+        glm::vec3 shiftedPoint = voxel.aabb.center + offset;
 
-        uint32_t voxelColor = voxel.renderData;
-        glm::vec3 color = glm::vec3((voxelColor & 0x00110000) >> 16, (voxelColor & 0x00001100) >> 8, voxelColor & 0x0000011);        
+        float gridSize = std::pow(2.0f, depth - 1);
+        glm::vec3 voxelSize = glm::vec3(shiftedMax / gridSize);
+        glm::vec3 voxelIndex = glm::floor(shiftedPoint / voxelSize);
 
-        Vertex v = {
-            .position = voxel.aabb.center,
-            .normal = voxel.normal,
-            .color = color
-        };
-        vertices.push_back(v);
-        indices.push_back(indices.size());
+        int index = voxelIndex.x + voxelIndex.z * gridSize + voxelIndex.y * gridSize * gridSize;
+        
+        voxelData[index * 4 + 0] = (uint8_t)(voxelColor.x * 255.0f);
+        voxelData[index * 4 + 1] = (uint8_t)(voxelColor.y * 255.0f);
+        voxelData[index * 4 + 2] = (uint8_t)(voxelColor.z * 255.0f);
+        voxelData[index * 4 + 3] = (uint8_t)(voxelColor.w * 255.0f);
+
         return;
     }
     
     for (ONode* child : node->children)
-        traverseGettingLeaves(child, depth + 1, maxTraverseDepth, vertices, indices);
+        traverseGettingLeaves(child, depth + 1, maxTraverseDepth, voxelData);
 }
 
-std::vector<Mesh*> Octree::getDebugMeshes() {
-    std::vector<Mesh*> meshes;
-    traverseGettingMeshes(root, 1, meshes);
-    return meshes;
+Mesh* Octree::getDebugMesh(uint32_t depth) {
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    std::vector<Material> materials;
+    traverseGettingMeshes(root, 1, depth, vertices, indices);
+
+    Mesh* debugRenderMesh = new Mesh();
+    debugRenderMesh->setVertices(vertices);
+    debugRenderMesh->setIndices(indices);
+    return debugRenderMesh;
 }
 
-void Octree::traverseGettingMeshes(ONode* node, uint32_t depth, std::vector<Mesh*>& meshes) {
-    if (node == nullptr) return;
+void Octree::traverseGettingMeshes(ONode* node, uint32_t depth, uint32_t maxTraverseDepth, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
+    if (node == nullptr) return; 
 
     float ratio = 2.0f * (depth - 1) / (maxDepth - 1);
     float r = std::max(0.0f, ratio - 1.0f);
@@ -121,16 +150,34 @@ void Octree::traverseGettingMeshes(ONode* node, uint32_t depth, std::vector<Mesh
     float g = 1.0f - b - r;
 
     AABB nodeAABB = node->getVoxel().aabb;
-    meshes.push_back(Utils::getDebugBoxMesh(nodeAABB, glm::vec3(r, g, b)));
+    Mesh* debugBox = Utils::getDebugBoxMesh(nodeAABB, glm::vec4(r, g, b, 1.0f));
+    std::vector<Vertex> debugVertices = debugBox->getVertices();
+    std::vector<uint32_t> debugIndices = debugBox->getIndices();
+
+    vertices.insert(vertices.end(), debugVertices.begin(), debugVertices.end());
+
+    std::transform(debugIndices.begin(), debugIndices.end(), debugIndices.begin(), [vertices](uint32_t x) {return x + vertices.size();});
+    indices.insert(indices.end(), debugIndices.begin(), debugIndices.end());
+
     for (ONode* child : node->children)
-        traverseGettingMeshes(child, depth + 1, meshes);
+        traverseGettingMeshes(child, depth + 1, maxTraverseDepth, vertices, indices);
 }
 
 glm::vec3 Octree::getVoxelDataAverageNormal(std::vector<Voxel> data) {
     glm::vec3 averageNormal = glm::vec3(0.0f);
     for (Voxel v : data)
         averageNormal += v.normal;
-    return glm::normalize(averageNormal);
+    return averageNormal * (1.0f / data.size());
+}
+
+glm::vec4 Octree::getVoxelDataAverageColor(std::vector<Voxel> data) {
+    glm::vec4 averageColor = glm::vec4(0.0f);
+    for (Voxel v : data)
+        averageColor += v.color;
+
+    averageColor /= data.size();
+
+    return averageColor;   
 }
 
 ONode* Octree::getRoot() {

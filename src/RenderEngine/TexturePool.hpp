@@ -13,6 +13,9 @@ public:
     ~TexturePool();
 
     Texture* requireTexture(Device* device, CommandPool* commandPool, std::string textureName);
+    Texture* getTexture(Device* device, CommandPool* commandPool, std::string textureName);
+    void addTextureToPool(std::string textureName, Texture* texture);
+    void removeTextureFromPool(std::string textureName);
     std::map<std::string, Texture*> getPool();
 private:
     std::map<std::string, Texture*> pool;

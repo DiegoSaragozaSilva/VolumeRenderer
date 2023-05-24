@@ -14,6 +14,7 @@
 
 #include "Mesh.hpp"
 #include "Geometry.hpp"
+#include "Utils.hpp"
 
 struct Volume {
     int scale;
@@ -26,7 +27,7 @@ public:
     static int density;
 
     static Volume voxelizeMesh(Mesh* mesh);
-    static Mesh* triangulateVolume(Volume volume);
+    static Volume voxelizeVolumetricData(VolumetricData data);
 private:
     Voxelizer();
 

@@ -4,14 +4,14 @@ layout (points) in;
 
 layout (location = 0) in vec4 pPosition[];
 layout (location = 1) in vec3 pNormal[];
-layout (location = 2) in vec3 pColor[];
+layout (location = 2) in vec4 pColor[];
 layout (location = 3) in vec2 pUV[];
 
 layout (triangle_strip, max_vertices = 14) out;
 
 layout (location = 0) out vec4 fragPosition;
 layout (location = 1) out vec3 fragNormal;
-layout (location = 2) out vec3 fragColor;
+layout (location = 2) out vec4 fragColor;
 layout (location = 3) out vec2 fragUV;
 
 layout (std430, push_constant) uniform PushConstants {
@@ -21,10 +21,6 @@ layout (std430, push_constant) uniform PushConstants {
 } pushConstants;
 
 void main() {
-    // vec4 a = pushConstants.viewDirection;
-    // vec3 b = pNormal[0];
-    // if (a.x * b.x + a.y * b.y + a.z * b.z < 0) return;
-
     float octreeDepth = pushConstants.octreeData.w;
     vec3 octreeSize = pushConstants.octreeData.xyz;
     vec3 voxelDimensions = vec3(

@@ -10,18 +10,7 @@ struct AABB {
 };
 
 struct Voxel {
-    /*
-        DATA SENT TO THE GPU
-
-        renderData
-        8 bits + 24 bits = 32 bits
-        | MaterialID | R | G | B |
-
-        normal
-        4 bytes = 32 bits
-        | nx | ny | nz |
-    */
-    uint32_t renderData;
+    glm::vec4 color;
     glm::vec3 normal;
     glm::vec3 position;
     AABB aabb;

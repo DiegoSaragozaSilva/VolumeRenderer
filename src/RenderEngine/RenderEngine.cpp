@@ -93,12 +93,13 @@ void RenderEngine::init() {
 
     // Initialize the main camera
     camera = new Camera();
-    camera->setPosition({0.0f, 0.0f, 0.0f});
-    camera->setUpVector({0.0f, 1.0f, 0.0f});
+    camera->setPosition({0.0f, 0.0f, 1.0f});
     camera->setFrontVector({0.0f, 0.0f, -1.0f});
+    camera->setUpVector({0.0f, 1.0f, 0.0f});
     camera->setFOV(60.0f);
     camera->setNearPlane(0.1f);
     camera->setFarPlane(1000.0f);
+    camera->updateVectors();
     camera->generateViewMatrix();
     camera->generateProjectionMatrix();
 
@@ -108,8 +109,10 @@ void RenderEngine::init() {
 
     // Initialize the UIStates
     uiStates.showCameraProperties = false;
-    uiStates.showDebugStructures = false;
+    uiStates.invertPlaneCutoff = true;
     uiStates.octreeTargetDepth = 5;
+    uiStates.opacityCutoffMax = 1.0f;
+    uiStates.planeCutoff = glm::vec3(0.0f, 0.0f, 0.0f);
 
     // Initialize time data
     deltaTime = 0.0;
@@ -117,6 +120,9 @@ void RenderEngine::init() {
 
     // Initialize octree
     targetOctree = nullptr;
+
+    // Upload basic rectangle mesh to the voxel scene for raytracing
+    addRayTraceQuadToScene();
 }
 
 void RenderEngine::initWindow() {
@@ -233,9 +239,8 @@ void RenderEngine::initVulkan() {
     render.defaultShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/default.frag.spv"), vk::ShaderStageFlagBits::eFragment, 64, 32));
 
     // Voxel shaders initialization
-    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.geom.spv"), vk::ShaderStageFlagBits::eGeometry, 0, 96));
-    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 0));
-    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.frag.spv"), vk::ShaderStageFlagBits::eFragment, 80, 96));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 64));
+    render.voxelShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/voxel.frag.spv"), vk::ShaderStageFlagBits::eFragment, 0, sizeof(VoxelConstants)));
 
     // Debug shaders initialization
     render.debugShaders.push_back(new ShaderModule(vulkan.device, Utils::loadShaderCode("assets/shaders/debug.vert.spv"), vk::ShaderStageFlagBits::eVertex, 0, 64));
@@ -263,7 +268,7 @@ void RenderEngine::initVulkan() {
         render.voxelShaders,
         vertexDescription.bindings,
         vertexDescription.attributes,
-        vk::PrimitiveTopology::ePointList,
+        vk::PrimitiveTopology::eTriangleList,
         vk::PolygonMode::eFill,
         vulkan.viewport,
         vulkan.scissor,
@@ -299,6 +304,7 @@ Image* RenderEngine::createMultiSampleImage() {
         extent.width,
         extent.height,
         1,
+        1,
         vulkan.device->getMultiSamplingLevel(),
         render.swapchain->getColorFormat(),
         vk::ImageTiling::eOptimal,
@@ -319,6 +325,7 @@ Image* RenderEngine::createDepthImage() {
         vulkan.commandPool,
         extent.width,
         extent.height,
+        1,
         1,
         vulkan.device->getMultiSamplingLevel(),
         vulkan.device->getDepthFormat(),
@@ -393,7 +400,7 @@ std::vector<vk::ClearValue> RenderEngine::createClearValues() {
     // Sky clear color
     vk::ClearValue skyColor;
     skyColor.color = vk::ClearColorValue(std::array<float, 4> {
-        135.f / 255.f, 206.f / 255.f, 235.f / 255.f, 1.0f
+        0.f / 255.f, 0.f / 255.f, 0.f / 255.f, 1.0f
     });
 
     // Depth clear color
@@ -492,24 +499,14 @@ void RenderEngine::renderFrame() {
     lastTime = currentTime;
 
     // Calculate model view projection matrix
-    glm::mat4 modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
-    glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
+    glm::mat4 worldMatrix = camera->getWorldMatrix();
+    glm::mat4 mvp = camera->getProjectionMatrix() * camera->getViewMatrix() * worldMatrix;
 
     // Get the camera position and direction
     glm::vec3 _camPosition = camera->getPosition();
     glm::vec3 _camDirection = camera->getFrontVector();
     glm::vec4 camPosition = glm::vec4(_camPosition.x, _camPosition.y, _camPosition.z, 1.0f);
-    glm::vec4 camDirection = glm::vec4(_camDirection.x, _camDirection.y, _camDirection.z, 1.0f);
-
-    // Get Octree information
-    glm::vec4 octreeData = glm::vec4(0.0f);
-    if (targetOctree != nullptr) {
-        float octreeDepth = (float)uiStates.octreeTargetDepth;
-        glm::vec4 octreeAABBMin = glm::vec4(targetOctree->getRoot()->getVoxel().aabb.min, 1.0f);
-        glm::vec4 octreeAABBMax = glm::vec4(targetOctree->getRoot()->getVoxel().aabb.max, 1.0f);
-        octreeData = octreeAABBMax - octreeAABBMin;
-        octreeData.w = octreeDepth;
-    }
+    glm::vec4 camRotation = glm::vec4(camera->getPitch(), camera->getYaw(), 0.0f, 0.0f);
 
     // Start Imgui frame
     ImGui_ImplVulkan_NewFrame();
@@ -534,7 +531,7 @@ void RenderEngine::renderFrame() {
     PushConstants pushConstants = {
         mvp,
         camPosition,
-        camDirection
+        camRotation
     };
 
     vk::PushConstantRange range = render.defaultPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eVertex);
@@ -611,67 +608,84 @@ void RenderEngine::renderFrame() {
         }
     }
 
-    // Bind volume pipeline
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.voxelPipeline->getPipeline());
-
-    // Push constants
-    GeometryConstants geometryConstants = {
-        .mvp = mvp,
-        .octreeData = octreeData,
-        .viewDirection = camDirection
-    };
-    range = render.voxelPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eGeometry);
-    commandBuffer.pushConstants (
-        render.voxelPipeline->getPipelineLayout(),
-        vk::ShaderStageFlagBits::eGeometry,
-        0,
-        sizeof(geometryConstants),
-        &geometryConstants
-    );
-    
-    FragmentConstants fragmentConstants = {
-        .viewMatrix = camera->getViewMatrix(),
-        .viewPosition = camPosition,
-        .viewDirection = camDirection
-    };
-    range = render.voxelPipeline->getPushConstantRange(vk::ShaderStageFlagBits::eFragment);
-    commandBuffer.pushConstants (
-        render.voxelPipeline->getPipelineLayout(),
-        vk::ShaderStageFlagBits::eFragment,
-        80,
-        sizeof(fragmentConstants),
-        &fragmentConstants
-    );
-
-    for (Mesh* mesh : voxelScene) {
-        vk::DeviceSize offsets[]{0};
-        vk::Buffer volumeVertexBuffer = mesh->getVertexBuffer()->getBuffer();
-        commandBuffer.bindVertexBuffers(0, 1, &volumeVertexBuffer, offsets);
-        commandBuffer.bindIndexBuffer(mesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
-
-        // Draw indexed
-        commandBuffer.drawIndexed(mesh->getNumIndices(), 1, 0, 0, 0);
-    }
-
-    if (uiStates.showDebugStructures) {
-        // Bind debug pipeline
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.debugPipeline->getPipeline());
+    if (targetOctree != nullptr) {
+        // Bind volume pipeline
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, render.voxelPipeline->getPipeline());
 
         // Push constants
+        glm::vec4 cameraPosition = {
+            _camPosition.x,
+            _camPosition.y,
+            _camPosition.z,
+            1.0f
+        };
+
+        glm::vec4 windowDimensions = {
+            window->getWidth(),
+            window->getHeight(),
+            0.0f,
+            0.0f,
+        };
+
+        glm::vec4 octreeMin = {
+            targetOctree->getRoot()->getVoxel().aabb.min.x,
+            targetOctree->getRoot()->getVoxel().aabb.min.y,
+            targetOctree->getRoot()->getVoxel().aabb.min.z,
+            1.0f
+        };
+        octreeMin = glm::floor(octreeMin);
+
+        glm::vec4 octreeMax = {
+            targetOctree->getRoot()->getVoxel().aabb.max.x,
+            targetOctree->getRoot()->getVoxel().aabb.max.y,
+            targetOctree->getRoot()->getVoxel().aabb.max.z,
+            1.0f
+        };
+        octreeMax = glm::ceil(octreeMax);
+
+        VoxelConstants voxelConstants = {
+            camera->getViewMatrix(),
+            camera->getProjectionMatrix(),
+            cameraPosition,
+            windowDimensions,
+            octreeMin,
+            octreeMax,
+            glm::vec4(uiStates.planeCutoff.x, uiStates.planeCutoff.y, uiStates.planeCutoff.z, (float)uiStates.invertPlaneCutoff == true ? -1.0f : 1.0f),
+            uiStates.octreeTargetDepth,
+            uiStates.opacityCutoffMin,
+            uiStates.opacityCutoffMax,
+        };
+
         commandBuffer.pushConstants (
-            render.debugPipeline->getPipelineLayout(),
-            vk::ShaderStageFlagBits::eVertex,
+            render.voxelPipeline->getPipelineLayout(),
+            vk::ShaderStageFlagBits::eFragment,
             0,
-            64,
-            &mvp
+            sizeof(VoxelConstants),
+            &voxelConstants
         );
 
-        // Bind the mesh vertex and index buffers
-        for (Mesh* mesh : debugScene) {
+        for (Mesh* mesh : voxelScene) {
             vk::DeviceSize offsets[]{0};
-            vk::Buffer debugVertexBuffer = mesh->getVertexBuffer()->getBuffer();
-            commandBuffer.bindVertexBuffers(0, 1, &debugVertexBuffer, offsets);
+            vk::Buffer volumeVertexBuffer = mesh->getVertexBuffer()->getBuffer();
+            commandBuffer.bindVertexBuffers(0, 1, &volumeVertexBuffer, offsets);
             commandBuffer.bindIndexBuffer(mesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
+
+            // Get texture descriptor set
+            vk::DescriptorSet voxelTextureSamplerDescriptorSet = render.voxelPipeline->getTextureSamplerDescriptorSet(
+                    vulkan.device,
+                    texturePool->requireTexture(vulkan.device, vulkan.commandPool, "Octree Image Data")
+            );
+
+            // Bind texture descriptor set
+            commandBuffer.bindDescriptorSets(
+                vk::PipelineBindPoint::eGraphics,
+                render.voxelPipeline->getPipelineLayout(),
+                0,
+                1,
+                &voxelTextureSamplerDescriptorSet,
+                0,
+                nullptr
+            );
 
             // Draw indexed
             commandBuffer.drawIndexed(mesh->getNumIndices(), 1, 0, 0, 0);
@@ -722,15 +736,23 @@ void RenderEngine::renderUI() {
                         addVoxelizedOBJToScene(file);
                 ImGui::EndMenu();
             }
+            if (ImGui::BeginMenu("Voxelize volume")) {
+                std::vector<std::string> volumeFolders = Utils::listFolderFiles("assets/volumes");
+                for (const auto& folder : volumeFolders)
+                    if (ImGui::MenuItem(folder.c_str()))
+                        addVoxelizedVolumeToScene(folder);
+                ImGui::EndMenu();               
+            }
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("Options")) {
             ImGui::Checkbox("Show camera properties", &uiStates.showCameraProperties);
-            ImGui::Checkbox("Show debug structures", &uiStates.showDebugStructures);
-            ImGui::InputInt("Voxel scale", &Voxelizer::scale);
-            ImGui::InputInt("Voxel density", &Voxelizer::density);
-            ImGui::SliderInt("Octree rendering depth", &uiStates.octreeTargetDepth, 1, 10); 
+            ImGui::SliderInt("Octree rendering depth", &uiStates.octreeTargetDepth, 1, 8);
+            ImGui::SliderFloat("Opacity cutoff min", &uiStates.opacityCutoffMin, 0.0f, 1.0f);
+            ImGui::SliderFloat("Opacity cutoff max", &uiStates.opacityCutoffMax, 0.0f, 1.0f);
+            ImGui::SliderFloat3("Plane cutoff", (float *)&uiStates.planeCutoff, 0.0f, 1.0f);
+            ImGui::Checkbox("Invert plane cutoff", &uiStates.invertPlaneCutoff);
             ImGui::EndMenu();
         }
         
@@ -891,8 +913,11 @@ void RenderEngine::addOBJToScene(std::string objPath) {
 
 void RenderEngine::addVoxelizedOBJToScene(std::string objPath) {
     // Clear octree if it exists
-    if (targetOctree != nullptr)
+    if (targetOctree != nullptr) {
+        clearScene();
+        addRayTraceQuadToScene();
         delete targetOctree;
+    }
 
     // Load model from obj path, voxelize it and add to the scene
     Mesh* newMesh = Utils::loadOBJFile(objPath, "assets/materials");
@@ -900,11 +925,32 @@ void RenderEngine::addVoxelizedOBJToScene(std::string objPath) {
 
     targetOctree = new Octree();
     targetOctree->build(meshVolume.voxels, uiStates.octreeTargetDepth);
-    addVolumeMeshToScene(targetOctree->compressToMesh(uiStates.octreeTargetDepth));
+    ImageData octreeImageData = targetOctree->compressToImage(uiStates.octreeTargetDepth);
 
-    // std::vector<Mesh*> debugOctreeMeshes = targetOctree->getDebugMeshes();
-    // for (Mesh* debugMesh : debugOctreeMeshes)
-    //     addDebugMeshToScene(debugMesh); 
+    Texture* presentTexture = texturePool->getTexture(vulkan.device, vulkan.commandPool, octreeImageData.name);
+    if (presentTexture) texturePool->removeTextureFromPool(octreeImageData.name);
+
+    Texture* octreeDataTexture = new Texture(vulkan.device, vulkan.commandPool, octreeImageData);
+    texturePool->addTextureToPool(octreeImageData.name, octreeDataTexture);
+}
+
+void RenderEngine::addVoxelizedVolumeToScene(std::string folderPath) {
+     // Clear octree if it exists
+    if (targetOctree != nullptr) {
+        clearScene();
+        addRayTraceQuadToScene();
+        delete targetOctree;
+    }
+
+    VolumetricData volumetricData = Utils::loadVolumetricData(folderPath);
+    Volume volume = Voxelizer::voxelizeVolumetricData(volumetricData);
+
+    targetOctree = new Octree();
+    targetOctree->build(volume.voxels, uiStates.octreeTargetDepth);
+    ImageData octreeImageData = targetOctree->compressToImage(uiStates.octreeTargetDepth);
+
+    Texture* octreeDataTexture = new Texture(vulkan.device, vulkan.commandPool, octreeImageData);
+    texturePool->addTextureToPool(octreeImageData.name, octreeDataTexture);
 }
 
 void RenderEngine::addMeshToScene(Mesh* mesh) {
@@ -944,6 +990,8 @@ void RenderEngine::clearScene() {
         delete mesh;
     }
     debugScene.clear();
+
+    texturePool->removeTextureFromPool("Octree Image Data");
 }
 
 double RenderEngine::getDeltaTime() {
@@ -971,4 +1019,23 @@ void RenderEngine::deleteTexture(Texture* texture) {
     vulkan.device->freeDeviceMemory(texture->getImage()->getImageMemory());
     vulkan.device->destroyImage(texture->getImage()->getImage());
     delete texture;
+}
+
+void RenderEngine::addRayTraceQuadToScene() {
+    std::vector<Vertex> quadVertices = {
+        {{-1, -1, 0}, {0, 0, 0}, {0, 0, 0, 0}, {0, 0}},
+        {{1, -1, 0}, {0, 0, 0}, {0, 0, 0, 0}, {0, 0}},
+        {{1, 1, 0}, {0, 0, 0}, {0, 0, 0, 0}, {0, 0}},
+        {{-1, 1, 0}, {0, 0, 0}, {0, 0, 0, 0}, {0, 0}},
+    };
+
+    std::vector<uint32_t> quadIndices = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    Mesh* quadMesh = new Mesh();
+    quadMesh->setVertices(quadVertices);
+    quadMesh->setIndices(quadIndices);
+    addVolumeMeshToScene(quadMesh);
 }

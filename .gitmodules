@@ -19,3 +19,6 @@
 [submodule "include/imgui"]
 	path = include/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "include/libtiff"]
+	path = include/libtiff
+	url = https://github.com/libsdl-org/libtiff

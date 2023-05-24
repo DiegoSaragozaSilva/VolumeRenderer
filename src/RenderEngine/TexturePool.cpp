@@ -14,7 +14,7 @@ Texture* TexturePool::requireTexture(Device* device, CommandPool* commandPool, s
     if (pool.find(textureName) == pool.end()) {
         ImageData newImageData = Utils::loadImageFile(textureName);
 
-        // If incoming loaded image failed to load, return the default texture
+        // If incoming image failed to load, return the default texture
         if (!newImageData.loaded)
             return pool["assets/textures/default.png"];
 
@@ -22,6 +22,21 @@ Texture* TexturePool::requireTexture(Device* device, CommandPool* commandPool, s
         pool.insert(std::pair<std::string, Texture*>(textureName, newTexture));
     }
     return pool[textureName];
+}
+
+Texture* TexturePool::getTexture(Device* device, CommandPool* commandPool, std::string textureName) {
+    if (pool.find(textureName) == pool.end()) return nullptr;
+    return pool[textureName];
+}
+
+void TexturePool::addTextureToPool(std::string textureName, Texture* texture) {
+    pool.insert(std::pair<std::string, Texture*>(textureName, texture));
+}
+
+void TexturePool::removeTextureFromPool(std::string textureName) {
+    Texture* toRemove = pool[textureName];
+    pool.erase(textureName);
+    delete toRemove;
 }
 
 std::map<std::string, Texture*> TexturePool::getPool() {
