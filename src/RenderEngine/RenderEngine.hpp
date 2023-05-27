@@ -68,13 +68,17 @@ struct PushConstants {
 struct VoxelConstants {
     glm::mat4 cameraView;
     glm::mat4 cameraProjection;
-    glm::vec4 cameraPos;
-    glm::vec4 windowDimesions;
-    glm::vec4 octreeMin;
-    glm::vec4 octreeMax;
+    glm::vec4 transferAlpha;
     glm::vec4 planeCutoff;
+    glm::vec2 windowDimensions;
+    glm::vec2 transferRed;
+    glm::vec2 transferGreen;
+    glm::vec2 transferBlue;
+    glm::vec3 cameraPos;
     float octreeDepth;
+    glm::vec3 octreeMin;
     float opacityCutoffMin;
+    glm::vec3 octreeMax;
     float opacityCutoffMax;
 };
 
@@ -86,6 +90,10 @@ struct UIStates {
     float opacityCutoffMin;
     float opacityCutoffMax;
     glm::vec3 planeCutoff;
+    glm::vec2 transferRed;
+    glm::vec2 transferGreen;
+    glm::vec2 transferBlue;
+    glm::vec4 transferAlpha;
 };
 
 class RenderEngine {

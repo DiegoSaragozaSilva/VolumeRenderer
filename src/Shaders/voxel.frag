@@ -11,13 +11,17 @@ layout (binding = 0) uniform sampler3D octreeData;
 layout (std430, push_constant) uniform PushConstants {
     mat4 cameraView;
     mat4 cameraProjection;
-    vec4 cameraPos;
-    vec4 windowDimensions;
-    vec4 octreeMin;
-    vec4 octreeMax;
+    vec4 transferAlpha;
     vec4 planeCutoff;
+    vec2 windowDimensions;
+    vec2 transferRed;
+    vec2 transferGreen;
+    vec2 transferBlue;
+    vec3 cameraPos;
     float octreeDepth;
+    vec3 octreeMin;
     float opacityCutoffMin;
+    vec3 octreeMax;
     float opacityCutoffMax;
 } pushConstants;
 
@@ -25,6 +29,43 @@ struct Ray {
     vec3 origin;
     vec3 direction;
 };
+
+// From: https://gist.github.com/companje/29408948f1e8be54dd5733a74ca49bb9
+float map(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+float alphaStep(float alpha) {
+  // Tissue
+  vec2 tissueDensity = pushConstants.transferAlpha.xy;
+  if (alpha >= tissueDensity.x && alpha <= tissueDensity.y) {
+    // Left curve
+    float leftValue = smoothstep(tissueDensity.x, tissueDensity.y, alpha);
+    if (leftValue < 1.0f - EPSILON) {
+      float mappedLeftValue = map(leftValue, 0.0f, 1.0f, 0.0f, 0.5f);
+      return mappedLeftValue;
+    }
+
+    // Right curve
+    float rightValue = smoothstep(tissueDensity.y, tissueDensity.x, alpha);
+    float mappedRightValue = map(rightValue, 0.0f, 1.0f, 0.0f, 0.5f);
+    return mappedRightValue;
+  }
+
+  // Bone
+  vec2 boneDensity = pushConstants.transferAlpha.zw;
+  if (alpha >= boneDensity.x && alpha <= boneDensity.y) {
+    // Left curve
+    float leftValue = smoothstep(boneDensity.x, boneDensity.y, alpha);
+    if (leftValue < 1.0f - EPSILON) return leftValue;
+
+    // Right curve
+    float rightCurve = smoothstep(boneDensity.y, boneDensity.x, alpha);
+    return rightCurve;
+  }
+
+  return 0.0f;
+}
  
 bool hitBox(Ray ray, vec3 boxMin, vec3 boxMax, inout float tmin, inout float tmax) {
     tmin = 0.0f;
@@ -56,17 +97,35 @@ vec4 sampleGrid(vec3 index) {
     
     vec4 color = vec4(texture(octreeData, trueIndex).xyz, 0.0f);
 
-    float meanAlpha = (color.x + color.y + color.z) / 3.0f;
-    color.w = meanAlpha > pushConstants.opacityCutoffMin && meanAlpha < pushConstants.opacityCutoffMax ? meanAlpha : 0.0f;
+    float meanDensity = (color.x + color.y + color.z) / 3.0f;
+    color.w = meanDensity > pushConstants.opacityCutoffMin && meanDensity < pushConstants.opacityCutoffMax ? meanDensity : 0.0f;
 
-    vec4 blendColor = vec4(0.0f, 0.0f, 0.0f, color.w);
+    vec4 blendColor = vec4(0.0f);
 
-    // Color blending
-    if (color.w <= 0.333f) blendColor.xyz = vec3(0.0f, meanAlpha, 0.0f);
-    else if (color.w > 0.333f && color.w <= 0.666f) blendColor.xyz = vec3(meanAlpha, 0.0f, 0.0f);
-    else blendColor.xyz = vec3(0.0f, 0.0f, meanAlpha); 
+    // Apply transfer function
+    vec4 minColorDensities = vec4(pushConstants.transferRed.x,
+                                  pushConstants.transferGreen.x,
+                                  pushConstants.transferBlue.x,
+                                  pushConstants.transferAlpha.x);
 
-    blendColor.xyz = vec3(meanAlpha);
+    vec4 maxColorDensities = vec4(pushConstants.transferRed.y,
+                                  pushConstants.transferGreen.y,
+                                  pushConstants.transferBlue.y,
+                                  pushConstants.transferAlpha.w);
+
+    float minDensity = min(minColorDensities.x, min(minColorDensities.y, minColorDensities.z));
+    float maxDensity = max(maxColorDensities.x, max(maxColorDensities.y, maxColorDensities.z));
+
+    float mappedDensity = map(color.w, 0.0f, 1.0f, minDensity, maxDensity);
+
+    blendColor.x = smoothstep(minColorDensities.x, maxColorDensities.x, mappedDensity) / maxColorDensities.x;
+    blendColor.y = smoothstep(minColorDensities.y, maxColorDensities.y, mappedDensity) / maxColorDensities.y;
+    blendColor.z = smoothstep(minColorDensities.z, maxColorDensities.z, mappedDensity) / maxColorDensities.z;
+    blendColor.w = alphaStep(mappedDensity) / maxColorDensities.w;
+
+    blendColor.x = blendColor.x > 0.75f ? 0.0f : blendColor.x;
+    blendColor.y = blendColor.y > 0.60f ? 0.0f : blendColor.y;
+    blendColor.z = blendColor.z > 0.65f ? 0.0f : blendColor.z;
 
     return blendColor;
 }

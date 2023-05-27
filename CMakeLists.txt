@@ -16,7 +16,7 @@ add_subdirectory("include/glfw")
 add_subdirectory("include/spdlog")
 
 # Build VulkanMemoryAllocator from include folder
-add_subdirectory("include/VulkanMemoryAllocator")
+# add_subdirectory("include/VulkanMemoryAllocator")
 
 # Build glm from include folder
 add_subdirectory("include/glm")

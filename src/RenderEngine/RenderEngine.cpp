@@ -109,10 +109,13 @@ void RenderEngine::init() {
 
     // Initialize the UIStates
     uiStates.showCameraProperties = false;
-    uiStates.invertPlaneCutoff = true;
-    uiStates.octreeTargetDepth = 5;
-    uiStates.opacityCutoffMax = 1.0f;
-    uiStates.planeCutoff = glm::vec3(0.0f, 0.0f, 0.0f);
+    uiStates.invertPlaneCutoff    = true;
+    uiStates.octreeTargetDepth    = 5;
+    uiStates.opacityCutoffMax     = 1.0f;
+    uiStates.planeCutoff          = glm::vec3(0.0f, 0.0f, 0.0f);
+    uiStates.transferRed          = glm::vec2(0.0f, 10.0f);
+    uiStates.transferGreen        = glm::vec2(10.0f, 30.0f);
+    uiStates.transferBlue         = glm::vec2(30.0f, 255.0f);
 
     // Initialize time data
     deltaTime = 0.0;
@@ -646,14 +649,18 @@ void RenderEngine::renderFrame() {
         VoxelConstants voxelConstants = {
             camera->getViewMatrix(),
             camera->getProjectionMatrix(),
-            cameraPosition,
-            windowDimensions,
-            octreeMin,
-            octreeMax,
+            uiStates.transferAlpha,
             glm::vec4(uiStates.planeCutoff.x, uiStates.planeCutoff.y, uiStates.planeCutoff.z, (float)uiStates.invertPlaneCutoff == true ? -1.0f : 1.0f),
+            windowDimensions,
+            uiStates.transferRed,
+            uiStates.transferGreen,
+            uiStates.transferBlue,
+            cameraPosition,
             uiStates.octreeTargetDepth,
+            octreeMin,
             uiStates.opacityCutoffMin,
-            uiStates.opacityCutoffMax,
+            octreeMax,
+            uiStates.opacityCutoffMax
         };
 
         commandBuffer.pushConstants (
@@ -751,8 +758,12 @@ void RenderEngine::renderUI() {
             ImGui::SliderInt("Octree rendering depth", &uiStates.octreeTargetDepth, 1, 8);
             ImGui::SliderFloat("Opacity cutoff min", &uiStates.opacityCutoffMin, 0.0f, 1.0f);
             ImGui::SliderFloat("Opacity cutoff max", &uiStates.opacityCutoffMax, 0.0f, 1.0f);
-            ImGui::SliderFloat3("Plane cutoff", (float *)&uiStates.planeCutoff, 0.0f, 1.0f);
+            ImGui::SliderFloat3("Plane cutoff", (float*)&uiStates.planeCutoff, 0.0f, 1.0f);
             ImGui::Checkbox("Invert plane cutoff", &uiStates.invertPlaneCutoff);
+            ImGui::InputFloat2("TF red", (float*)&uiStates.transferRed);
+            ImGui::InputFloat2("TF green", (float*)&uiStates.transferGreen);
+            ImGui::InputFloat2("TF blue", (float*)&uiStates.transferBlue);
+            ImGui::InputFloat4("TF alpha", (float*)&uiStates.transferAlpha);
             ImGui::EndMenu();
         }
         
