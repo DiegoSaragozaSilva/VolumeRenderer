@@ -121,7 +121,7 @@ vec4 sampleGrid(vec3 index) {
     blendColor.x = smoothstep(minColorDensities.x, maxColorDensities.x, mappedDensity) / maxColorDensities.x;
     blendColor.y = smoothstep(minColorDensities.y, maxColorDensities.y, mappedDensity) / maxColorDensities.y;
     blendColor.z = smoothstep(minColorDensities.z, maxColorDensities.z, mappedDensity) / maxColorDensities.z;
-    blendColor.w = alphaStep(mappedDensity) / maxColorDensities.w;
+    blendColor.w = color.w;
 
     blendColor.x = blendColor.x > 0.75f ? 0.0f : blendColor.x;
     blendColor.y = blendColor.y > 0.60f ? 0.0f : blendColor.y;
