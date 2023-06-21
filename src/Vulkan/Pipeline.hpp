@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 #include <tuple>
-#include <SPIRV-Cross/spirv_cross.hpp>
+#include <spirv_cross/spirv_cross.hpp>
 #include "../RenderEngine/Texture.hpp"
 #include "Device.hpp"
 #include "RenderPass.hpp"
@@ -13,6 +13,8 @@ class Pipeline {
 public:
     Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderModule*> shaderModules, std::vector<vk::VertexInputBindingDescription> bindingDescription, std::vector<vk::VertexInputAttributeDescription> attributeDescription, vk::PrimitiveTopology topology, vk::PolygonMode polygonMode, vk::Viewport viewport, vk::Rect2D scissor, float lineWidth);
     ~Pipeline();
+
+    uint32_t bindingCount;
 
     vk::Pipeline getPipeline();
     vk::PipelineLayout getPipelineLayout();
@@ -25,6 +27,7 @@ private:
     vk::PipelineLayout pipelineLayout;
     vk::DescriptorPool descriptorPool;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+    std::vector<vk::DescriptorSet> descriptorSets;
     std::vector<vk::PushConstantRange> pushConstantRanges;
     std::unordered_map<Texture*, vk::DescriptorSet> textureSamplerDescriptorSets;
 
@@ -39,7 +42,7 @@ private:
     vk::PipelineDepthStencilStateCreateInfo initDepthStencilState();
     vk::PipelineColorBlendStateCreateInfo initColorBlendState();
     vk::PipelineLayoutCreateInfo initPipelineLayoutInfo();
-    vk::DescriptorSet createTextureSamplerDescriptorSet(Device* device, Texture* texture, vk::DescriptorSetLayout descriptorSetLayout);
+    vk::DescriptorSet createTextureSamplerDescriptor(Device* device, Texture* texture, vk::DescriptorSetLayout descriptorSetLayout, vk::DescriptorSet descriptorSet);
 };
 
 #endif

@@ -10,6 +10,24 @@ Pipeline::Pipeline(Device* device, RenderPass* renderPass, std::vector<ShaderMod
     // Create the push constant ranges
     pushConstantRanges = createPushConstantRanges(shaderModules);
 
+    bindingCount = 0;
+
+    // Descriptor set allocate info
+    if (descriptorSetLayouts.size() > 0) {
+        vk::DescriptorSetAllocateInfo setAllocateInfo (
+            descriptorPool,
+            1,
+            &descriptorSetLayouts[0]
+        );
+
+        // Descriptor set creation
+        vk::DescriptorSet descriptorSet (
+            std::move(device->getLogicalDevice()->allocateDescriptorSets(setAllocateInfo)[0])
+        );
+
+        descriptorSets.push_back(descriptorSet);
+    }
+
     // Vertex input state (No function for this one)
     vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo (
         vk::PipelineVertexInputStateCreateFlags(),
@@ -236,7 +254,6 @@ std::vector<vk::DescriptorSetLayout> Pipeline::createDescriptorSetLayouts(Device
         }
     }
     
-
     // Separate bindings per set
     std::vector<std::vector<vk::DescriptorSetLayoutBinding>> setBindings(setIndexBindings.size());
     for (const std::tuple<uint32_t, uint32_t>& setIndexBinding : setIndexBindings) {
@@ -345,8 +362,8 @@ vk::PipelineDepthStencilStateCreateInfo Pipeline::initDepthStencilState() {
     // Depth stencil state create info creation and return
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo (
         vk::PipelineDepthStencilStateCreateFlags(),
-        true,
-        true,
+        false,
+        false,
         vk::CompareOp::eLess,
         false,
         false,
@@ -423,10 +440,11 @@ vk::DescriptorSet Pipeline::getTextureSamplerDescriptorSet(Device* device, Textu
         // If not found, create it
         textureSamplerDescriptorSets.insert(std::make_pair(
             texture,
-            createTextureSamplerDescriptorSet(
+            createTextureSamplerDescriptor(
                 device,
                 texture,
-                descriptorSetLayouts[0] // [TODO] Differentiate descriptor sets for different sets
+                descriptorSetLayouts[0], // [TODO] Differentiate descriptor sets for different sets
+                descriptorSets[0]
             )
         ));
     }
@@ -445,19 +463,7 @@ vk::PushConstantRange Pipeline::getPushConstantRange(vk::ShaderStageFlagBits sha
     throw 0;
 }
 
-vk::DescriptorSet Pipeline::createTextureSamplerDescriptorSet(Device* device, Texture* texture, vk::DescriptorSetLayout descriptorSetLayout) {
-    // Descriptor set allocate info
-    vk::DescriptorSetAllocateInfo setAllocateInfo (
-        descriptorPool,
-        1,
-        &descriptorSetLayout
-    );
-
-    // Descriptor set creation
-    vk::DescriptorSet descriptorSet (
-        std::move(device->getLogicalDevice()->allocateDescriptorSets(setAllocateInfo)[0])
-    );
-
+vk::DescriptorSet Pipeline::createTextureSamplerDescriptor(Device* device, Texture* texture, vk::DescriptorSetLayout descriptorSetLayout, vk::DescriptorSet descriptorSet) {
     // Descriptor image info
     vk::DescriptorImageInfo descriptorImageInfo (
         texture->getSampler(),
@@ -468,7 +474,7 @@ vk::DescriptorSet Pipeline::createTextureSamplerDescriptorSet(Device* device, Te
     // Write descriptor set
     vk::WriteDescriptorSet writeDescriptorSet (
         descriptorSet,
-        0,
+        bindingCount++,
         0,
         1,
         vk::DescriptorType::eCombinedImageSampler,

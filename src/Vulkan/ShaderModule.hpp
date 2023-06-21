@@ -1,7 +1,7 @@
 #ifndef _SHADERMODULE_H_
 #define _SHADERMODULE_H_
 
-#include <SPIRV-Cross/spirv_cross.hpp>
+#include <spirv_cross/spirv_cross.hpp>
 #include "Device.hpp"
 
 class ShaderModule {

@@ -3,9 +3,10 @@
 
 #include <iostream>
 #include <spdlog/spdlog.h>
-#include <tinyobjloader/tiny_obj_loader.h>
+#include <tiny_obj_loader.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <dcmtk/dcmimgle/dcmimage.h>
 #include <tiffio.h>
 #include <string>
 #include <vector>
@@ -26,12 +27,13 @@ struct ImageData {
 struct TIFFData {
     std::string name;
     uint32_t width, height;
-    std::vector<glm::vec4> data;
+    std::vector<uint8_t> data;
 };
 
 struct VolumetricData {
     int width, height, depth;
-    std::vector<glm::vec4> data;
+    glm::vec3 scale;
+    std::vector<uint8_t> data;
 };
 
 class Utils {

@@ -1,18 +1,18 @@
 #include "Image.hpp"
 
 Image::Image(Device* device, CommandPool* commandPool, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipmapLevels, vk::SampleCountFlagBits sampleCount, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usageFlags, vk::MemoryPropertyFlags memoryFlags, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) {
-    this->width = width;
-    this->height = height;
-    this->depth = depth;
-    this->type = depth == 0 ? vk::ImageType::e1D : (depth == 1 ? vk::ImageType::e2D : vk::ImageType::e3D);
-    this->mipmapLevels = mipmapLevels;
+    this->width = width == 0 ? width + 1 : width;
+    this->height = height == 0 ? height + 1 : height;
+    this->depth = depth == 0 ? depth + 1 : depth;
+    this->type = this->width >= 1 && this->height == 1 && this->depth == 1 ? vk::ImageType::e1D : (this->width >= 1 && this->height >= 1 && this->depth == 1? vk::ImageType::e2D : vk::ImageType::e3D);
+    this->mipmapLevels = this->type == vk::ImageType::e1D ? 0 : mipmapLevels;
     this->format = format;
 
     // Image extent
     vk::Extent3D extent (
-        width,
-        height,
-        depth
+        this->width,
+        this->height,
+        this->depth
     );
 
     // Image creation

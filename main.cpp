@@ -1,9 +1,10 @@
 #include "src/RenderEngine/RenderEngine.hpp"
 #include "src/RenderEngine/Octree.hpp"
 
-#define CAMERA_SPEED 2.5f
+#define CAMERA_SPEED 10.0f
 #define CAMERA_ROTATE_SPEED 0.01f
 #define CAMERA_ZOOM_SPEED 10.0f
+#define ORBITAL_RADIUS 100.0f
 
 glm::vec2 previousMousePos = {0.0f, 0.0f};
 
@@ -14,9 +15,9 @@ void processInput(Window* window) {
       glm::vec3 oldPos = renderEngine->camera->getPosition();
       glm::vec3 newPos = oldPos - renderEngine->camera->getFrontVector() * CAMERA_SPEED * (float)renderEngine->getDeltaTime(); 
       newPos = glm::vec3(
-        glm::clamp(newPos.x, -5.0f, 5.0f),
-        glm::clamp(newPos.y, -5.0f, 5.0f),
-        glm::clamp(newPos.z, -5.0f, 5.0f)
+        glm::clamp(newPos.x, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.y, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.z, -ORBITAL_RADIUS, ORBITAL_RADIUS)
       );
 
       renderEngine->camera->setPosition(newPos);
@@ -29,9 +30,9 @@ void processInput(Window* window) {
       glm::vec3 oldPos = renderEngine->camera->getPosition();
       glm::vec3 newPos = oldPos + renderEngine->camera->getFrontVector() * CAMERA_SPEED * (float)renderEngine->getDeltaTime();
       newPos = glm::vec3(
-        glm::clamp(newPos.x, -5.0f, 5.0f),
-        glm::clamp(newPos.y, -5.0f, 5.0f),
-        glm::clamp(newPos.z, -5.0f, 5.0f)
+        glm::clamp(newPos.x, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.y, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.z, -ORBITAL_RADIUS, ORBITAL_RADIUS)
       );  
 
       renderEngine->camera->setPosition(newPos);
@@ -43,9 +44,9 @@ void processInput(Window* window) {
       glm::vec3 oldPos = renderEngine->camera->getPosition();
       glm::vec3 newPos = oldPos - renderEngine->camera->getRightVector() * CAMERA_SPEED * (float)renderEngine->getDeltaTime();
       newPos = glm::vec3(
-        glm::clamp(newPos.x, -5.0f, 5.0f),
-        glm::clamp(newPos.y, -5.0f, 5.0f),
-        glm::clamp(newPos.z, -5.0f, 5.0f)
+        glm::clamp(newPos.x, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.y, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.z, -ORBITAL_RADIUS, ORBITAL_RADIUS)
       );
 
       renderEngine->camera->setPosition(newPos);
@@ -58,9 +59,9 @@ void processInput(Window* window) {
       glm::vec3 oldPos = renderEngine->camera->getPosition();
       glm::vec3 newPos = oldPos + renderEngine->camera->getRightVector() * CAMERA_SPEED * (float)renderEngine->getDeltaTime();
       newPos = glm::vec3(
-        glm::clamp(newPos.x, -5.0f, 5.0f),
-        glm::clamp(newPos.y, -5.0f, 5.0f),
-        glm::clamp(newPos.z, -5.0f, 5.0f)
+        glm::clamp(newPos.x, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.y, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.z, -ORBITAL_RADIUS, ORBITAL_RADIUS)
       );
 
       renderEngine->camera->setPosition(newPos);
@@ -73,9 +74,9 @@ void processInput(Window* window) {
       glm::vec3 oldPos = renderEngine->camera->getPosition();
       glm::vec3 newPos = oldPos - renderEngine->camera->getUpVector() * CAMERA_SPEED * (float)renderEngine->getDeltaTime();
       newPos = glm::vec3(
-        glm::clamp(newPos.x, -5.0f, 5.0f),
-        glm::clamp(newPos.y, -5.0f, 5.0f),
-        glm::clamp(newPos.z, -5.0f, 5.0f)
+        glm::clamp(newPos.x, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.y, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.z, -ORBITAL_RADIUS, ORBITAL_RADIUS)
       );
       renderEngine->camera->setPosition(newPos);
 
@@ -87,9 +88,9 @@ void processInput(Window* window) {
       glm::vec3 oldPos = renderEngine->camera->getPosition();
       glm::vec3 newPos = oldPos + renderEngine->camera->getUpVector() * CAMERA_SPEED * (float)renderEngine->getDeltaTime();
       newPos = glm::vec3(
-        glm::clamp(newPos.x, -5.0f, 5.0f),
-        glm::clamp(newPos.y, -5.0f, 5.0f),
-        glm::clamp(newPos.z, -5.0f, 5.0f)
+        glm::clamp(newPos.x, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.y, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.z, -ORBITAL_RADIUS, ORBITAL_RADIUS)
       ); 
 
       renderEngine->camera->setPosition(newPos);
@@ -113,9 +114,9 @@ void processInput(Window* window) {
       glm::vec3 oldPos = renderEngine->camera->getPosition();
       glm::vec3 newPos = oldPos + movementDelta * CAMERA_SPEED; 
       newPos = glm::vec3(
-        glm::clamp(newPos.x, -5.0f, 5.0f),
-        glm::clamp(newPos.y, -5.0f, 5.0f),
-        glm::clamp(newPos.z, -5.0f, 5.0f)
+        glm::clamp(newPos.x, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.y, -ORBITAL_RADIUS, ORBITAL_RADIUS),
+        glm::clamp(newPos.z, -ORBITAL_RADIUS, ORBITAL_RADIUS)
       );  
 
       renderEngine->camera->setPosition(newPos);

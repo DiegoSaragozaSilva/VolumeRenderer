@@ -1,64 +1,19 @@
 cmake_minimum_required(VERSION 3.1)
 project(VolumeRenderer)
 
-add_compile_options(-O3)
+add_compile_options(-O3 -std=c++17)
 
 # Base include directory
 include_directories("include" "/usr/lib/stb")
 
-# Build GLFW from include folder
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only")
-set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")
-
-add_subdirectory("include/glfw")
-
-# Build spdlog from include folder
-add_subdirectory("include/spdlog")
-
-# Build VulkanMemoryAllocator from include folder
-# add_subdirectory("include/VulkanMemoryAllocator")
-
-# Build glm from include folder
-add_subdirectory("include/glm")
-
-# Build SPIRV-Cross from include folder
-add_subdirectory("include/SPIRV-Cross")
-
-# Build tinyobjloader from include folder
-add_subdirectory("include/tinyobjloader")
-
-# Build libtiff from include folder
-add_subdirectory("include/libtiff")
-
-# Set up Imgui
-set(IMGUI_DIR include/imgui)
-add_library(IMGUI STATIC)
-
-target_sources(
-    IMGUI
-    PRIVATE
-    ${IMGUI_DIR}/imgui_demo.cpp
-    ${IMGUI_DIR}/imgui_draw.cpp
-    ${IMGUI_DIR}/imgui_tables.cpp
-    ${IMGUI_DIR}/imgui_widgets.cpp
-    ${IMGUI_DIR}/imgui.cpp
-
-    PRIVATE
-    ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-)
-
-target_include_directories(
-    IMGUI
-    PUBLIC ${IMGUI_DIR}
-    PUBLIC ${IMGUI_DIR}/backends
-    PUBLIC ${GLFW_DIR}/include
-)
-
-target_link_libraries(IMGUI PUBLIC glfw)
-
-# Force Vulkan packaged be required
+# Required packages
 find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(glm REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(spirv_cross_core REQUIRED)
+find_package(DCMTK REQUIRED)
+find_package(tinyobjloader REQUIRED)
 
 # Cpp and hpp dependencies
 file(GLOB SOURCES src/*/*.hpp src/*/*.cpp)
@@ -100,14 +55,29 @@ foreach(source IN LISTS SHADERS)
     list(APPEND SPV_SHADERS ${SHADER_BINARY_DIR}/${FILENAME}.spv)
 endforeach()
 
+message("DCMTK LIBRARIES" ${DCMTK_LIBRARIES})
+
+# Include directiries
+include_directories("include" ${DCMTK_INCLUDE_DIRS})
+
 # Executable
 add_executable(Renderer main.cpp ${SOURCES})
 
 # Libray linking
-target_link_libraries(Renderer PRIVATE spdlog::spdlog glfw glm vulkan spirv-cross-core tinyobjloader IMGUI tiff)
-
-# Include directiries
-include_directories("include")
+target_link_libraries(Renderer PRIVATE
+                      vulkan
+                      glfw
+                      glm::glm
+                      tinyobjloader
+                      ${DCMTK_LIBRARIES}
+                      spirv-cross-core
+                      tiff
+                      spdlog::spdlog
+                      dcmimgle
+                      dcmdata
+                      oflog
+                      ofstd
+                      z)
 
 # Shader custom target
 add_custom_target(Shaders ALL DEPENDS ${SPV_SHADERS})

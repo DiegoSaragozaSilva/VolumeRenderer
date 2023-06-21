@@ -227,14 +227,9 @@ TIFFData Utils::loadTIFFile(std::string TIFFPath) {
             for (uint32_t y = 0; y < data.height; y++)
                 for (uint32_t x = 0; x < data.width; x++) {
                     uint32_t pixel = rasterData[y * data.width + x];
-                    glm::vec4 pixelData = glm::vec4(
-                        TIFFGetR(pixel),
-                        TIFFGetG(pixel),
-                        TIFFGetB(pixel),
-                        TIFFGetA(pixel)
-                    );
-                    pixelData /= 255.0f;
-                    data.data.push_back(pixelData);
+                    data.data.push_back(TIFFGetR(pixel));
+                    data.data.push_back(TIFFGetG(pixel));
+                    data.data.push_back(TIFFGetB(pixel));
                 }
         }
         _TIFFfree(rasterData);
@@ -245,20 +240,50 @@ TIFFData Utils::loadTIFFile(std::string TIFFPath) {
 }
 
 VolumetricData Utils::loadVolumetricData(std::string folderPath) {
-    std::vector<std::string> TIFFiles = listFolderFiles(folderPath);
-    std::sort(TIFFiles.begin(), TIFFiles.end());
+    std::vector<std::string> files = listFolderFiles(folderPath);
+    std::sort(files.begin(), files.end());
 
     VolumetricData volumetricData;
     volumetricData.width = 0;
     volumetricData.height = 0;
-    volumetricData.depth = TIFFiles.size();
-    for (auto TIFFile : TIFFiles) {
-        TIFFData data = loadTIFFile(TIFFile);
-        volumetricData.data.insert(volumetricData.data.end(), data.data.begin(), data.data.end());
+    volumetricData.depth = files.size();
 
-        if (volumetricData.width == 0 && volumetricData.height == 0) {
-            volumetricData.width = data.width;
-            volumetricData.height = data.height;
+    if (files.size() == 0) return volumetricData;
+
+    if (files[0].find(".tif") != std::string::npos) {
+      for (auto file : files) {
+          TIFFData data = loadTIFFile(file);
+          volumetricData.data.insert(volumetricData.data.end(), data.data.begin(), data.data.end());
+
+          if (volumetricData.width == 0 && volumetricData.height == 0) {
+              volumetricData.width = data.width;
+              volumetricData.height = data.height;
+          }
+      }
+    }
+    else if (files[0].find(".dcm") != std::string::npos) {
+        for (auto file : files) {
+            DicomImage* dcmImage = new DicomImage(file.c_str());
+            if (dcmImage == NULL) {
+                spdlog::error("Error while loading DICOM file " + file);
+                throw 0;
+            }
+            
+            if (volumetricData.width == 0 && volumetricData.height == 0) {
+                volumetricData.width = dcmImage->getWidth();
+                volumetricData.height = dcmImage->getHeight();
+                volumetricData.scale = glm::vec3(1.0f / volumetricData.width, 1.0f / volumetricData.height, 1.0f / volumetricData.depth);
+            }
+            
+            dcmImage->setMinMaxWindow();
+
+            uint8_t* dcmPixels = (uint8_t*)dcmImage->getOutputData(8);
+            if (dcmPixels == NULL) {
+                spdlog::error("Error while getting pixel data from DICOM file " + file);
+                throw 0;
+            }
+            std::vector<uint8_t> dcmData = std::vector<uint8_t>(dcmPixels, dcmPixels + dcmImage->getOutputDataSize(8));
+            volumetricData.data.insert(volumetricData.data.end(), dcmData.begin(), dcmData.end());
         }
     }
 

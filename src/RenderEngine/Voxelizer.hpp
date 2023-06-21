@@ -17,7 +17,7 @@
 #include "Utils.hpp"
 
 struct Volume {
-    int scale;
+    glm::vec3 scale;
     std::vector<Voxel> voxels;
 };
 

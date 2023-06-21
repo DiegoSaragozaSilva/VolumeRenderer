@@ -9,7 +9,7 @@ Volume Voxelizer::voxelizeMesh(Mesh* mesh) {
     removeDuplicatedVoxels(voxels);
 
     Volume volume = {
-        .scale = scale,
+        .scale = glm::vec3(scale),
         .voxels = voxels
     };
 
@@ -89,21 +89,24 @@ void Voxelizer::removeDuplicatedVoxels(std::vector<Voxel>& voxels) {
 
 Volume Voxelizer::voxelizeVolumetricData(VolumetricData data) { 
     Volume volume;
-    volume.scale = scale;
+    volume.scale = data.scale;
 
-    for (uint32_t y = 0; y < data.height; y++)
-        for (uint32_t z = 0; z < data.depth; z++)
-            for (uint32_t x = 0; x < data.width; x++) {
+    for (uint32_t y = 0; y < data.height / 3; y++)
+        for (uint32_t z = 0; z < data.depth / 3; z++)
+            for (uint32_t x = 0; x < data.width / 3; x++) {
                 uint32_t index = x + data.width * (y + data.height * z);
-                
-                glm::vec4 pixelData = data.data[index];
+                glm::vec4 pixelData = glm::vec4(
+                  data.data[index * 3 + 0],
+                  data.data[index * 3 + 1],
+                  data.data[index * 3 + 2],
+                  255.0f
+                ) / 255.0f;
 
                 Voxel voxel;
                 voxel.normal = glm::vec3(0.0f);
-                voxel.position = glm::vec3(x, y, z);
+                voxel.position = glm::vec3(x, z, y);
                 voxel.color = pixelData;
-                volume.voxels.push_back(voxel);                
+                volume.voxels.push_back(voxel);
             }
-
     return volume;
 }

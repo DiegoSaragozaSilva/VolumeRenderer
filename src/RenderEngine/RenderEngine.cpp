@@ -294,6 +294,12 @@ void RenderEngine::initVulkan() {
 
     // Default material initialization
     render.defaultMaterial.diffuseTextureMap = "assets/textures/default.png";
+
+    // Transfer function initialization
+    rgbTransferFunction = new TransferFunction();
+    rgbTransferFunction->redLimits    = glm::vec3(0.0f, 0.8f, 0.3f);
+    rgbTransferFunction->greenLimits  = glm::vec3(0.8f, 1.0f, 0.95f);
+    rgbTransferFunction->blueLimits   = glm::vec3(0.5f, 0.2f, 0.6f);
 }
 
 Image* RenderEngine::createMultiSampleImage() {
@@ -677,11 +683,16 @@ void RenderEngine::renderFrame() {
             commandBuffer.bindVertexBuffers(0, 1, &volumeVertexBuffer, offsets);
             commandBuffer.bindIndexBuffer(mesh->getIndexBuffer()->getBuffer(), 0, vk::IndexType::eUint32);
 
-            // Get texture descriptor set
-            vk::DescriptorSet voxelTextureSamplerDescriptorSet = render.voxelPipeline->getTextureSamplerDescriptorSet(
-                    vulkan.device,
-                    texturePool->requireTexture(vulkan.device, vulkan.commandPool, "Octree Image Data")
-            );
+            std::vector<vk::DescriptorSet> voxelTextureSampleDescriptorSets = {
+                render.voxelPipeline->getTextureSamplerDescriptorSet(
+                  vulkan.device,
+                  texturePool->requireTexture(vulkan.device, vulkan.commandPool, "Octree Image Data")
+                ),
+                render.voxelPipeline->getTextureSamplerDescriptorSet(
+                  vulkan.device,
+                  texturePool->requireTexture(vulkan.device, vulkan.commandPool, "transferFunction")
+                )
+            };
 
             // Bind texture descriptor set
             commandBuffer.bindDescriptorSets(
@@ -689,7 +700,7 @@ void RenderEngine::renderFrame() {
                 render.voxelPipeline->getPipelineLayout(),
                 0,
                 1,
-                &voxelTextureSamplerDescriptorSet,
+                &voxelTextureSampleDescriptorSets[0],
                 0,
                 nullptr
             );
@@ -755,18 +766,34 @@ void RenderEngine::renderUI() {
 
         if (ImGui::BeginMenu("Options")) {
             ImGui::Checkbox("Show camera properties", &uiStates.showCameraProperties);
-            ImGui::SliderInt("Octree rendering depth", &uiStates.octreeTargetDepth, 1, 8);
-            ImGui::SliderFloat("Opacity cutoff min", &uiStates.opacityCutoffMin, 0.0f, 1.0f);
-            ImGui::SliderFloat("Opacity cutoff max", &uiStates.opacityCutoffMax, 0.0f, 1.0f);
-            ImGui::SliderFloat3("Plane cutoff", (float*)&uiStates.planeCutoff, 0.0f, 1.0f);
+            ImGui::InputInt("Octree rendering depth", &uiStates.octreeTargetDepth, 1, 8);
+            ImGui::InputFloat("Opacity cutoff min", &uiStates.opacityCutoffMin, 0.0f, 1.0f);
+            ImGui::InputFloat("Opacity cutoff max", &uiStates.opacityCutoffMax, 0.0f, 1.0f);
+            ImGui::InputFloat3("Plane cutoff", (float*)&uiStates.planeCutoff);
             ImGui::Checkbox("Invert plane cutoff", &uiStates.invertPlaneCutoff);
-            ImGui::InputFloat2("TF red", (float*)&uiStates.transferRed);
-            ImGui::InputFloat2("TF green", (float*)&uiStates.transferGreen);
-            ImGui::InputFloat2("TF blue", (float*)&uiStates.transferBlue);
-            ImGui::InputFloat4("TF alpha", (float*)&uiStates.transferAlpha);
             ImGui::EndMenu();
         }
-        
+
+        if (ImGui::BeginMenu("Color")) {
+            ImGui::Text("RGB Transfer Function");
+            ImGui::Text("Red");
+            ImGui::InputFloat("Red Left limit", &rgbTransferFunction->redLimits.x, 0.0f, 1.0f);
+            ImGui::InputFloat("Red Right limit", &rgbTransferFunction->redLimits.z, 0.0f, 1.0f);
+            ImGui::InputFloat("Red Amplitude", &rgbTransferFunction->redLimits.y, 0.0f, 1.0f);
+            ImGui::Text("Green");
+            ImGui::InputFloat("Green Left limit", &rgbTransferFunction->greenLimits.x, 0.0f, 1.0f);
+            ImGui::InputFloat("Green Right limit", &rgbTransferFunction->greenLimits.z, 0.0f, 1.0f);
+            ImGui::InputFloat("Green Amplitude", &rgbTransferFunction->greenLimits.y, 0.0f, 1.0f);
+            ImGui::Text("Blue");
+            ImGui::InputFloat("Blue Left limit", &rgbTransferFunction->blueLimits.x, 0.0f, 1.0f);
+            ImGui::InputFloat("Blue Right limit", &rgbTransferFunction->blueLimits.z, 0.0f, 1.0f);
+            ImGui::InputFloat("Blue Amplitude", &rgbTransferFunction->blueLimits.y, 0.0f, 1.0f);
+            
+            if (ImGui::MenuItem("Update textures"))
+                updateTransferFunctionTexture();
+
+            ImGui::EndMenu();
+        }
         // FPS Counter
         std::string fpsStr = std::to_string(1000.0f / ImGui::GetIO().Framerate) + " ms/frame | " + std::to_string(ImGui::GetIO().Framerate) + " FPS";
         float fpsStrSize = ImGui::CalcTextSize(fpsStr.c_str()).x;
@@ -962,6 +989,11 @@ void RenderEngine::addVoxelizedVolumeToScene(std::string folderPath) {
 
     Texture* octreeDataTexture = new Texture(vulkan.device, vulkan.commandPool, octreeImageData);
     texturePool->addTextureToPool(octreeImageData.name, octreeDataTexture);
+
+    ImageData rgbTransferFunctionImageData = rgbTransferFunction->getRGBImageData();
+    std::cout << rgbTransferFunctionImageData.width << std::endl;
+    Texture* rgbTransferFunctionTexture = new Texture(vulkan.device, vulkan.commandPool, rgbTransferFunctionImageData);
+    texturePool->addTextureToPool("transferFunction", rgbTransferFunctionTexture);
 }
 
 void RenderEngine::addMeshToScene(Mesh* mesh) {
@@ -977,6 +1009,14 @@ void RenderEngine::addVolumeMeshToScene(Mesh* mesh) {
 void RenderEngine::addDebugMeshToScene(Mesh* mesh) {
     mesh->uploadMesh(vulkan.device);
     debugScene.push_back(mesh);
+}
+
+void RenderEngine::updateTransferFunctionTexture() {
+  texturePool->removeTextureFromPool("transferFunction");
+
+  ImageData rgbTransferFunctionImageData = rgbTransferFunction->getRGBImageData();
+  Texture* rgbTransferFunctionTexture = new Texture(vulkan.device, vulkan.commandPool, rgbTransferFunctionImageData);
+  texturePool->addTextureToPool("transferFunction", rgbTransferFunctionTexture);
 }
 
 void RenderEngine::clearScene() {
@@ -1049,4 +1089,5 @@ void RenderEngine::addRayTraceQuadToScene() {
     quadMesh->setVertices(quadVertices);
     quadMesh->setIndices(quadIndices);
     addVolumeMeshToScene(quadMesh);
+    render.voxelPipeline->bindingCount = 0; 
 }

@@ -2,9 +2,9 @@
 #define _RENDER_ENGINE_H_
 
 #include <cmath>
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_vulkan.h>
+#include "../imgui/imgui.h"
+#include "../imgui/imgui_impl_glfw.h"
+#include "../imgui/imgui_impl_vulkan.h"
 #include "../Vulkan/Instance.hpp"
 #include "../Vulkan/Device.hpp"
 #include "../Vulkan/Swapchain.hpp"
@@ -22,6 +22,7 @@
 #include "Window.hpp"
 #include "Voxelizer.hpp"
 #include "Octree.hpp"
+#include "TransferFunction.hpp"
 
 // Struct that holds all vulkan context variables
 struct Vulkan {
@@ -118,6 +119,7 @@ private:
     std::vector<Mesh*> voxelScene;
     std::vector<Mesh*> debugScene;
     Octree* targetOctree;
+    TransferFunction* rgbTransferFunction;
     UIStates uiStates;
     double deltaTime, lastTime;
 
@@ -140,6 +142,7 @@ private:
     void addVoxelizedOBJToScene(std::string objPath);
     void addVoxelizedVolumeToScene(std::string folderPath);
     void addRayTraceQuadToScene();
+    void updateTransferFunctionTexture();
     void clearScene();
     void deletePipeline(Pipeline* pipeline);
     void deleteTexture(Texture* texture);
